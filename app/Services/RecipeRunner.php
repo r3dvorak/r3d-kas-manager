@@ -1,14 +1,16 @@
+
 <?php
+
 /**
  * R3D KAS Manager
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.1.0-alpha
+ * @version   0.2.1-alpha
  * @date      2025-09-24
  * 
- * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
- * @license     GNU General Public License version 2 or later
+ * @copyright (C) 2025 Richard Dvořák
+ * @license   MIT License
  * 
  * Service to execute automation recipes (domains, mailboxes, DNS).
  */
@@ -17,108 +19,102 @@ namespace App\Services;
 
 use App\Models\Recipe;
 use App\Models\RecipeRun;
+use App\Models\RecipeAction;
 
 class RecipeRunner
 {
+    protected KasApiService $kas;
+
+    public function __construct(KasApiService $kas)
+    {
+        $this->kas = $kas;
+    }
+
     public function run(Recipe $recipe, array $vars = [], bool $dryRun = false): RecipeRun
     {
         $run = new RecipeRun();
         $run->recipe_id = $recipe->id;
-        $run->status = 'running';
+        $run->status = 'success';
         $run->variables = $vars;
-        $run->save();
-
-        $results = [];
+        $run->result = [];
 
         foreach ($recipe->actions as $action) {
-            // Replace placeholders inside parameters
-            $params = $this->substituteVariables($action->parameters, $vars);
+            $parameters = $this->substituteVars($action->parameters, $vars);
 
             if ($dryRun) {
-                $results[] = [
+                $run->result[] = [
                     'action'  => $action->toArray(),
                     'status'  => 'simulated',
-                    'details' => $this->simulateAction($action->type, $params),
+                    'details' => "Would call KAS API: {$action->type}",
                 ];
                 continue;
             }
 
-            try {
-                $details = $this->executeAction($action->type, $params);
-                $results[] = [
-                    'action'  => $action->toArray(),
-                    'status'  => 'success',
-                    'details' => $details,
-                ];
-            } catch (\Exception $e) {
-                $results[] = [
-                    'action'  => $action->toArray(),
-                    'status'  => 'failed',
-                    'details' => $e->getMessage(),
-                ];
-            }
+            // 🔌 Real API execution
+            $response = $this->executeAction($action->type, $parameters);
+
+            $run->result[] = [
+                'action'  => $action->toArray(),
+                'status'  => isset($response['error']) ? 'failed' : 'success',
+                'details' => is_array($response) ? json_encode($response) : (string) $response,
+            ];
         }
 
-        $run->status = collect($results)->contains(fn($r) => $r['status'] === 'failed')
-            ? 'failed'
-            : 'success';
-        $run->result = $results;
         $run->save();
 
         return $run;
     }
 
     /**
-     * Replace {placeholders} in nested arrays/strings with actual values.
+     * Replace placeholders {var} with runtime variables.
      */
-    protected function substituteVariables($parameters, array $vars)
+    protected function substituteVars(array $parameters, array $vars): array
     {
-        if (is_string($parameters)) {
-            $parameters = json_decode($parameters, true) ?? $parameters;
-        }
-
-        $replace = [];
-        foreach ($vars as $key => $val) {
-            $replace['{' . $key . '}'] = $val;
-        }
-
-        array_walk_recursive($parameters, function (&$value) use ($replace) {
-            if (is_string($value)) {
-                $value = strtr($value, $replace);
+        return collect($parameters)->map(function ($value) use ($vars) {
+            if (!is_string($value)) {
+                return $value;
             }
-        });
 
-        return $parameters;
+            return preg_replace_callback('/\{(\w+)\}/', function ($matches) use ($vars) {
+                return $vars[$matches[1]] ?? $matches[0];
+            }, $value);
+        })->toArray();
     }
 
-    protected function simulateAction(string $type, array $params): string
+    /**
+     * Map action types to actual KAS API calls.
+     */
+    protected function executeAction(string $type, array $parameters): mixed
     {
-        return match ($type) {
-            'add_domain'     => "Would add domain " . ($params['domain'] ?? '{domain}') .
-                                " to account " . ($params['account'] ?? '{account}'),
+        switch ($type) {
+            case 'add_domain':
+                return $this->kas->call('add_domain', [
+                    'domain'  => $parameters['domain'],
+                    'account' => $parameters['account'],
+                ]);
 
-            'create_dns'     => "Would create DNS " . ($params['type'] ?? '?') .
-                                " for " . ($params['domain'] ?? '{domain}') .
-                                " -> " . ($params['value'] ?? '?'),
+            case 'create_dns':
+                return $this->kas->call('add_dns_record', [
+                    'domain' => $parameters['domain'],
+                    'type'   => $parameters['type'],
+                    'value'  => $parameters['value'],
+                ]);
 
-            'create_mailbox' => "Would create mailbox " .
-                                ($params['mailbox'] ?? '{mailbox}') . '@' . ($params['domain'] ?? '{domain}'),
+            case 'create_mailbox':
+                return $this->kas->call('add_mailbox', [
+                    'domain'   => $parameters['domain'],
+                    'mailbox'  => $parameters['mailbox'],
+                    'password' => $parameters['password'] ?? 'changeme123',
+                ]);
 
-            'create_forward' => "Would forward " .
-                                ($params['mailbox'] ?? '{mailbox}') . '@' . ($params['domain'] ?? '{domain}') .
-                                " -> " . (isset($params['forwards'])
-                                    ? implode(', ', (array)$params['forwards'])
-                                    : '[no forwards defined]'
-                                ),
+            case 'create_forward':
+                return $this->kas->call('add_mail_forward', [
+                    'source' => $parameters['source'],
+                    'target' => $parameters['target'],
+                ]);
 
-            default          => "Would perform {$type}",
-        };
-    }
-
-
-    protected function executeAction(string $type, array $params): string
-    {
-        // TODO: implement real KAS SOAP API calls here
-        return "[Executed {$type}]";
+            default:
+                return ['error' => true, 'message' => "Unknown action: $type"];
+        }
     }
 }
