@@ -161,22 +161,11 @@ class RecipeRunner
             'KasRequestParams' => $kasParams,
         ];
 
-        try {
-            $response = $this->client->KasApi(json_encode($request));
+         $response = $this->client->KasApi(json_encode($request));
 
-            // SOAP liefert oft ein Objekt → in Array wandeln
-            if (is_object($response)) {
-                $response = json_decode(json_encode($response), true);
-            }
-
-            if (is_array($response)) {
-                return $response;
-            }
-
-            return ['success' => true, 'data' => (string) $response];
-        } catch (Exception $e) {
-            return ['error' => true, 'message' => $e->getMessage()];
-        }
+        return is_object($response)
+            ? json_decode(json_encode($response), true)
+            : (array)$response;
     }
 
     /**
