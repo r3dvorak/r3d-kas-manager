@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RecipeSeeder::class,
             R3dDeTestRecipeSeeder::class, // added r3d.de test recipe
+            KasTestRecipesSeeder::class, // added KAS test recipes
         ]);
     }
 }

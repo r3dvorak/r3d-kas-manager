@@ -4,13 +4,13 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.4.2-alpha
+ * @version   0.4.3-alpha
  * @date      2025-09-25
  * 
- * @copyright (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  * 
- * Service to execute automation recipes for all-inkl.com KAS API.
+ * Service to execute automation recipes (domains, mailboxes, DNS).
  */
 
 namespace App\Services;
@@ -28,10 +28,10 @@ class RecipeRunner
 
     public function __construct()
     {
-        $this->client = new SoapClient('https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl', [
-            'trace' => 1,
-            'exceptions' => true,
-        ]);
+        $this->client = new SoapClient(
+            "https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl",
+            ['trace' => 1, 'exceptions' => true]
+        );
         $this->kasUser = env('KAS_USER');
         $this->kasPassword = env('KAS_PASSWORD');
     }
@@ -50,7 +50,7 @@ class RecipeRunner
                     'status'  => 'simulated',
                     'details' => [
                         'message' => "Would call KAS API: {$action->type}",
-                        'params'  => $params
+                        'params'  => $params,
                     ],
                 ];
                 continue;
@@ -59,11 +59,11 @@ class RecipeRunner
             try {
                 $response = $this->executeKasAction($action->type, $params);
 
-                if (isset($response['error']) && $response['error']) {
+                if (isset($response['error'])) {
                     $results[] = [
                         'action'  => $action->toArray(),
                         'status'  => 'error',
-                        'details' => ['error' => $response['message']],
+                        'details' => $response,
                     ];
                 } else {
                     $results[] = [
@@ -76,7 +76,7 @@ class RecipeRunner
                 $results[] = [
                     'action'  => $action->toArray(),
                     'status'  => 'error',
-                    'details' => ['error' => $e->getMessage()],
+                    'details' => ['exception' => $e->getMessage()],
                 ];
             }
         }
@@ -89,82 +89,49 @@ class RecipeRunner
         ]);
     }
 
+    /**
+     * Dispatch supported KAS API actions
+     */
     protected function executeKasAction(string $type, array $params): array
     {
         return match ($type) {
-            'add_domain' => $this->kasRequest('add_domain', [
-                'domain_name' => $this->extractDomainName($params['domain']),
-                'domain_tld' => $this->extractTld($params['domain']),
-                'domain_path' => '/web/',
-                'php_version' => '8.4',
-                'redirect_status' => '0',
-            ]),
+            'get_domains'  => $this->kasRequest('get_domains', []),
+            'get_accounts' => $this->kasRequest('get_accounts', []),
 
-            'create_dns' => $this->kasRequest('add_dns_settings', [
-                'domain' => $params['domain'],
+            'add_domain'   => $this->kasRequest('add_domain', [
+                'domain_name'     => $params['domain'] ?? null,
+                'domain_tld'      => $params['tld'] ?? 'de',
+                'domain_path'     => '/web/',
+                'php_version'     => '8.1',
+                'redirect_status' => 0,
+            ]),
+            'create_dns'   => $this->kasRequest('add_dns_settings', [
+                'record_name' => $params['domain'],
                 'record_type' => $params['type'],
-                'data' => $params['value'],
+                'record_data' => $params['value'],
             ]),
 
-            'create_mailbox' => $this->kasRequest('add_mailbox', [
-                'domain' => $params['domain'],
-                'mailbox' => $params['mailbox'],
-                'password' => $params['password'] ?? 'changeme',
-            ]),
-
-            'create_forward' => $this->kasRequest('add_mail_forward', [
-                'source' => $params['mailbox'] . '@' . $params['domain'],
-                'target' => $params['target'],
-            ]),
-
-            default => [
-                'error'   => true,
-                'message' => "Unknown action type: {$type}",
-            ],
+            default        => ['error' => "Unknown action type: {$type}"],
         };
     }
 
-    protected function kasRequest(string $kasMethod, array $kasParams): array
+
+    /**
+     * Execute SOAP request to KAS API
+     */
+    protected function kasRequest(string $kasMethod, array $kasParams): mixed
     {
-        // ✅ KORREKTES Format basierend auf funktionierendem Beispiel
-        $jsonRequest = json_encode([
-            'kas_login'      => $this->kasUser,
-            'kas_auth_type'  => 'plain',
-            'kas_auth_data'  => $this->kasPassword,
-            'kas_action'     => $kasMethod,
-            'KasRequestParams' => $kasParams
-        ]);
+        $request = [
+            'kas_login'     => $this->kasUser,
+            'kas_auth_type' => 'plain',
+            'kas_auth_data' => $this->kasPassword,
+            'kas_action'    => $kasMethod,
+        ] + $kasParams;
 
-        try {
-            $response = $this->client->KasApi($jsonRequest);
+        // Direkt die SOAP-Methode aufrufen
+        $response = $this->client->KasApi(json_encode($request));
 
-            // Response normalisieren
-            if (is_object($response)) {
-                $response = json_decode(json_encode($response), true);
-            }
-
-            return [
-                'error' => false,
-                'data'  => $response,
-            ];
-
-        } catch (Exception $e) {
-            return [
-                'error'   => true,
-                'message' => $e->getMessage(),
-                'request' => $jsonRequest, // Für Debugging
-            ];
-        }
-    }
-
-    protected function extractDomainName(string $domain): string
-    {
-        return substr($domain, 0, strrpos($domain, '.'));
-    }
-
-    protected function extractTld(string $domain): string
-    {
-        return substr(strrchr($domain, '.'), 1);
+        return $response; // ✅ Roh zurück, kein json_decode/encode mehr
     }
 
     protected function replacePlaceholders(array $params, array $vars): array
