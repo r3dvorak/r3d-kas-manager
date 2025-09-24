@@ -34,5 +34,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'kas' => [
+        'wsdl'     => env('KAS_WSDL', 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl'),
+        'user'     => env('KAS_USER'),
+        'password' => env('KAS_PASSWORD'),
+    ],
+
 
 ];
