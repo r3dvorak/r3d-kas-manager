@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
             RecipeSeeder::class,
             R3dDeTestRecipeSeeder::class, // added r3d.de test recipe
             KasTestRecipesSeeder::class, // added KAS test recipes
+            DeleteR3dDeRecipeSeeder::class,
+            UserAndClientSeeder::class,
         ]);
     }
 }

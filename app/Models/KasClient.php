@@ -4,27 +4,29 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.1.0-alpha
- * @date      2025-09-24
+ * @version   0.5.0-alpha
+ * @date      2025-09-25
  * 
- * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ * @copyright (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
  * @license   MIT License
  * 
- * Service to execute automation recipes (domains, mailboxes, DNS).
+ * Represents a KAS client account with credentials.
  */
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class KasClient extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'name',
-        'api_user',
-        'api_password',
+        'kas_login',
+        'kas_auth_data',
     ];
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }
