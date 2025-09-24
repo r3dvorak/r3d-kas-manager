@@ -8,7 +8,7 @@
  * @date      2025-09-24
  * 
  * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
- * @license     GNU General Public License version 2 or later
+ * @license   MIT License
  * 
  * Service to execute automation recipes (domains, mailboxes, DNS).
  */
