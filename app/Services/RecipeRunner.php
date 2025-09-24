@@ -1,16 +1,14 @@
-
 <?php
-
 /**
  * R3D KAS Manager
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.2.1-alpha
+ * @version   0.2.3-alpha
  * @date      2025-09-24
  * 
- * @copyright (C) 2025 Richard Dvořák
- * @license   MIT License
+ * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ * @license     MIT License
  * 
  * Service to execute automation recipes (domains, mailboxes, DNS).
  */
@@ -19,102 +17,107 @@ namespace App\Services;
 
 use App\Models\Recipe;
 use App\Models\RecipeRun;
-use App\Models\RecipeAction;
+use SoapClient;
+use Exception;
 
 class RecipeRunner
 {
-    protected KasApiService $kas;
+    protected $client;
 
-    public function __construct(KasApiService $kas)
+    public function __construct()
     {
-        $this->kas = $kas;
+        $this->client = new SoapClient(config('services.kas.wsdl'), [
+            'login'    => config('services.kas.user'),
+            'password' => config('services.kas.password'),
+            'trace'    => true,
+            'exceptions' => true,
+        ]);
     }
 
-    public function run(Recipe $recipe, array $vars = [], bool $dryRun = false): RecipeRun
+    /**
+     * Run a recipe (dry or real).
+     */
+    public function run(Recipe $recipe, array $variables = [], bool $dryRun = false): RecipeRun
     {
-        $run = new RecipeRun();
-        $run->recipe_id = $recipe->id;
-        $run->status = 'success';
-        $run->variables = $vars;
-        $run->result = [];
+        $results = [];
+        $status = 'success';
 
-        foreach ($recipe->actions as $action) {
-            $parameters = $this->substituteVars($action->parameters, $vars);
+        try {
+            foreach ($recipe->actions as $action) {
+                $params = $this->replaceVars($action->parameters, $variables);
 
-            if ($dryRun) {
-                $run->result[] = [
+                if ($dryRun) {
+                    $results[] = [
+                        'action'  => $action->toArray(),
+                        'status'  => 'simulated',
+                        'details' => "Would call KAS API: {$action->type} " . json_encode($params),
+                    ];
+                    continue;
+                }
+
+                // Real API call (simplified stub for now)
+                switch ($action->type) {
+                    case 'add_domain':
+                        $res = $this->client->kasApi([
+                            'kas_login'    => config('services.kas.user'),
+                            'kas_auth_type'=> 'plain',
+                            'kas_auth_data'=> config('services.kas.password'),
+                            'kas_action'   => 'add_domain',
+                            'kas_param'    => $params,
+                        ]);
+                        break;
+
+                    case 'create_dns':
+                        $res = $this->client->kasApi([
+                            'kas_login'    => config('services.kas.user'),
+                            'kas_auth_type'=> 'plain',
+                            'kas_auth_data'=> config('services.kas.password'),
+                            'kas_action'   => 'create_dns_record',
+                            'kas_param'    => $params,
+                        ]);
+                        break;
+
+                    default:
+                        $res = "Unsupported action: {$action->type}";
+                        break;
+                }
+
+                $results[] = [
                     'action'  => $action->toArray(),
-                    'status'  => 'simulated',
-                    'details' => "Would call KAS API: {$action->type}",
+                    'status'  => 'success',
+                    'details' => is_string($res) ? $res : json_encode($res),
                 ];
-                continue;
             }
-
-            // 🔌 Real API execution
-            $response = $this->executeAction($action->type, $parameters);
-
-            $run->result[] = [
-                'action'  => $action->toArray(),
-                'status'  => isset($response['error']) ? 'failed' : 'success',
-                'details' => is_array($response) ? json_encode($response) : (string) $response,
+        } catch (Exception $e) {
+            $status = 'failed';
+            $results[] = [
+                'action'  => ['type' => 'exception'],
+                'status'  => 'error',
+                'details' => $e->getMessage(),
             ];
         }
 
+        // Always save run (dry or real)
+        $run = new RecipeRun();
+        $run->recipe_id = $recipe->id;
+        $run->status = $dryRun ? 'simulated' : $status;
+        $run->variables = $variables;
+        $run->result = $results;
         $run->save();
 
         return $run;
     }
 
     /**
-     * Replace placeholders {var} with runtime variables.
+     * Replace placeholders in parameters with actual variables.
      */
-    protected function substituteVars(array $parameters, array $vars): array
+    protected function replaceVars($params, $vars)
     {
-        return collect($parameters)->map(function ($value) use ($vars) {
-            if (!is_string($value)) {
-                return $value;
+        return collect($params)->map(function ($value) use ($vars) {
+            foreach ($vars as $key => $varValue) {
+                $value = str_replace("{{$key}}", $varValue, $value);
             }
-
-            return preg_replace_callback('/\{(\w+)\}/', function ($matches) use ($vars) {
-                return $vars[$matches[1]] ?? $matches[0];
-            }, $value);
+            return $value;
         })->toArray();
-    }
-
-    /**
-     * Map action types to actual KAS API calls.
-     */
-    protected function executeAction(string $type, array $parameters): mixed
-    {
-        switch ($type) {
-            case 'add_domain':
-                return $this->kas->call('add_domain', [
-                    'domain'  => $parameters['domain'],
-                    'account' => $parameters['account'],
-                ]);
-
-            case 'create_dns':
-                return $this->kas->call('add_dns_record', [
-                    'domain' => $parameters['domain'],
-                    'type'   => $parameters['type'],
-                    'value'  => $parameters['value'],
-                ]);
-
-            case 'create_mailbox':
-                return $this->kas->call('add_mailbox', [
-                    'domain'   => $parameters['domain'],
-                    'mailbox'  => $parameters['mailbox'],
-                    'password' => $parameters['password'] ?? 'changeme123',
-                ]);
-
-            case 'create_forward':
-                return $this->kas->call('add_mail_forward', [
-                    'source' => $parameters['source'],
-                    'target' => $parameters['target'],
-                ]);
-
-            default:
-                return ['error' => true, 'message' => "Unknown action: $type"];
-        }
     }
 }
