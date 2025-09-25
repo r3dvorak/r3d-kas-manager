@@ -5,12 +5,12 @@
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
  * @version   0.6.0-alpha
- * @date      2025-09-24
+ * @date      2025-09-26
  * 
  * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  * 
- * Custom Login Controller (Login/Domain + Passwort)
+ * Custom Login: supports login with API-User or Domain.
  */
 
 namespace App\Http\Controllers\Auth;
@@ -18,6 +18,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\KasClient;
 
 class LoginController extends Controller
 {
@@ -29,33 +31,29 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'login'    => 'required|string',
+            'login' => 'required|string',
             'password' => 'required|string',
         ]);
 
         $loginInput = $request->input('login');
         $password   = $request->input('password');
 
-        // 1. Prüfen ob direkt ein API-User existiert
-        $user = User::where('login', $loginInput)->first();
+        // 1. Prüfen: gibt es User mit login-Feld?
+        $credentials = ['login' => $loginInput, 'password' => $password];
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            return redirect()->intended('/');
+        }
 
-        // 2. Falls nicht: prüfen ob Eingabe eine Domain ist
-        if (! $user) {
-            $kasClient = KasClient::whereJsonContains('domains', $loginInput)->first();
-            if ($kasClient) {
-                $user = User::where('kas_client_id', $kasClient->id)->first();
+        // 2. Prüfen: wurde Domain eingegeben?
+        $kasClient = KasClient::where('domain', $loginInput)->first();
+        if ($kasClient) {
+            $user = User::where('kas_client_id', $kasClient->id)->first();
+            if ($user && Auth::attempt(['login' => $user->login, 'password' => $password], $request->boolean('remember'))) {
+                return redirect()->intended('/');
             }
         }
 
-        // 3. Authentifizieren
-        if ($user && Auth::attempt(['login' => $user->login, 'password' => $password])) {
-            $request->session()->regenerate();
-            return redirect()->intended('kas-clients');
-        }
-
-        return back()->withErrors([
-            'login' => 'Ungültige Zugangsdaten (Login oder Domain).',
-        ]);
+        return back()->withErrors(['login' => 'Ungültige Login-Daten.']);
     }
 
     public function logout(Request $request)

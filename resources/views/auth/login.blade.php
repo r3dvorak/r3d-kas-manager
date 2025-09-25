@@ -16,7 +16,7 @@
 
 @section('content')
 <div class="uk-flex uk-flex-center uk-margin-large-top">
-    <div class="uk-card uk-card-default uk-card-body uk-width-medium">
+    <div class="uk-card uk-card-default uk-card-body uk-width-large">
         <h3 class="uk-card-title">Login</h3>
 
         @if ($errors->any())
@@ -25,10 +25,8 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}" class="uk-form-stacked uk-card uk-card-default uk-card-body uk-width-medium uk-margin-auto">
+        <form method="POST" action="{{ route('login') }}">
             @csrf
-
-            <h3 class="uk-card-title">Login</h3>
 
             <div class="uk-margin">
                 <label class="uk-form-label">Login oder Domain</label>
