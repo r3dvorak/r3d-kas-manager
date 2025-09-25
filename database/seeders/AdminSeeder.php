@@ -18,13 +18,12 @@ class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        User::updateOrCreate(
-            ['email' => 'admin@example.com'],
-            [
-                'name' => 'RIIID',
-                'password' => Hash::make('Pood.2025'),
-                'is_admin' => true,
-            ]
-        );
+        User::create([
+            'name'     => 'RIIID',
+            'email'    => 'admin@example.com',
+            'password' => Hash::make('Pood.2025'),
+            'role'     => 'admin',
+            'kas_client_id' => null,
+        ]);
     }
 }

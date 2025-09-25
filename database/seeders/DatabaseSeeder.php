@@ -4,19 +4,17 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.2.2-alpha
- * @date      2025-09-24
+ * @version   0.4.4-alpha
+ * @date      2025-09-25
  * 
- * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
- * 
- * Main database seeder that registers all individual seeders.
  */
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Seeder;
+use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
@@ -25,18 +23,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Example user
-        User::factory()->create([
-            'name'  => 'R3D',
-            'email' => 'test@r3d.de',
+        // Erstellt den Admin-Benutzer
+        User::create([
+            'name' => 'RIIID',
+            'email' => 'admin@example.com', // später ggf. echte Mailadresse setzen
+            'password' => bcrypt('Pood.2025'),
+            'is_admin' => true,
         ]);
 
+        // Ruft den KasClientSeeder auf
         $this->call([
-            RecipeSeeder::class,
-            R3dDeTestRecipeSeeder::class, // added r3d.de test recipe
-            KasTestRecipesSeeder::class, // added KAS test recipes
-            DeleteR3dDeRecipeSeeder::class,
-            UserAndClientSeeder::class,
+            KasClientSeeder::class,
         ]);
     }
 }
