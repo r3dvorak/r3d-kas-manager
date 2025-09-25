@@ -15,7 +15,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="uk-flex uk-flex-center uk-margin-large-top">
+<div class="uk-flex uk-flex-center">
     <div class="uk-card uk-card-default uk-card-body uk-width-large">
         <h3 class="uk-card-title">Login</h3>
 
