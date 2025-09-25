@@ -20,28 +20,32 @@
                     </a>
                 </div>
 
+                @auth
                 <div class="uk-navbar-right uk-visible@m">
                     <form class="uk-search uk-search-default uk-margin-right" style="font-size: 0.85rem;">
                         <span uk-search-icon></span>
                         <input class="uk-search-input" type="search" placeholder="Suche...">
                     </form>
-                    <a href="#" class="uk-button uk-button-text">Abmelden</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="uk-button uk-button-text">Abmelden</button>
+                    </form>
                 </div>
 
                 {{-- Mobile toggle --}}
                 <div class="uk-navbar-right uk-hidden@m">
                     <a class="uk-navbar-toggle" uk-navbar-toggle-icon href="#offcanvas-nav" uk-toggle></a>
                 </div>
+                @endauth
             </nav>
         </div>
     </header>
 
     {{-- Offcanvas Mobile Nav --}}
+    @auth
     <div id="offcanvas-nav" uk-offcanvas="mode: slide; overlay: true">
         <div class="uk-offcanvas-bar">
-
             <button class="uk-offcanvas-close" type="button" uk-close></button>
-
             <ul class="uk-nav uk-nav-default">
                 <li><a href="#">Startseite</a></li>
                 <li><a href="#">Accounts</a></li>
@@ -49,15 +53,20 @@
                 <li><a href="#">Doku</a></li>
                 <li><a href="#">Stats</a></li>
                 <li class="uk-nav-divider"></li>
-                <li><a href="#">Abmelden</a></li>
+                <li>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button class="uk-button uk-button-text">Abmelden</button>
+                    </form>
+                </li>
             </ul>
-
             <form class="uk-search uk-search-default uk-margin-top" style="font-size: 0.85rem;">
                 <span uk-search-icon></span>
                 <input class="uk-search-input" type="search" placeholder="Suche...">
             </form>
         </div>
     </div>
+    @endauth
 
     {{-- Content --}}
     <main class="uk-section uk-section-default">
@@ -65,6 +74,7 @@
             <div class="uk-grid-large" uk-grid>
                 
                 {{-- Sidebar links --}}
+                @auth
                 <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
                     <ul class="uk-nav uk-nav-default">
                         <li><a href="#">Startseite</a></li>
@@ -74,6 +84,7 @@
                         <li><a href="#">Stats</a></li>
                     </ul>
                 </aside>
+                @endauth
 
                 {{-- Hauptinhalt --}}
                 <section id="content" class="uk-width-expand uk-padding-remove-left">
@@ -81,10 +92,12 @@
                 </section>
 
                 {{-- Sidebar rechts --}}
+                @auth
                 <aside class="uk-width-1-6@m uk-visible@m uk-border-left uk-padding-small">
                     <h4 class="uk-heading-line"><span>Hinweise</span></h4>
                     <p>Hier könnten Tipps oder Logs erscheinen.</p>
                 </aside>
+                @endauth
             </div>
         </div>
     </main>
@@ -95,6 +108,4 @@
     </footer>
 
 </body>
-
-
 </html>

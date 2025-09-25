@@ -4,20 +4,19 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.5.0-alpha
- * @date      2025-09-25
+ * @version   0.6.0-alpha
+ * @date      2025-09-24
  * 
- * @copyright (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  * 
- * Extends Laravel User model with role and kas_client_id.
+ * User Model with login (API user) + kas_client_id
  */
 
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -25,7 +24,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
-        'email',
+        'login',         // API-User wie w01e77bc
         'password',
         'role',
         'kas_client_id',

@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.4.4-alpha
+ * @version   0.6.1-alpha
  * @date      2025-09-25
  * 
  * @copyright (C) 2025 Richard Dvořák
@@ -14,26 +14,20 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // Erstellt den Admin-Benutzer
+        // Admin-User
         User::create([
             'name' => 'RIIID',
-            'email' => 'admin@example.com', // später ggf. echte Mailadresse setzen
-            'password' => bcrypt('Pood.2025'),
-            'is_admin' => true,
-        ]);
-
-        // Ruft den KasClientSeeder auf
-        $this->call([
-            KasClientSeeder::class,
+            'login' => 'w01e77bc', // 👈 API-User/Login
+            'email' => 'admin@example.com', // optional
+            'password' => Hash::make('password'),
+            'role' => 'admin',
         ]);
     }
 }
