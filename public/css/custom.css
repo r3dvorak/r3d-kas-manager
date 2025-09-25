@@ -1,0 +1,173 @@
+/* =========================
+   R3D KAS Manager Custom UI
+   ========================= */
+
+/* === Colors & Theme === */
+:root {
+    --r3d-green: #00984A;
+    --r3d-dark: #222;
+    --r3d-grey: #f5f5f5;
+    --r3d-muted: #eaeaea;
+}
+
+/* Base font */
+body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--r3d-dark);
+    background: #fff;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+    font-weight: 600;
+    color: var(--r3d-dark);
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0.75rem;
+}
+
+h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Navbar + Header */
+.uk-navbar-container {
+    background: var(--r3d-grey);
+    border-bottom: 2px solid var(--r3d-green);
+}
+
+.uk-navbar-container .uk-logo img {
+    height: 36px;
+}
+
+/* Footer */
+footer {
+    background: var(--r3d-muted);
+    color: #444;
+    font-size: 0.9rem;
+}
+
+footer a {
+    color: var(--r3d-green);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Sidebar (left + right) */
+aside {
+    font-size: 0.95rem;
+}
+
+aside ul.uk-nav li a {
+    color: var(--r3d-dark);
+}
+
+aside ul.uk-nav li a:hover {
+    color: var(--r3d-green);
+}
+aside {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 80px; /* Höhe des Headers */
+    align-self: flex-start;
+}
+
+/* Content */
+main {
+    background: #fff;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+/* Tables */
+.uk-table th {
+    background: var(--r3d-muted);
+    font-weight: 600;
+}
+
+.uk-table td {
+    font-size: 0.95rem;
+}
+
+/* Search bar smaller */
+.uk-search-input {
+    font-size: 0.85rem;
+}
+
+/* === Responsive Padding === */
+
+/* Desktop (≥961px) */
+.custom-container {
+    padding-left: 45px;
+    padding-right: 45px;
+}
+
+/* Tablet + Mobile (≤960px) */
+@media (max-width: 960px) {
+    .custom-container {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+}
+
+/* Smaller text in right sidebar */
+@media (max-width: 960px) {
+    aside.uk-border-left {
+        font-size: 0.85rem;
+    }
+}
+
+
+/* Logo & Header */
+.uk-logo img {
+    height: 40px; /* kleineres Logo */
+}
+
+header.uk-background-muted {
+    background: #f5f5f5; /* hellgrau */
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* Footer */
+footer.uk-background-muted {
+    background: #f5f5f5;
+    border-top: 1px solid #e5e5e5;
+    color: #555;
+    font-size: 0.85rem;
+}
+
+/* Sidebar */
+aside {
+    padding-top: 20px;
+}
+
+/* Suche kleiner */
+.uk-search-default .uk-search-input {
+    font-size: 0.85rem;
+}
+
+/* Padding wie bei UIKit Docs */
+.uk-container-expand {
+    padding-left: 45px !important;
+    padding-right: 45px !important;
+}
+
+@media (max-width: 960px) {
+    section#content {
+    padding-left: 40px !important;
+}
+}
+

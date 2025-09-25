@@ -5,7 +5,7 @@
 
     <p>Das ist nur ein Test-Inhalt in der Mitte.</p>
 
-    <table class="uk-table uk-table-divider uk-table-striped">
+    <table class="uk-table uk-table-small uk-table-hover uk-table-divider uk-table-striped">
         <thead>
             <tr>
                 <th>ID</th>
@@ -14,6 +14,141 @@
             </tr>
         </thead>
         <tbody>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>KAS Client 1</td>
+                <td>w01e77bc</td>
+            </tr>
             <tr>
                 <td>1</td>
                 <td>KAS Client 1</td>
