@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.6-alpha
+ * @version   0.6.7-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
@@ -17,7 +17,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 
 class ImpersonationToken extends Model
 {
@@ -31,44 +31,72 @@ class ImpersonationToken extends Model
 
     protected $casts = [
         'expires_at' => 'datetime',
-        'used' => 'bool',
+        'used'       => 'boolean',
     ];
 
+    /**
+     * Generate a new token for a KAS client
+     */
     public static function generateForClient(int $kasClientId, ?int $createdBy = null, int $minutes = 5): self
     {
-        $token = Str::random(48);
-        $expires = Carbon::now()->addMinutes($minutes);
+        $rawToken = Str::random(48);
+        $hashed   = hash('sha256', $rawToken);
 
-        return static::create([
-            'token' => hash('sha256', $token),
-            // we store hashed token server-side - actual token returned to client is raw
-            // but to avoid storing raw tokens. Implementation will return raw separately.
-            'kas_client_id' => $kasClientId,
-            'created_by' => $createdBy,
-            'expires_at' => $expires,
-            'used' => false,
-        ])->setRawToken($token);
+        $instance = static::create([
+            'token'        => $hashed,
+            'kas_client_id'=> $kasClientId,
+            'created_by'   => $createdBy,
+            'expires_at'   => Carbon::now()->addMinutes($minutes),
+            'used'         => false,
+        ]);
+
+        return $instance->setRawToken($rawToken);
     }
 
-    // Temporary in-memory raw token (not persisted). Helper for controller.
-    protected $rawToken;
+    /**
+     * Keep raw token in memory (never persisted).
+     */
+    protected ?string $rawToken = null;
 
-    public function setRawToken(string $raw)
+    public function setRawToken(string $raw): self
     {
         $this->rawToken = $raw;
         return $this;
     }
 
-    public function getRawToken(): string
+    public function getRawToken(): ?string
     {
         return $this->rawToken;
     }
 
-    public static function findByRawToken(string $raw)
+    /**
+     * Find token from raw string (after hashing).
+     */
+    public static function findByRawToken(string $raw): ?self
     {
         return static::where('token', hash('sha256', $raw))->first();
     }
 
+    /**
+     * Check if token is still valid (not used + not expired).
+     */
+    public function isValid(): bool
+    {
+        return !$this->used && $this->expires_at->isFuture();
+    }
+
+    /**
+     * Mark token as used.
+     */
+    public function markUsed(): void
+    {
+        $this->used = true;
+        $this->save();
+    }
+
+    /**
+     * Relation to KAS Client
+     */
     public function kasClient()
     {
         return $this->belongsTo(KasClient::class);
