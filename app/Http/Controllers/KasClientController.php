@@ -4,13 +4,13 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.4-alpha
+ * @version   0.6.5-alpha
  * @date      2025-09-26
  * 
  * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  * 
- * User Management Controller
+ * KasClient Management Controller
  */
 
 namespace App\Http\Controllers;
@@ -43,9 +43,9 @@ class KasClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'api_user' => 'required|string|max:255',
-            'api_password' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
+            'api_user'    => 'required|string|max:255',
+            'api_password'=> 'required|string|max:255',
         ]);
 
         KasClient::create($request->only(['name', 'api_user', 'api_password']));
@@ -76,9 +76,9 @@ class KasClientController extends Controller
     public function update(Request $request, KasClient $kasClient)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'api_user' => 'required|string|max:255',
-            'api_password' => 'required|string|max:255',
+            'name'        => 'required|string|max:255',
+            'api_user'    => 'required|string|max:255',
+            'api_password'=> 'required|string|max:255',
         ]);
 
         $kasClient->update($request->all());
@@ -97,54 +97,54 @@ class KasClientController extends Controller
         return redirect()->route('kas-clients.index')
             ->with('success', 'Client deleted successfully.');
     }
-}
 
-/**
- * Handle batch actions for KasClients
- */
-public function batch(Request $request)
-{
-    $action = $request->input('action');
-    $ids = $request->input('ids', []);
+    /**
+     * Handle batch actions for KasClients.
+     */
+    public function batch(Request $request)
+    {
+        $action = $request->input('action');
+        $ids    = $request->input('ids', []);
 
-    if (empty($ids)) {
-        return redirect()->route('kas-clients.index')
-            ->with('error', 'Keine Einträge ausgewählt.');
+        if (empty($ids)) {
+            return redirect()->route('kas-clients.index')
+                ->with('error', 'Keine Einträge ausgewählt.');
+        }
+
+        switch ($action) {
+            case 'activate':
+                KasClient::whereIn('id', $ids)->update(['active' => 1]);
+                $msg = 'Ausgewählte Clients wurden aktiviert.';
+                break;
+
+            case 'deactivate':
+                KasClient::whereIn('id', $ids)->update(['active' => 0]);
+                $msg = 'Ausgewählte Clients wurden deaktiviert.';
+                break;
+
+            case 'archive':
+                KasClient::whereIn('id', $ids)->update(['archived' => 1]);
+                $msg = 'Ausgewählte Clients wurden archiviert.';
+                break;
+
+            case 'delete':
+                KasClient::whereIn('id', $ids)->delete();
+                $msg = 'Ausgewählte Clients wurden gelöscht.';
+                break;
+
+            case 'duplicate':
+                foreach (KasClient::whereIn('id', $ids)->get() as $client) {
+                    $new       = $client->replicate();
+                    $new->name = $client->name . ' (Copy)';
+                    $new->save();
+                }
+                $msg = 'Ausgewählte Clients wurden dupliziert.';
+                break;
+
+            default:
+                $msg = 'Unbekannte Aktion.';
+        }
+
+        return redirect()->route('kas-clients.index')->with('success', $msg);
     }
-
-    switch ($action) {
-        case 'activate':
-            KasClient::whereIn('id', $ids)->update(['active' => 1]);
-            $msg = 'Ausgewählte Clients wurden aktiviert.';
-            break;
-
-        case 'deactivate':
-            KasClient::whereIn('id', $ids)->update(['active' => 0]);
-            $msg = 'Ausgewählte Clients wurden deaktiviert.';
-            break;
-
-        case 'archive':
-            KasClient::whereIn('id', $ids)->update(['archived' => 1]);
-            $msg = 'Ausgewählte Clients wurden archiviert.';
-            break;
-
-        case 'delete':
-            KasClient::whereIn('id', $ids)->delete();
-            $msg = 'Ausgewählte Clients wurden gelöscht.';
-            break;
-
-        case 'duplicate':
-            foreach (KasClient::whereIn('id', $ids)->get() as $client) {
-                $new = $client->replicate();
-                $new->name = $client->name . ' (Copy)';
-                $new->save();
-            }
-            $msg = 'Ausgewählte Clients wurden dupliziert.';
-            break;
-
-        default:
-            $msg = 'Unbekannte Aktion.';
-    }
-
-    return redirect()->route('kas-clients.index')->with('success', $msg);
 }
