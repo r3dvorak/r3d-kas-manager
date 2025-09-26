@@ -61,16 +61,26 @@ Route::get('/stats', [StatsController::class, 'index'])
     Route::post('login', [LoginController::class, 'login']);
 
     // Als KAS Client einloggen (neues Fenster)
-    Route::get('/kas-clients/{kasClient}/login', [KasClientController::class, 'clientLogin'])->name('kas-clients.login');
+    // Route::get('/kas-clients/{kasClient}/login', [KasClientController::class, 'clientLogin'])->name('kas-clients.login');
 
     // KAS Client Auth
-Route::get('/client/login', [KasClientAuthController::class, 'showLoginForm'])->name('kas-client.login');
-Route::post('/client/login', [KasClientAuthController::class, 'login'])->name('kas-client.login.submit');
-Route::post('/client/logout', [KasClientAuthController::class, 'logout'])->name('kas-client.logout');
+    Route::get('/client/login', [KasClientAuthController::class, 'showLoginForm'])->name('kas-client.login');
+    Route::post('/client/login', [KasClientAuthController::class, 'login'])->name('kas-client.login.submit');
+    Route::post('/client/logout', [KasClientAuthController::class, 'logout'])->name('kas-client.logout');
 
-// Client Dashboard (geschützt)
-Route::middleware('auth:kas_client')->group(function () {
-    Route::get('/client/dashboard', function () {
-        return view('client.dashboard');
-    })->name('client.dashboard');
-});
+    // Client Dashboard (geschützt)
+    Route::middleware('auth:kas_client')->group(function () {
+        Route::get('/client/dashboard', function () {
+            return view('client.dashboard');
+        })->name('client.dashboard');
+    });
+
+    // Impersonation helper — generates token and redirects to /impersonate/{rawToken}
+    Route::get('kas-clients/{kasClient}/impersonate', [App\Http\Controllers\KasClientController::class, 'createImpersonationToken'])
+        ->middleware(['auth', 'can:impersonate']) // we'll check admin inside controller too
+        ->name('kas-clients.impersonate.generate');
+
+    // Public endpoint that consumes token and logs in the kas_client guard
+    Route::get('impersonate/{token}', [App\Http\Controllers\KasClientController::class, 'consumeImpersonationToken'])
+        ->name('kas-clients.impersonate.consume');
+
