@@ -1,45 +1,40 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="uk-container">
-    <h2 class="uk-heading-line"><span>Add Client</span></h2>
-
-    @if ($errors->any())
-        <div class="uk-alert-danger" uk-alert>
-            <a class="uk-alert-close" uk-close></a>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    <h1 class="uk-heading-line"><span>KAS Client anlegen</span></h1>
 
     <form class="uk-form-stacked" action="{{ route('kas-clients.store') }}" method="POST">
         @csrf
+
         <div class="uk-margin">
             <label class="uk-form-label">Name</label>
             <div class="uk-form-controls">
-                <input class="uk-input" type="text" name="name" value="{{ old('name') }}" required>
+                <input class="uk-input" type="text" name="name" required>
             </div>
         </div>
 
         <div class="uk-margin">
-            <label class="uk-form-label">API User</label>
+            <label class="uk-form-label">Login</label>
             <div class="uk-form-controls">
-                <input class="uk-input" type="text" name="api_user" value="{{ old('api_user') }}" required>
+                <input class="uk-input" type="text" name="login" required>
             </div>
         </div>
 
         <div class="uk-margin">
-            <label class="uk-form-label">API Password</label>
+            <label class="uk-form-label">Domain</label>
+            <div class="uk-form-controls">
+                <input class="uk-input" type="text" name="domain" required>
+            </div>
+        </div>
+
+        <div class="uk-margin">
+            <label class="uk-form-label">API Passwort</label>
             <div class="uk-form-controls">
                 <input class="uk-input" type="password" name="api_password" required>
             </div>
         </div>
 
-        <button class="uk-button uk-button-primary">Save</button>
-        <a href="{{ route('kas-clients.index') }}" class="uk-button uk-button-default">Cancel</a>
+        <button type="submit" class="uk-button uk-button-primary">Speichern</button>
+        <a href="{{ route('kas-clients.index') }}" class="uk-button uk-button-default">Abbrechen</a>
     </form>
-</div>
 @endsection

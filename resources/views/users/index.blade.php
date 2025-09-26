@@ -10,7 +10,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <h1 class="uk-heading-line"><span>KAS Clients</span></h1>
+    <h1 class="uk-heading-line"><span>User Management</span></h1>
 
     @if(session('success'))
         <div class="uk-alert-success" uk-alert>
@@ -23,7 +23,7 @@
         </div>
     @endif
 
-    <form action="{{ route('kas-clients.batch') }}" method="POST">
+    <form action="{{ route('users.batch') }}" method="POST">
         @csrf
 
         <div class="uk-margin-small">
@@ -36,7 +36,7 @@
                 <option value="duplicate">Duplizieren</option>
             </select>
             <button type="submit" class="uk-button uk-button-primary uk-margin-small-left">Anwenden</button>
-            <a href="{{ route('kas-clients.create') }}" class="uk-button uk-button-secondary uk-margin-small-left">Neu</a>
+            <a href="{{ route('users.create') }}" class="uk-button uk-button-secondary uk-margin-small-left">Neu</a>
         </div>
 
         <table class="uk-table uk-table-divider uk-table-small uk-table-hover">
@@ -45,21 +45,25 @@
                     <th><input class="uk-checkbox" type="checkbox" id="select-all"></th>
                     <th>Name</th>
                     <th>Login</th>
-                    <th>Domain</th>
+                    <th>Email</th>
+                    <th>Rolle</th>
+                    <th>KAS Client</th>
                     <th>Aktionen</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($kasClients as $client)
+                @foreach($users as $user)
                     <tr>
-                        <td><input class="uk-checkbox" type="checkbox" name="ids[]" value="{{ $client->id }}"></td>
-                        <td>{{ $client->name }}</td>
-                        <td>{{ $client->login }}</td>
-                        <td>{{ $client->domain }}</td>
+                        <td><input class="uk-checkbox" type="checkbox" name="ids[]" value="{{ $user->id }}"></td>
+                        <td>{{ $user->name }}</td>
+                        <td>{{ $user->login }}</td>
+                        <td>{{ $user->email }}</td>
+                        <td>{{ $user->role }}</td>
+                        <td>{{ optional($user->kasClient)->name }}</td>
                         <td>
-                            <a href="{{ route('kas-clients.show', $client) }}" uk-icon="icon: eye"></a>
-                            <a href="{{ route('kas-clients.edit', $client) }}" uk-icon="icon: pencil"></a>
-                            <form action="{{ route('kas-clients.destroy', $client) }}" method="POST" style="display:inline">
+                            <a href="{{ route('users.show', $user) }}" uk-icon="icon: eye"></a>
+                            <a href="{{ route('users.edit', $user) }}" uk-icon="icon: pencil"></a>
+                            <form action="{{ route('users.destroy', $user) }}" method="POST" style="display:inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="uk-button-link" onclick="return confirm('Wirklich löschen?')">

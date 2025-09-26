@@ -1,47 +1,41 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="uk-container">
-    <h2 class="uk-heading-line"><span>Edit Client</span></h2>
+    <h1 class="uk-heading-line"><span>KAS Client bearbeiten</span></h1>
 
-    @if ($errors->any())
-        <div class="uk-alert-danger" uk-alert>
-            <a class="uk-alert-close" uk-close></a>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form class="uk-form-stacked" action="{{ route('kas-clients.update', $kasClient->id) }}" method="POST">
+    <form class="uk-form-stacked" action="{{ route('kas-clients.update', $kasClient) }}" method="POST">
         @csrf
         @method('PUT')
 
         <div class="uk-margin">
             <label class="uk-form-label">Name</label>
             <div class="uk-form-controls">
-                <input class="uk-input" type="text" name="name" value="{{ old('name', $kasClient->name) }}" required>
+                <input class="uk-input" type="text" name="name" value="{{ $kasClient->name }}" required>
             </div>
         </div>
 
         <div class="uk-margin">
-            <label class="uk-form-label">API User</label>
+            <label class="uk-form-label">Login</label>
             <div class="uk-form-controls">
-                <input class="uk-input" type="text" name="api_user" value="{{ old('api_user', $kasClient->api_user) }}" required>
+                <input class="uk-input" type="text" name="login" value="{{ $kasClient->login }}" required>
             </div>
         </div>
 
         <div class="uk-margin">
-            <label class="uk-form-label">API Password</label>
+            <label class="uk-form-label">Domain</label>
             <div class="uk-form-controls">
-                <input class="uk-input" type="text" name="api_password" value="{{ old('api_password', $kasClient->api_password) }}" required>
+                <input class="uk-input" type="text" name="domain" value="{{ $kasClient->domain }}" required>
             </div>
         </div>
 
-        <button class="uk-button uk-button-primary">Update</button>
-        <a href="{{ route('kas-clients.index') }}" class="uk-button uk-button-default">Cancel</a>
+        <div class="uk-margin">
+            <label class="uk-form-label">API Passwort (leer lassen = unverändert)</label>
+            <div class="uk-form-controls">
+                <input class="uk-input" type="password" name="api_password">
+            </div>
+        </div>
+
+        <button type="submit" class="uk-button uk-button-primary">Aktualisieren</button>
+        <a href="{{ route('kas-clients.index') }}" class="uk-button uk-button-default">Abbrechen</a>
     </form>
-</div>
 @endsection

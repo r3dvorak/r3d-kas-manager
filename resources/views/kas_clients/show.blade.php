@@ -1,19 +1,27 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="uk-container">
-    <h2 class="uk-heading-line"><span>Client Details</span></h2>
+    <h1 class="uk-heading-line"><span>KAS Client Details</span></h1>
 
-    <ul class="uk-list uk-list-striped">
-        <li><strong>ID:</strong> {{ $kasClient->id }}</li>
-        <li><strong>Name:</strong> {{ $kasClient->name }}</li>
-        <li><strong>API User:</strong> {{ $kasClient->api_user }}</li>
-        <li><strong>API Password:</strong> {{ $kasClient->api_password }}</li>
-        <li><strong>Created:</strong> {{ $kasClient->created_at }}</li>
-        <li><strong>Updated:</strong> {{ $kasClient->updated_at }}</li>
-    </ul>
+    <table class="uk-table uk-table-divider uk-table-small">
+        <tr>
+            <th>Name</th>
+            <td>{{ $kasClient->name }}</td>
+        </tr>
+        <tr>
+            <th>Login</th>
+            <td>{{ $kasClient->login }}</td>
+        </tr>
+        <tr>
+            <th>Domain</th>
+            <td>{{ $kasClient->domain }}</td>
+        </tr>
+        <tr>
+            <th>API Passwort</th>
+            <td>••••••••</td>
+        </tr>
+    </table>
 
-    <a href="{{ route('kas-clients.index') }}" class="uk-button uk-button-default">Back</a>
-    <a href="{{ route('kas-clients.edit', $kasClient->id) }}" class="uk-button uk-button-primary">Edit</a>
-</div>
+    <a href="{{ route('kas-clients.index') }}" class="uk-button uk-button-default">Zurück</a>
+    <a href="{{ route('kas-clients.edit', $kasClient) }}" class="uk-button uk-button-primary">Bearbeiten</a>
 @endsection
