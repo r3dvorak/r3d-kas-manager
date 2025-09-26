@@ -19,6 +19,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\DocuController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\KasClientAuthController;
 
 // Dashboard
 Route::get('/', function () {
@@ -54,5 +56,21 @@ Route::get('/stats', [StatsController::class, 'index'])
     ->middleware('auth')
     ->name('stats');
 
-// Auth routes (Login, Logout etc.)
-require __DIR__.'/auth.php';
+    Route::post('logout', [LoginController::class, 'logout'])->name('logout');
+    Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [LoginController::class, 'login']);
+
+    // Als KAS Client einloggen (neues Fenster)
+    Route::get('/kas-clients/{kasClient}/login', [KasClientController::class, 'clientLogin'])->name('kas-clients.login');
+
+    // KAS Client Auth
+Route::get('/client/login', [KasClientAuthController::class, 'showLoginForm'])->name('kas-client.login');
+Route::post('/client/login', [KasClientAuthController::class, 'login'])->name('kas-client.login.submit');
+Route::post('/client/logout', [KasClientAuthController::class, 'logout'])->name('kas-client.logout');
+
+// Client Dashboard (geschützt)
+Route::middleware('auth:kas_client')->group(function () {
+    Route::get('/client/dashboard', function () {
+        return view('client.dashboard');
+    })->name('client.dashboard');
+});

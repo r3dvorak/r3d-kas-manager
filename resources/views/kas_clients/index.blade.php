@@ -59,13 +59,14 @@
                         <td>
                             <a href="{{ route('kas-clients.show', $client) }}" uk-icon="icon: eye"></a>
                             <a href="{{ route('kas-clients.edit', $client) }}" uk-icon="icon: pencil"></a>
-                            <form action="{{ route('kas-clients.destroy', $client) }}" method="POST" style="display:inline">
+                            <a href="{{ route('kas-clients.login', $client) }}" target="_blank" uk-icon="icon: sign-in" title="Als Client einloggen"></a>                            
+                            <form action="{{ route('kas-clients.destroy', $client) }}" method="POST" style="display:inline" onsubmit="return confirm('Wirklich löschen?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="uk-button-link" onclick="return confirm('Wirklich löschen?')">
-                                    <span uk-icon="icon: trash"></span>
-                                </button>
+                                <a href="#" onclick="event.preventDefault(); this.closest('form').submit();" 
+                                uk-icon="icon: trash" class="uk-icon-link uk-text-danger"></a>
                             </form>
+
                         </td>
                     </tr>
                 @endforeach

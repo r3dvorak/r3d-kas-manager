@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.5-alpha
+ * @version   0.6.6-alpha
  * @date      2025-09-26
  * 
  * @copyright (C) 2025 Richard Dvořák
@@ -25,8 +25,8 @@ class KasClientController extends Controller
      */
     public function index()
     {
-        $clients = KasClient::all();
-        return view('kas_clients.index', compact('clients'));
+        $kasClients = KasClient::all();
+        return view('kas_clients.index', compact('kasClients'));
     }
 
     /**
@@ -147,4 +147,16 @@ class KasClientController extends Controller
 
         return redirect()->route('kas-clients.index')->with('success', $msg);
     }
+
+    /**
+     * Login als KAS Client (neues Fenster)
+     */
+    public function clientLogin(KasClient $kasClient)
+    {
+        auth('kas_client')->login($kasClient);
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Eingeloggt als ' . $kasClient->name);
+    }
+
 }

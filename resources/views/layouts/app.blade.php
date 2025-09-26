@@ -26,6 +26,7 @@
                         <span uk-search-icon></span>
                         <input class="uk-search-input" type="search" placeholder="Suche...">
                     </form>
+                    {{-- Logout --}}
                     <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                         @csrf
                         <button type="submit" class="uk-button uk-button-text">Abmelden</button>
@@ -47,16 +48,20 @@
         <div class="uk-offcanvas-bar">
             <button class="uk-offcanvas-close" type="button" uk-close></button>
             <ul class="uk-nav uk-nav-default">
-                <li><a href="#">Startseite</a></li>
-                <li><a href="#">Accounts</a></li>
-                <li><a href="#">User</a></li>
-                <li><a href="#">Doku</a></li>
-                <li><a href="#">Stats</a></li>
+                <li><a href="{{ route('dashboard') }}">Startseite</a></li>
+                <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
+                <li><a href="{{ route('users.index') }}">User</a></li>
+                <li><a href="{{ route('docs') }}">Doku</a></li>
+                <li><a href="{{ route('stats') }}">Stats</a></li>
                 <li class="uk-nav-divider"></li>
+                {{-- Logout --}}
                 <li>
-                    <form method="POST" action="{{ route('logout') }}">
+                    <a href="#"
+                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                        Abmelden
+                    </a>
+                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
                         @csrf
-                        <button class="uk-button uk-button-text">Abmelden</button>
                     </form>
                 </li>
             </ul>
@@ -84,7 +89,6 @@
                         <li><a href="{{ route('stats') }}">Stats</a></li>
                     </ul>
                 </aside>
-
                 @endauth
 
                 {{-- Hauptinhalt --}}

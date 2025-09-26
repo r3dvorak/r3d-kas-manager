@@ -1,32 +1,31 @@
 <?php
 /**
  * R3D KAS Manager
- * 
+ *
  * @package   r3d-kas-manager
- * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.5.0-alpha
- * @date      2025-09-25
- * 
- * @copyright (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ * @author    Richard Dvořák
+ * @version   0.6.6-alpha
+ * @date      2025-09-26
+ *
+ * @copyright (C) 2025
  * @license   MIT License
- * 
- * Represents a KAS client account with credentials.
  */
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class KasClient extends Model
+class KasClient extends Authenticatable
 {
     protected $fillable = [
         'name',
-        'kas_login',
-        'kas_auth_data',
+        'login',
+        'domain',
+        'api_user',
+        'api_password',
     ];
 
-    public function users()
-    {
-        return $this->hasMany(User::class);
-    }
+    protected $hidden = [
+        'api_password',
+    ];
 }

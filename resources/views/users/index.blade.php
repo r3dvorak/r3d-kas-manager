@@ -63,13 +63,12 @@
                         <td>
                             <a href="{{ route('users.show', $user) }}" uk-icon="icon: eye"></a>
                             <a href="{{ route('users.edit', $user) }}" uk-icon="icon: pencil"></a>
-                            <form action="{{ route('users.destroy', $user) }}" method="POST" style="display:inline">
+                            <form action="{{ route('users.destroy', $user) }}" method="POST" style="display:inline" onsubmit="return confirm('Wirklich löschen?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="uk-button-link" onclick="return confirm('Wirklich löschen?')">
-                                    <span uk-icon="icon: trash"></span>
-                                </button>
+                                <a href="#" onclick="event.preventDefault(); this.closest('form').submit();" uk-icon="icon: trash" class="uk-icon-link uk-text-danger"></a>
                             </form>
+
                         </td>
                     </tr>
                 @endforeach
