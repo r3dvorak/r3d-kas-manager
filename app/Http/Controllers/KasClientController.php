@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.6-alpha
+ * @version   0.6.7-alpha
  * @date      2025-09-26
  * 
  * @copyright (C) 2025 Richard Dvořák
@@ -16,7 +16,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\KasClient;
+use App\Models\ImpersonationToken;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class KasClientController extends Controller
 {
@@ -43,9 +46,9 @@ class KasClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'api_user'    => 'required|string|max:255',
-            'api_password'=> 'required|string|max:255',
+            'name'         => 'required|string|max:255',
+            'api_user'     => 'required|string|max:255',
+            'api_password' => 'required|string|max:255',
         ]);
 
         KasClient::create($request->only(['name', 'api_user', 'api_password']));
@@ -76,9 +79,9 @@ class KasClientController extends Controller
     public function update(Request $request, KasClient $kasClient)
     {
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'api_user'    => 'required|string|max:255',
-            'api_password'=> 'required|string|max:255',
+            'name'         => 'required|string|max:255',
+            'api_user'     => 'required|string|max:255',
+            'api_password' => 'required|string|max:255',
         ]);
 
         $kasClient->update($request->all());
@@ -148,15 +151,44 @@ class KasClientController extends Controller
         return redirect()->route('kas-clients.index')->with('success', $msg);
     }
 
-    /**
-     * Login als KAS Client (neues Fenster)
+     /**
+     * Create impersonation token and redirect (admin only)
      */
-    public function clientLogin(KasClient $kasClient)
+    public function createImpersonationToken(KasClient $kasClient)
     {
-        auth('kas_client')->login($kasClient);
+        // optional: check only admins can impersonate
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized');
+        }
 
-        return redirect()->route('dashboard')
-            ->with('success', 'Eingeloggt als ' . $kasClient->name);
+        $token = Str::random(40);
+
+        ImpersonationToken::create([
+            'kas_client_id' => $kasClient->id,
+            'token'         => $token,
+            'expires_at'    => now()->addMinutes(5),
+        ]);
+
+        return redirect()->away(url("/impersonate/{$token}"));
     }
 
+    /**
+     * Consume impersonation token and log in as kas_client
+     */
+    public function consumeImpersonationToken(string $token)
+    {
+        $impersonation = ImpersonationToken::where('token', $token)
+            ->where('expires_at', '>', now())
+            ->firstOrFail();
+
+        $kasClient = $impersonation->kasClient;
+
+        // one-time token, delete it
+        $impersonation->delete();
+
+        Auth::guard('kas_client')->login($kasClient);
+
+        return redirect()->route('client.dashboard')
+            ->with('success', 'Eingeloggt als ' . $kasClient->name);
+    }
 }
