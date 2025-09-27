@@ -59,9 +59,9 @@
                         <td>
                             <a href="{{ route('kas-clients.show', $client) }}" uk-icon="icon: eye"></a>
                             <a href="{{ route('kas-clients.edit', $client) }}" uk-icon="icon: pencil"></a>
-                          
+                            @can('impersonate')
                             <a href="{{ route('kas-clients.impersonate.generate', $client) }}" target="_blank" uk-icon="icon: sign-in"></a>
-                            
+                            @endcan
                             <form action="{{ route('kas-clients.destroy', $client) }}" method="POST" style="display:inline" onsubmit="return confirm('Wirklich löschen?');">
                                 @csrf
                                 @method('DELETE')

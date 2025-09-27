@@ -20,6 +20,8 @@ use App\Models\ImpersonationToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+
 
 class KasClientController extends Controller
 {
@@ -156,28 +158,18 @@ class KasClientController extends Controller
      */
     public function createImpersonationToken(KasClient $kasClient)
     {
-        dd([
-            'guard' => auth()->guard()->getName(),
-            'user'  => auth()->user(),
-            'can_impersonate' => Gate::allows('impersonate'),
-        ]);
-        
-        $user = auth()->user();
-
-        if (! ($user->role === 'admin' || $user->is_admin)) {
+                
+        if (! Gate::allows('impersonate')) {
             abort(403, 'Unauthorized');
         }
 
-        $token = Str::random(40);
+        $token = \App\Models\ImpersonationToken::generateForClient(
+            $kasClient->id,
+            auth()->id()
+        );
 
-        ImpersonationToken::create([
-            'kas_client_id' => $kasClient->id,
-            'token'         => $token,
-            'expires_at'    => now()->addMinutes(5),
-        ]);
-
-        return redirect()->away(url("/impersonate/{$token}"));
-
+        $url = route('kas-clients.impersonate.consume', $token->getRawToken());
+        return redirect()->away($url);
     }
 
     /**

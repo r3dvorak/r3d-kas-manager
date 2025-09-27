@@ -10,12 +10,12 @@
  * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  * 
- * routes\console.php
+ * routes\api.php
  */
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
