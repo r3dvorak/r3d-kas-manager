@@ -21,6 +21,12 @@ use App\Http\Controllers\StatsController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\KasClientAuthController;
+use App\Http\Controllers\Auth\UnifiedLoginController;
+
+// Unified Login
+Route::get('/login', [UnifiedLoginController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [UnifiedLoginController::class, 'login'])->name('login.submit');
+Route::post('/logout', [UnifiedLoginController::class, 'logout'])->name('logout');
 
 // Dashboard
 Route::get('/', function () {
@@ -56,46 +62,38 @@ Route::get('/stats', [StatsController::class, 'index'])
     ->middleware('auth')
     ->name('stats');
 
-    Route::post('logout', [LoginController::class, 'logout'])->name('logout');
-    Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('login', [LoginController::class, 'login']);
+// Client routes (nur für kas_client Guard)
+Route::prefix('client')->name('client.')->middleware('auth:kas_client')->group(function () {
 
-    // Als KAS Client einloggen (neues Fenster)
-    // Route::get('/kas-clients/{kasClient}/login', [KasClientController::class, 'clientLogin'])->name('kas-clients.login');
+    Route::get('/dashboard', function () {
+        return view('client.dashboard');
+    })->name('dashboard');
 
-    // KAS Client Auth
-    Route::get('/client/login', [KasClientAuthController::class, 'showLoginForm'])->name('kas-client.login');
-    Route::post('/client/login', [KasClientAuthController::class, 'login'])->name('kas-client.login.submit');
-    Route::post('/client/logout', [KasClientAuthController::class, 'logout'])->name('kas-client.logout');
+    // Domains
+    Route::get('/domains', [App\Http\Controllers\Client\DomainController::class, 'index'])
+        ->name('domains.index');
 
-    // Client Dashboard + eigene Bereiche
-    Route::middleware('auth:kas_client')->group(function () {
-        Route::get('/client/dashboard', function () {
-            return view('client.dashboard');
-        })->name('client.dashboard');
+    // Mailkonten
+    Route::get('/mailboxes', [App\Http\Controllers\Client\MailboxController::class, 'index'])
+        ->name('mailboxes.index');
 
-        Route::get('/client/domains', [App\Http\Controllers\Client\DomainController::class, 'index'])
-            ->name('client.domains');
+    // DNS
+    Route::get('/dns', [App\Http\Controllers\Client\DnsController::class, 'index'])
+        ->name('dns.index');
 
-        Route::get('/client/mailboxes', [App\Http\Controllers\Client\MailboxController::class, 'index'])
-            ->name('client.mailboxes');
+    // Rezepte
+    Route::get('/recipes', [App\Http\Controllers\Client\RecipeController::class, 'index'])
+        ->name('recipes.index');
+});
 
-        Route::get('/client/dns', [App\Http\Controllers\Client\DnsController::class, 'index'])
-            ->name('client.dns');
+// Impersonation helper — generates token and redirects to /impersonate/{rawToken}
+Route::get('kas-clients/{kasClient}/impersonate', [App\Http\Controllers\KasClientController::class, 'createImpersonationToken'])
+    ->middleware(['auth', 'can:impersonate']) // we'll check admin inside controller too
+    ->name('kas-clients.impersonate.generate');
 
-        Route::get('/client/recipes', [App\Http\Controllers\Client\RecipeController::class, 'index'])
-            ->name('client.recipes');
-    });
+// Public endpoint that consumes token and logs in the kas_client guard
+Route::get('impersonate/{token}', [App\Http\Controllers\KasClientController::class, 'consumeImpersonationToken'])
+    ->name('kas-clients.impersonate.consume');
 
-
-    // Impersonation helper — generates token and redirects to /impersonate/{rawToken}
-    Route::get('kas-clients/{kasClient}/impersonate', [App\Http\Controllers\KasClientController::class, 'createImpersonationToken'])
-        ->middleware(['auth', 'can:impersonate']) // we'll check admin inside controller too
-        ->name('kas-clients.impersonate.generate');
-
-    // Public endpoint that consumes token and logs in the kas_client guard
-    Route::get('impersonate/{token}', [App\Http\Controllers\KasClientController::class, 'consumeImpersonationToken'])
-        ->name('kas-clients.impersonate.consume');
-
-    Route::post('kas-clients/impersonate/leave', [App\Http\Controllers\KasClientController::class, 'leaveImpersonation'])
-    ->name('kas-clients.impersonate.leave');
+Route::post('kas-clients/impersonate/leave', [App\Http\Controllers\KasClientController::class, 'leaveImpersonation'])
+->name('kas-clients.impersonate.leave');

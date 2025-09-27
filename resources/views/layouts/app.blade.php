@@ -20,90 +20,56 @@
                     </a>
                 </div>
 
-                @auth
                 <div class="uk-navbar-right uk-visible@m">
+                    {{-- Suche --}}
                     <form class="uk-search uk-search-default uk-margin-right" style="font-size: 0.85rem;">
                         <span uk-search-icon></span>
                         <input class="uk-search-input" type="search" placeholder="Suche...">
                     </form>
-                    {{-- Logout --}}
-                    <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-                        @csrf
-                        <button type="submit" class="uk-button uk-button-text">Abmelden</button>
-                    </form>
-                </div>
 
-                {{-- Mobile toggle --}}
-                <div class="uk-navbar-right uk-hidden@m">
-                    <a class="uk-navbar-toggle" uk-navbar-toggle-icon href="#offcanvas-nav" uk-toggle></a>
+                    {{-- Logout --}}
+                    @auth('web')
+                        <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                            @csrf
+                            <button type="submit" class="uk-button uk-button-text">Abmelden</button>
+                        </form>
+                    @endauth
+                    @auth('kas_client')
+                        <form action="{{ route('kas-client.logout') }}" method="POST" style="display:inline;">
+                            @csrf
+                            <button type="submit" class="uk-button uk-button-text">Abmelden</button>
+                        </form>
+                    @endauth
                 </div>
-                @endauth
             </nav>
         </div>
     </header>
-
-    {{-- Offcanvas Mobile Nav --}}
-    @auth
-    <div id="offcanvas-nav" uk-offcanvas="mode: slide; overlay: true">
-        <div class="uk-offcanvas-bar">
-            <button class="uk-offcanvas-close" type="button" uk-close></button>
-            <ul class="uk-nav uk-nav-default">
-                <li><a href="{{ route('dashboard') }}">Startseite</a></li>
-                <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
-                <li><a href="{{ route('users.index') }}">User</a></li>
-                <li><a href="{{ route('docs') }}">Doku</a></li>
-                <li><a href="{{ route('stats') }}">Stats</a></li>
-                <li class="uk-nav-divider"></li>
-                {{-- Logout --}}
-                <li>
-                    <a href="#"
-                       onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                        Abmelden
-                    </a>
-                    <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                        @csrf
-                    </form>
-                </li>
-            </ul>
-            <form class="uk-search uk-search-default uk-margin-top" style="font-size: 0.85rem;">
-                <span uk-search-icon></span>
-                <input class="uk-search-input" type="search" placeholder="Suche...">
-            </form>
-        </div>
-    </div>
-    @endauth
 
     {{-- Content --}}
     <main class="uk-section uk-section-default">
         <div class="uk-container uk-container-expand" style="padding-left:45px; padding-right:45px;">
             <div class="uk-grid-large" uk-grid>
-                
-                {{-- Sidebar links --}}
-                @if(Auth::guard('kas_client')->check())
-                    {{-- Client-Menü --}}
-                    <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
-                        <ul class="uk-nav uk-nav-default">
-                            <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
-                            <li><a href="{{ route('client.domains') }}">Domains</a></li>
-                            <li><a href="{{ route('client.mailboxes') }}">Mailkonten</a></li>
-                            <li><a href="{{ route('client.dns') }}">DNS</a></li>
-                            <li><a href="{{ route('client.recipes') }}">Rezepte</a></li>
-                        </ul>
-                    </aside>
 
-                @elseif(Auth::guard('web')->check())
-                    {{-- Admin-Menü --}}
-                    <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
-                        <ul class="uk-nav uk-nav-default">
+                {{-- Sidebar links --}}
+                <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
+                    <ul class="uk-nav uk-nav-default">
+                        
+                        @if(Auth::guard('kas_client')->check())
+                            <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
+                            <li><a href="{{ route('client.domains.index') }}">Domains</a></li>
+                            <li><a href="{{ route('client.mailboxes.index') }}">Mailkonten</a></li>
+                            <li><a href="{{ route('client.dns.index') }}">DNS</a></li>
+                            <li><a href="{{ route('client.recipes.index') }}">Rezepte</a></li>
+                        
+                        @elseif(Auth::guard('web')->check())
                             <li><a href="{{ route('dashboard') }}">Startseite</a></li>
                             <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
                             <li><a href="{{ route('users.index') }}">User</a></li>
                             <li><a href="{{ route('docs') }}">Doku</a></li>
                             <li><a href="{{ route('stats') }}">Stats</a></li>
-                        </ul>
-                    </aside>
-                @endif
-
+                        @endif
+                    </ul>
+                </aside>
 
                 {{-- Hauptinhalt --}}
                 <section id="content" class="uk-width-expand uk-padding-remove-left">
@@ -111,12 +77,10 @@
                 </section>
 
                 {{-- Sidebar rechts --}}
-                @auth
                 <aside class="uk-width-1-6@m uk-visible@m uk-border-left uk-padding-small">
                     <h4 class="uk-heading-line"><span>Hinweise</span></h4>
                     <p>Hier könnten Tipps oder Logs erscheinen.</p>
                 </aside>
-                @endauth
             </div>
         </div>
     </main>

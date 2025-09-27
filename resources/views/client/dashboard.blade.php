@@ -41,39 +41,34 @@
             <div class="uk-card uk-card-hover uk-card-default uk-card-body">
                 <h3 class="uk-card-title">Meine Domains</h3>
                 <p>Liste und Verwaltung der Domains dieses Clients.</p>
-                <a href="#" class="uk-button uk-button-primary">Domains ansehen</a>
+                <a href="{{ route('client.domains.index') }}" class="uk-button uk-button-primary">Domains ansehen</a>
             </div>
         </div>
         <div>
             <div class="uk-card uk-card-hover uk-card-default uk-card-body">
                 <h3 class="uk-card-title">Mailkonten</h3>
                 <p>Mailboxen und Weiterleitungen verwalten.</p>
-                <a href="#" class="uk-button uk-button-primary">Mailkonten ansehen</a>
+                <a href="{{ route('client.mailboxes.index') }}" class="uk-button uk-button-primary">Mailkonten ansehen</a>
             </div>
         </div>
         <div>
             <div class="uk-card uk-card-hover uk-card-default uk-card-body">
                 <h3 class="uk-card-title">DNS Einstellungen</h3>
                 <p>DNS Records dieses Clients verwalten.</p>
-                <a href="#" class="uk-button uk-button-primary">DNS Einstellungen</a>
+                <a href="{{ route('client.dns.index') }}" class="uk-button uk-button-primary">DNS Einstellungen</a>
             </div>
         </div>
         <div>
             <div class="uk-card uk-card-hover uk-card-default uk-card-body">
                 <h3 class="uk-card-title">Rezepte</h3>
                 <p>Automatisierungen für Domains, Mailboxen und DNS.</p>
-                <a href="#" class="uk-button uk-button-primary">Rezepte öffnen</a>
+                <a href="{{ route('client.recipes.index') }}" class="uk-button uk-button-primary">Rezepte öffnen</a>
             </div>
         </div>
     </div>
 
     <div class="uk-margin-top">
-        <form action="{{ route('kas-client.logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="uk-button uk-button-danger">
-                Abmelden
-            </button>
-        </form>
+        <a href="{{ route('kas-client.logout') }}" class="uk-button uk-button-danger">Abmelden</a>
     </div>
 </div>
 @endsection
