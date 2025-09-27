@@ -68,7 +68,7 @@
     </div>
 
     <div class="uk-margin-top">
-        <a href="{{ route('kas-client.logout') }}" class="uk-button uk-button-danger">Abmelden</a>
+        <a href="{{ route('logout') }}" class="uk-button uk-button-danger">Abmelden</a>
     </div>
 </div>
 @endsection

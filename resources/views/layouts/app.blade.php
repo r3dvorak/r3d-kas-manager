@@ -35,7 +35,7 @@
                         </form>
                     @endauth
                     @auth('kas_client')
-                        <form action="{{ route('kas-client.logout') }}" method="POST" style="display:inline;">
+                        <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                             @csrf
                             <button type="submit" class="uk-button uk-button-text">Abmelden</button>
                         </form>
