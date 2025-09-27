@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.9-alpha
+ * @version   0.7.0-alpha
  * @date      2025-09-26
  * 
  * @copyright (C) 2025 Richard Dvořák
@@ -68,12 +68,25 @@ Route::get('/stats', [StatsController::class, 'index'])
     Route::post('/client/login', [KasClientAuthController::class, 'login'])->name('kas-client.login.submit');
     Route::post('/client/logout', [KasClientAuthController::class, 'logout'])->name('kas-client.logout');
 
-    // Client Dashboard (geschützt)
+    // Client Dashboard + eigene Bereiche
     Route::middleware('auth:kas_client')->group(function () {
         Route::get('/client/dashboard', function () {
             return view('client.dashboard');
         })->name('client.dashboard');
+
+        Route::get('/client/domains', [App\Http\Controllers\Client\DomainController::class, 'index'])
+            ->name('client.domains');
+
+        Route::get('/client/mailboxes', [App\Http\Controllers\Client\MailboxController::class, 'index'])
+            ->name('client.mailboxes');
+
+        Route::get('/client/dns', [App\Http\Controllers\Client\DnsController::class, 'index'])
+            ->name('client.dns');
+
+        Route::get('/client/recipes', [App\Http\Controllers\Client\RecipeController::class, 'index'])
+            ->name('client.recipes');
     });
+
 
     // Impersonation helper — generates token and redirects to /impersonate/{rawToken}
     Route::get('kas-clients/{kasClient}/impersonate', [App\Http\Controllers\KasClientController::class, 'createImpersonationToken'])
@@ -84,3 +97,5 @@ Route::get('/stats', [StatsController::class, 'index'])
     Route::get('impersonate/{token}', [App\Http\Controllers\KasClientController::class, 'consumeImpersonationToken'])
         ->name('kas-clients.impersonate.consume');
 
+    Route::post('kas-clients/impersonate/leave', [App\Http\Controllers\KasClientController::class, 'leaveImpersonation'])
+    ->name('kas-clients.impersonate.leave');

@@ -79,17 +79,31 @@
             <div class="uk-grid-large" uk-grid>
                 
                 {{-- Sidebar links --}}
-                @auth
-                <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
-                    <ul class="uk-nav uk-nav-default">
-                        <li><a href="{{ route('dashboard') }}">Startseite</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
-                        <li><a href="{{ route('users.index') }}">User</a></li>
-                        <li><a href="{{ route('docs') }}">Doku</a></li>
-                        <li><a href="{{ route('stats') }}">Stats</a></li>
-                    </ul>
-                </aside>
-                @endauth
+                @if(Auth::guard('kas_client')->check())
+                    {{-- Client-Menü --}}
+                    <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
+                        <ul class="uk-nav uk-nav-default">
+                            <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
+                            <li><a href="{{ route('client.domains') }}">Domains</a></li>
+                            <li><a href="{{ route('client.mailboxes') }}">Mailkonten</a></li>
+                            <li><a href="{{ route('client.dns') }}">DNS</a></li>
+                            <li><a href="{{ route('client.recipes') }}">Rezepte</a></li>
+                        </ul>
+                    </aside>
+
+                @elseif(Auth::guard('web')->check())
+                    {{-- Admin-Menü --}}
+                    <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
+                        <ul class="uk-nav uk-nav-default">
+                            <li><a href="{{ route('dashboard') }}">Startseite</a></li>
+                            <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
+                            <li><a href="{{ route('users.index') }}">User</a></li>
+                            <li><a href="{{ route('docs') }}">Doku</a></li>
+                            <li><a href="{{ route('stats') }}">Stats</a></li>
+                        </ul>
+                    </aside>
+                @endif
+
 
                 {{-- Hauptinhalt --}}
                 <section id="content" class="uk-width-expand uk-padding-remove-left">

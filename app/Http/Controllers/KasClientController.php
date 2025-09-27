@@ -193,4 +193,14 @@ class KasClientController extends Controller
         return redirect()->route('client.dashboard')
             ->with('success', 'Eingeloggt als ' . $kasClient->name);
     }
+
+    public function leaveImpersonation()
+    {
+        // Client-Session beenden
+        Auth::guard('kas_client')->logout();
+
+        // Optional: zurück zum Admin weiterleiten
+        return redirect()->route('dashboard')->with('success', 'Zurück zum Admin gewechselt.');
+    }
+
 }
