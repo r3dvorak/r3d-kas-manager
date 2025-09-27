@@ -177,14 +177,16 @@ class KasClientController extends Controller
      */
     public function consumeImpersonationToken(string $token)
     {
-        $impersonation = ImpersonationToken::where('token', $token)
-            ->where('expires_at', '>', now())
-            ->firstOrFail();
+        $impersonation = ImpersonationToken::findByRawToken($token);
+
+        if (! $impersonation || $impersonation->expires_at->isPast()) {
+            abort(403, 'Ungültiger oder abgelaufener Token.');
+        }
 
         $kasClient = $impersonation->kasClient;
 
-        // one-time token, delete it
-        $impersonation->delete();
+        // one-time token: markieren oder löschen
+        $impersonation->update(['used' => true]);
 
         Auth::guard('kas_client')->login($kasClient);
 
