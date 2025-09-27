@@ -10,7 +10,7 @@
  * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  *
- * Dashboard for KAS Client login session
+ * resources\views\client\dashboard.blade.php
 --}}
 
 @extends('layouts.app')

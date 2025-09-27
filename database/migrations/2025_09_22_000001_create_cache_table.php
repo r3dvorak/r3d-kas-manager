@@ -1,4 +1,17 @@
 <?php
+/**
+ * R3D KAS Manager
+ * 
+ * @package   r3d-kas-manager
+ * @author    Richard Dvořák, R3D Internet Dienstleistungen
+ * @version   0.7.4-alpha
+ * @date      2025-09-22
+ * 
+ * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ * @license   MIT License
+ * 
+ * database\migrations\2025_09_22_000001_create_cache_table.php
+ */
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;

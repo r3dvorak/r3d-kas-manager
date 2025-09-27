@@ -1,16 +1,16 @@
 <?php
 /**
  * R3D KAS Manager
- * 
+ *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.1.0-alpha
+ * @version   0.7.4-alpha
  * @date      2025-09-24
- * 
- * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ *
+ * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
- * 
- * Service to execute automation recipes (domains, mailboxes, DNS).
+ *
+ * database\migrations\2025_09_24_050010_create_recipe_runs_table.php
  */
 
 use Illuminate\Database\Migrations\Migration;

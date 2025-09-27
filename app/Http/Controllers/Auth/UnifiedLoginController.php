@@ -7,6 +7,8 @@
  * @version   0.7.2-alpha
  * @date      2025-09-27
  * @license   MIT License
+ * 
+ * app\Http\Controllers\Auth\UnifiedLoginController.php
  */
 
 namespace App\Http\Controllers\Auth;

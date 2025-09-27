@@ -4,13 +4,13 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.6-alpha
+ * @version   0.7.4-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  *
- * Create table for one-time impersonation tokens.
+ * database\migrations\2025_09_26_000000_create_impersonation_tokens_table.php
  */
 
 use Illuminate\Database\Migrations\Migration;
