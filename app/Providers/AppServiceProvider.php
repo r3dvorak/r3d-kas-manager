@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.6.7-alpha
+ * @version   0.6.8-alpha
  * @date      2025-09-26
  * 
  * @copyright (C) 2025 Richard Dvořák
@@ -15,31 +15,17 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Gate;
-use App\Models\User;
+use Illuminate\Support\ServiceProvider;
 
-class AuthServiceProvider extends ServiceProvider
+class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * The policy mappings for the application.
-     *
-     * @var array<class-string, class-string>
-     */
-    protected $policies = [
-        // Example: 'App\Models\Model' => 'App\Policies\ModelPolicy',
-    ];
+    public function register(): void
+    {
+        //
+    }
 
-    /**
-     * Register any authentication / authorization services.
-     */
     public function boot(): void
     {
-        $this->registerPolicies();
-
-        // Gate für Impersonation: Nur Admins dürfen impersonieren
-        Gate::define('impersonate', function ($user) {
-            return $user->role === 'admin';   // nur auf die role-Spalte prüfen
-        });
+        //
     }
 }

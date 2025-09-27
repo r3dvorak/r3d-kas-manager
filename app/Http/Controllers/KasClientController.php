@@ -156,6 +156,12 @@ class KasClientController extends Controller
      */
     public function createImpersonationToken(KasClient $kasClient)
     {
+        dd([
+            'guard' => auth()->guard()->getName(),
+            'user'  => auth()->user(),
+            'can_impersonate' => Gate::allows('impersonate'),
+        ]);
+        
         $user = auth()->user();
 
         if (! ($user->role === 'admin' || $user->is_admin)) {
