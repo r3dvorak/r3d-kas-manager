@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.0-alpha
+ * @version   0.6.7-alpha
  * @date      2025-09-24
  * 
  * @copyright (C) 2025 Richard Dvořák
@@ -42,6 +42,6 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return ($this->role === 'admin');
     }
 }

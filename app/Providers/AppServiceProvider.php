@@ -38,8 +38,8 @@ class AuthServiceProvider extends ServiceProvider
         $this->registerPolicies();
 
         // Gate für Impersonation: Nur Admins dürfen impersonieren
-        Gate::define('impersonate', function (User $user) {
-            return $user->isAdmin();
+        Gate::define('impersonate', function ($user) {
+            return $user->role === 'admin';   // nur auf die role-Spalte prüfen
         });
     }
 }

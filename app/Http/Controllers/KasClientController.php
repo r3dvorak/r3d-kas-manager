@@ -156,8 +156,9 @@ class KasClientController extends Controller
      */
     public function createImpersonationToken(KasClient $kasClient)
     {
-        // optional: check only admins can impersonate
-        if (!auth()->user()->isAdmin()) {
+        $user = auth()->user();
+
+        if (! ($user->role === 'admin' || $user->is_admin)) {
             abort(403, 'Unauthorized');
         }
 
@@ -170,6 +171,7 @@ class KasClientController extends Controller
         ]);
 
         return redirect()->away(url("/impersonate/{$token}"));
+
     }
 
     /**
