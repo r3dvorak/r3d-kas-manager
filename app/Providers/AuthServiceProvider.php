@@ -10,7 +10,7 @@
  * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  * 
- * AuthServiceProvider with impersonation Gate
+ * app\Providers\AuthServiceProvider.php with impersonation Gate
  */
 
 namespace App\Providers;
