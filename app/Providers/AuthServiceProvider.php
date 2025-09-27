@@ -22,14 +22,24 @@ use App\Models\User;
 class AuthServiceProvider extends ServiceProvider
 {
     /**
+     * The model to policy mappings for the application.
+     *
+     * @var array<class-string, class-string>
+     */
+    protected $policies = [
+        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+    ];
+
+    /**
      * Register any authentication / authorization services.
      */
     public function boot(): void
     {
         $this->registerPolicies();
 
+        // Admin-Check für Impersonation
         Gate::define('impersonate', function (User $user) {
-            return $user->role === 'admin' || $user->is_admin;
+            return $user->role === 'admin' || $user->is_admin === 1;
         });
     }
 }
