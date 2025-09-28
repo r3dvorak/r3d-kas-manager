@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.7.4-alpha
+ * @version   0.7.5-alpha
  * @date      2025-09-23
  * 
  * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
@@ -19,40 +19,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('kas_clients', function (Blueprint $table) {
             $table->id();
-
-            // Anzeigename
-            $table->string('name');
-
-            // Login ist Pflicht und eindeutig (z. B. w01e77bc)
-            $table->string('login')->unique();
-
-            // Email optional
-            $table->string('email')->nullable()->index();
-
-            // Domain (z. B. ord.de)
+            $table->string('name')->nullable();
+            $table->string('login')->unique();   // KAS Login (z. B. w01e77bc)
+            $table->string('email')->nullable();
             $table->string('domain')->nullable();
-
-            // API-Zugangsdaten (optional)
             $table->string('api_user')->nullable();
-            $table->string('api_password')->nullable();
 
-            // Rolle für spätere Erweiterung (default client)
+            // NEU: zwei Felder für Passwort
+            $table->string('password');     // bcrypt für Laravel
+            $table->string('api_password'); // Klartext für SOAP
+
             $table->string('role')->default('client');
-
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('kas_clients');

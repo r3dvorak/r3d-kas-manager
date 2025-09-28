@@ -28,18 +28,17 @@
                     </form>
 
                     {{-- Logout --}}
-                    @auth('web')
+                    @if(Auth::guard('kas_client')->check())
                         <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                             @csrf
                             <button type="submit" class="uk-button uk-button-text">Abmelden</button>
                         </form>
-                    @endauth
-                    @auth('kas_client')
+                    @elseif(Auth::guard('web')->check())
                         <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                             @csrf
                             <button type="submit" class="uk-button uk-button-text">Abmelden</button>
                         </form>
-                    @endauth
+                    @endif
                 </div>
             </nav>
         </div>

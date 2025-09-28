@@ -4,13 +4,13 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.7.0-alpha
- * @date      2025-09-26
+ * @version   0.7.6-alpha
+ * @date      2025-09-28
  * 
  * @copyright (C) 2025 Richard Dvořák
  * @license   MIT License
  * 
- * routes\web.php
+ * routes/web.php
  */
 
 use Illuminate\Support\Facades\Route;
@@ -19,51 +19,46 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\DocuController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\SearchController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\KasClientAuthController;
 use App\Http\Controllers\Auth\UnifiedLoginController;
 
-// Unified Login
+// === Unified Login ===
 Route::get('/login', [UnifiedLoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [UnifiedLoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [UnifiedLoginController::class, 'logout'])->name('logout');
 
-// Dashboard
-Route::get('/', function () {
-    return view('dashboard');
-})->middleware('auth')->name('dashboard');
+// === Admin routes (web guard) ===
+Route::middleware(['web','useguard:web','auth:web'])->group(function () {
 
-// SEARCH
-Route::get('/search', [SearchController::class, 'index'])
-    ->middleware('auth')
-    ->name('search');
+    // Dashboard
+    Route::get('/', function () {
+        return view('dashboard');
+    })->name('dashboard');
 
-// Accounts (KAS Clients)
-Route::resource('kas-clients', KasClientController::class)
-    ->middleware('auth');
-Route::post('kas-clients/batch', [KasClientController::class, 'batch'])
-    ->middleware('auth')
-    ->name('kas-clients.batch');
+    // SEARCH
+    Route::get('/search', [SearchController::class, 'index'])->name('search');
 
-// User Management
-Route::resource('users', UserController::class)
-    ->middleware('auth');
-Route::post('users/batch', [UserController::class, 'batch'])
-    ->middleware('auth')
-    ->name('users.batch');
+    // Accounts (KAS Clients)
+    Route::resource('kas-clients', KasClientController::class);
+    Route::post('kas-clients/batch', [KasClientController::class, 'batch'])->name('kas-clients.batch');
 
-// Doku (statische Seite)
-Route::get('/docs', [DocuController::class, 'index'])
-    ->middleware('auth')
-    ->name('docs');
+    // User Management
+    Route::resource('users', UserController::class);
+    Route::post('users/batch', [UserController::class, 'batch'])->name('users.batch');
 
-// Stats
-Route::get('/stats', [StatsController::class, 'index'])
-    ->middleware('auth')
-    ->name('stats');
+    // Doku
+    Route::get('/docs', [DocuController::class, 'index'])->name('docs');
 
-// Client routes (nur für kas_client Guard)
-Route::prefix('client')->name('client.')->middleware('auth:kas_client')->group(function () {
+    // Stats
+    Route::get('/stats', [StatsController::class, 'index'])->name('stats');
+
+    // Impersonation helper — generates token and redirects to /impersonate/{rawToken}
+    Route::get('kas-clients/{kasClient}/impersonate', [KasClientController::class, 'createImpersonationToken'])
+        ->middleware('can:impersonate') // zusätzlich prüfen wir admin im Controller
+        ->name('kas-clients.impersonate.generate');
+});
+
+// === Client routes (kas_client guard) ===
+Route::prefix('client')->name('client.')->middleware(['web','useguard:kas_client','auth:kas_client'])->group(function () {
 
     Route::get('/dashboard', function () {
         return view('client.dashboard');
@@ -86,14 +81,9 @@ Route::prefix('client')->name('client.')->middleware('auth:kas_client')->group(f
         ->name('recipes.index');
 });
 
-// Impersonation helper — generates token and redirects to /impersonate/{rawToken}
-Route::get('kas-clients/{kasClient}/impersonate', [App\Http\Controllers\KasClientController::class, 'createImpersonationToken'])
-    ->middleware(['auth', 'can:impersonate']) // we'll check admin inside controller too
-    ->name('kas-clients.impersonate.generate');
-
-// Public endpoint that consumes token and logs in the kas_client guard
-Route::get('impersonate/{token}', [App\Http\Controllers\KasClientController::class, 'consumeImpersonationToken'])
+// === Impersonation public endpoints ===
+Route::get('impersonate/{token}', [KasClientController::class, 'consumeImpersonationToken'])
     ->name('kas-clients.impersonate.consume');
 
-Route::post('kas-clients/impersonate/leave', [App\Http\Controllers\KasClientController::class, 'leaveImpersonation'])
-->name('kas-clients.impersonate.leave');
+Route::post('kas-clients/impersonate/leave', [KasClientController::class, 'leaveImpersonation'])
+    ->name('kas-clients.impersonate.leave');

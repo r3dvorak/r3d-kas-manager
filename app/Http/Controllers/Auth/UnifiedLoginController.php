@@ -4,8 +4,8 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.7.2-alpha
- * @date      2025-09-27
+ * @version   0.7.5-alpha
+ * @date      2025-09-28
  * @license   MIT License
  * 
  * app\Http\Controllers\Auth\UnifiedLoginController.php
@@ -16,12 +16,14 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\KasClient;
 
 class UnifiedLoginController extends Controller
 {
     public function showLoginForm()
     {
-        return view('auth.login'); // dein unified Login-Formular
+        return view('auth.login'); // unified Login-Formular
     }
 
     public function login(Request $request)
@@ -33,20 +35,22 @@ class UnifiedLoginController extends Controller
 
         $loginInput = $request->input('login');
         $password   = $request->input('password');
+        $remember   = $request->boolean('remember');
 
-        // === 1. Versuch: User Login (Guard: web) ===
-        if (Auth::guard('web')->attempt(['login' => $loginInput, 'password' => $password], $request->filled('remember'))
-            || Auth::guard('web')->attempt(['email' => $loginInput, 'password' => $password], $request->filled('remember'))) {
+        // === 1. Versuch: Admin Login (Guard: web) ===
+        if (Auth::guard('web')->attempt(['login' => $loginInput, 'password' => $password], $remember)
+            || Auth::guard('web')->attempt(['email' => $loginInput, 'password' => $password], $remember)) {
             return redirect()->intended(route('dashboard'));
         }
 
-        // === 2. Versuch: KasClient Login per login ===
-        if (Auth::guard('kas_client')->attempt(['login' => $loginInput, 'password' => $password], $request->filled('remember'))) {
-            return redirect()->intended(route('client.dashboard'));
-        }
+        // === 2. Versuch: KasClient Login (login, email, domain) ===
+        $client = KasClient::where('login', $loginInput)
+            ->orWhere('email', $loginInput)
+            ->orWhere('domain', $loginInput)
+            ->first();
 
-        // === 3. Versuch: KasClient Login per domain ===
-        if (Auth::guard('kas_client')->attempt(['domain' => $loginInput, 'password' => $password], $request->filled('remember'))) {
+        if ($client && Hash::check($password, $client->password)) {
+            Auth::guard('kas_client')->login($client, $remember);
             return redirect()->intended(route('client.dashboard'));
         }
 
@@ -58,10 +62,14 @@ class UnifiedLoginController extends Controller
 
     public function logout(Request $request)
     {
-        // erst web abmelden
-        Auth::guard('web')->logout();
-        // dann kas_client abmelden
-        Auth::guard('kas_client')->logout();
+        // Nur den gerade aktiven Guard abmelden
+        if (Auth::guard('kas_client')->check()) {
+            Auth::guard('kas_client')->logout();
+        }
+
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
