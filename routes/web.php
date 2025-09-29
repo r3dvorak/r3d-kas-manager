@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.8.0-alpha
+ * @version   0.9.0-alpha
  * @date      2025-09-29
  * 
  * @license   MIT License
@@ -37,7 +37,7 @@ Route::post('/login/client', [UnifiedLoginController::class, 'loginClient'])->na
 Route::post('/logout', [UnifiedLoginController::class, 'logout'])->name('logout');
 
 // === Admin routes (web guard) ===
-Route::middleware(['web','useguard:web','auth:web'])->group(function () {
+Route::middleware(['web_admin','auth:web'])->group(function () {
 
     Route::get('/', fn() => view('dashboard'))->name('dashboard');
 
@@ -58,7 +58,7 @@ Route::middleware(['web','useguard:web','auth:web'])->group(function () {
 });
 
 // === Client routes (kas_client guard) ===
-Route::prefix('client')->name('client.')->middleware(['web','useguard:kas_client','auth:kas_client'])->group(function () {
+Route::prefix('client')->name('client.')->middleware(['web_client','auth:kas_client'])->group(function () {
 
     Route::get('/dashboard', fn() => view('client.dashboard'))->name('dashboard');
 
