@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>RIIID KAS Manager</title>
+    @php
+        $isAdmin  = Auth::guard('web')->check();
+        $isClient = Auth::guard('kas_client')->check();
+        $mode     = $isAdmin ? 'ADMIN' : ($isClient ? 'KAS Client' : '');
+    @endphp
+    <title>{{ $mode ? $mode . ' | ' : '' }}RIIID KAS Manager</title>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/css/uikit.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit-icons.min.js"></script>
@@ -18,6 +24,14 @@
                     <a href="/" class="uk-logo uk-padding-small uk-padding-remove-horizontal">
                         <img src="https://www.r3d.de/images/svg/r3d-logo_green_ng.svg" alt="RIIID" height="32">
                     </a>
+                </div>
+
+                <div class="uk-navbar-center">
+                    @if($isAdmin)
+                        <span class="uk-label uk-label-danger">ADMIN</span>
+                    @elseif($isClient)
+                        <span class="uk-label uk-label-success">KAS Client</span>
+                    @endif
                 </div>
 
                 <div class="uk-navbar-right uk-visible@m">
