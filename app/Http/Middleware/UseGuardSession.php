@@ -19,9 +19,11 @@ class UseGuardSession
 {
     public function handle($request, Closure $next, $guard = null)
     {
+        logger('UseGuardSession fired for guard='.$guard);
+        
         if ($guard === 'kas_client') {
             config(['session.cookie' => env('SESSION_COOKIE_CLIENT', 'kas_client_session')]);
-        } else {
+        } elseif ($guard === 'web') {
             config(['session.cookie' => env('SESSION_COOKIE_WEB', 'kas_admin_session')]);
         }
 
