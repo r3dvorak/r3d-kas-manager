@@ -42,12 +42,7 @@
                     </form>
 
                     {{-- Logout --}}
-                    @if(Auth::guard('kas_client')->check())
-                        <form action="{{ route('logout') }}" method="POST" style="display:inline;">
-                            @csrf
-                            <button type="submit" class="uk-button uk-button-text">Abmelden</button>
-                        </form>
-                    @elseif(Auth::guard('web')->check())
+                    @if($isAdmin || $isClient)
                         <form action="{{ route('logout') }}" method="POST" style="display:inline;">
                             @csrf
                             <button type="submit" class="uk-button uk-button-text">Abmelden</button>
@@ -66,15 +61,13 @@
                 {{-- Sidebar links --}}
                 <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
                     <ul class="uk-nav uk-nav-default">
-                        
-                        @if(Auth::guard('kas_client')->check())
+                        @if($isClient)
                             <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
                             <li><a href="{{ route('client.domains.index') }}">Domains</a></li>
                             <li><a href="{{ route('client.mailboxes.index') }}">Mailkonten</a></li>
                             <li><a href="{{ route('client.dns.index') }}">DNS</a></li>
                             <li><a href="{{ route('client.recipes.index') }}">Rezepte</a></li>
-                        
-                        @elseif(Auth::guard('web')->check())
+                        @elseif($isAdmin)
                             <li><a href="{{ route('dashboard') }}">Startseite</a></li>
                             <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
                             <li><a href="{{ route('users.index') }}">User</a></li>
