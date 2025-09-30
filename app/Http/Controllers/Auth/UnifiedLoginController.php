@@ -4,9 +4,11 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.8.0-alpha
+ * @version   0.9.1-alpha
  * @date      2025-09-29
  * @license   MIT License
+ * 
+ * app\Http\Controllers\Auth\UnifiedLoginController.php
  */
 
 namespace App\Http\Controllers\Auth;
@@ -39,13 +41,17 @@ class UnifiedLoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::guard('web')->attempt(
-            ['login' => $request->login, 'password' => $request->password],
-            $request->boolean('remember')
-        ) || Auth::guard('web')->attempt(
-            ['email' => $request->login, 'password' => $request->password],
-            $request->boolean('remember')
-        )) {
+        if (
+            Auth::guard('web')->attempt(
+                ['login' => $request->login, 'password' => $request->password],
+                $request->boolean('remember')
+            )
+            || Auth::guard('web')->attempt(
+                ['email' => $request->login, 'password' => $request->password],
+                $request->boolean('remember')
+            )
+        ) {
+            $request->session()->regenerate();
             return redirect()->intended(route('dashboard'));
         }
 
@@ -59,13 +65,17 @@ class UnifiedLoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::guard('kas_client')->attempt(
-            ['login' => $request->login, 'password' => $request->password],
-            $request->boolean('remember')
-        ) || Auth::guard('kas_client')->attempt(
-            ['domain' => $request->login, 'password' => $request->password],
-            $request->boolean('remember')
-        )) {
+        if (
+            Auth::guard('kas_client')->attempt(
+                ['login' => $request->login, 'password' => $request->password],
+                $request->boolean('remember')
+            )
+            || Auth::guard('kas_client')->attempt(
+                ['domain' => $request->login, 'password' => $request->password],
+                $request->boolean('remember')
+            )
+        ) {
+            $request->session()->regenerate();
             return redirect()->intended(route('client.dashboard'));
         }
 
@@ -74,13 +84,16 @@ class UnifiedLoginController extends Controller
 
     public function logout(Request $request)
     {
+        // check which guard is active
         if (Auth::guard('web')->check()) {
             Auth::guard('web')->logout();
         }
+
         if (Auth::guard('kas_client')->check()) {
             Auth::guard('kas_client')->logout();
         }
 
+        // invalidate only current session
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

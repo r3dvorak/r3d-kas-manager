@@ -3,7 +3,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.8.0-alpha
+ * @version   0.9.0-alpha
  * @date      2025-09-29
  * 
  * @license   MIT License
@@ -18,10 +18,10 @@
         <h3 class="uk-card-title">Bitte wählen Sie den Login-Typ</h3>
 
         <div class="uk-margin">
-            <a href="{{ route('login.admin') }}" class="uk-button uk-button-primary uk-width-1-1">Admin Login</a>
+            <a href="{{ route('login.admin') }}" class="uk-button uk-button-primary uk-width-1-1" target="_blank">Admin Login</a>
         </div>
         <div class="uk-margin">
-            <a href="{{ route('login.client') }}" class="uk-button uk-button-secondary uk-width-1-1">KAS Client Login</a>
+            <a href="{{ route('login.client') }}" class="uk-button uk-button-secondary uk-width-1-1" target="_blank">KAS Client Login</a>
         </div>
     </div>
 </div>

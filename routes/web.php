@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.9.2-alpha
+ * @version   0.9.3-alpha
  * @date      2025-09-29
  * @license   MIT License
  */
@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\UnifiedLoginController;
 use App\Http\Controllers\KasClientController;
 
-// === Login Auswahlseite ===
-Route::get('/login', [UnifiedLoginController::class, 'selectLogin'])->name('login');
+// === Login Auswahlseite ohne Session ===
+Route::get('/login', [UnifiedLoginController::class, 'selectLogin'])->withoutMiddleware('web')->name('login');
 
 // === Admin Login ===
 Route::get('/login/admin', [UnifiedLoginController::class, 'showAdminLoginForm'])->name('login.admin');
