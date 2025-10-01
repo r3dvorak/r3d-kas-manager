@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.10.3-alpha
+ * @version   0.10.5-alpha
  * @date      2025-09-30
  * 
  * @license   MIT License
@@ -13,12 +13,11 @@
  * routes\web.php
  */
 
-
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\UnifiedLoginController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\UnifiedLoginController;
 
-// === Root redirect ===
+// === Root route ===
 Route::get('/', function () {
     if (Auth::guard('web')->check()) {
         return redirect()->route('dashboard');
@@ -29,22 +28,21 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-// === Login page (neutral) ===
+// === Login GET routes (no guard/session middleware!) ===
 Route::get('/login', [UnifiedLoginController::class, 'selectLogin'])->name('login');
+Route::get('/login/admin', [UnifiedLoginController::class, 'showAdminLoginForm'])->name('login.admin');
+Route::get('/login/client', [UnifiedLoginController::class, 'showClientLoginForm'])->name('login.client');
 
-// === Admin Login ===
-Route::middleware('web_admin')->group(function () {
-    Route::get('/login/admin', [UnifiedLoginController::class, 'showAdminLoginForm'])->name('login.admin');
-    Route::post('/login/admin', [UnifiedLoginController::class, 'loginAdmin'])->name('login.admin.submit');
-});
+// === Login POST routes (with proper session groups) ===
+Route::post('/login/admin', [UnifiedLoginController::class, 'loginAdmin'])
+    ->middleware('web_admin')
+    ->name('login.admin.submit');
 
-// === Client Login ===
-Route::middleware('web_client')->group(function () {
-    Route::get('/login/client', [UnifiedLoginController::class, 'showClientLoginForm'])->name('login.client');
-    Route::post('/login/client', [UnifiedLoginController::class, 'loginClient'])->name('login.client.submit');
-});
+Route::post('/login/client', [UnifiedLoginController::class, 'loginClient'])
+    ->middleware('web_client')
+    ->name('login.client.submit');
 
-// === Logout (neutral) ===
+// === Logout ===
 Route::post('/logout', [UnifiedLoginController::class, 'logout'])->name('logout');
 
 // === Impersonation ===

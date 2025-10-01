@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.10.3-alpha
+ * @version   0.10.4-alpha
  * @date      2025-09-30
  * @license   MIT License
  * 
@@ -32,17 +32,13 @@ class UnifiedLoginController extends Controller
 
     public function showAdminLoginForm()
     {
-        if (Auth::guard('web')->check()) {
-            return redirect()->route('dashboard');
-        }
+        // No redirect checks here → avoid loops
         return view('auth.login');
     }
 
     public function showClientLoginForm()
     {
-        if (Auth::guard('kas_client')->check()) {
-            return redirect()->route('client.dashboard');
-        }
+        // No redirect checks here → avoid loops
         return view('auth.login');
     }
 
