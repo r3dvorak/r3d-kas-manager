@@ -7,9 +7,10 @@
  * @version   0.10.3-alpha
  * @date      2025-09-29
  * @license   MIT License
+ * 
+ * app\Http\Middleware\AdminSessionConfig.php
  */
 
-// app/Http/Middleware/AdminSessionConfig.php
 namespace App\Http\Middleware;
 
 use Closure;
@@ -17,6 +18,12 @@ use Illuminate\Support\Facades\Config;
 
 class AdminSessionConfig
 {
+    /**
+     * Apply admin-specific session configuration.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     */
     public function handle($request, Closure $next)
     {
         Config::set('session.cookie', env('SESSION_COOKIE_WEB', 'kas_admin_session'));
