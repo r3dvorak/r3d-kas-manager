@@ -4,9 +4,11 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.10.2-alpha
+ * @version   0.10.3-alpha
  * @date      2025-09-30
  * @license   MIT License
+ * 
+ * app\Http\Controllers\Auth\UnifiedLoginController.php
  */
 
 namespace App\Http\Controllers\Auth;
@@ -17,9 +19,30 @@ use Illuminate\Support\Facades\Auth;
 
 class UnifiedLoginController extends Controller
 {
-    public function showLoginForms()
+    public function selectLogin()
     {
-        // zeigt beide Formulare nebeneinander/untereinander
+        if (Auth::guard('web')->check()) {
+            return redirect()->route('dashboard');
+        }
+        if (Auth::guard('kas_client')->check()) {
+            return redirect()->route('client.dashboard');
+        }
+        return view('auth.login');
+    }
+
+    public function showAdminLoginForm()
+    {
+        if (Auth::guard('web')->check()) {
+            return redirect()->route('dashboard');
+        }
+        return view('auth.login');
+    }
+
+    public function showClientLoginForm()
+    {
+        if (Auth::guard('kas_client')->check()) {
+            return redirect()->route('client.dashboard');
+        }
         return view('auth.login');
     }
 
@@ -30,18 +53,21 @@ class UnifiedLoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::guard('web')->attempt(
-            ['login' => $request->login, 'password' => $request->password],
-            $request->boolean('remember')
-        ) || Auth::guard('web')->attempt(
-            ['email' => $request->login, 'password' => $request->password],
-            $request->boolean('remember')
-        )) {
+        if (
+            Auth::guard('web')->attempt(
+                ['login' => $request->login, 'password' => $request->password],
+                $request->boolean('remember')
+            )
+            || Auth::guard('web')->attempt(
+                ['email' => $request->login, 'password' => $request->password],
+                $request->boolean('remember')
+            )
+        ) {
             $request->session()->regenerate();
-            return redirect()->intended(route('dashboard'));   // <- FIX
+            return redirect()->route('dashboard');
         }
 
-        return back()->withErrors(['login' => 'Ungültige Zugangsdaten.'])->onlyInput('login');
+        return back()->withErrors(['login' => 'Invalid credentials'])->onlyInput('login');
     }
 
     public function loginClient(Request $request)
@@ -51,26 +77,32 @@ class UnifiedLoginController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::guard('kas_client')->attempt(
-            ['login' => $request->login, 'password' => $request->password],
-            $request->boolean('remember')
-        ) || Auth::guard('kas_client')->attempt(
-            ['domain' => $request->login, 'password' => $request->password],
-            $request->boolean('remember')
-        )) {
+        if (
+            Auth::guard('kas_client')->attempt(
+                ['login' => $request->login, 'password' => $request->password],
+                $request->boolean('remember')
+            )
+            || Auth::guard('kas_client')->attempt(
+                ['domain' => $request->login, 'password' => $request->password],
+                $request->boolean('remember')
+            )
+        ) {
             $request->session()->regenerate();
-            return redirect()->intended(route('client.dashboard'));   // <- FIX
+            return redirect()->route('client.dashboard');
         }
 
-        return back()->withErrors(['login' => 'Ungültige Zugangsdaten.'])->onlyInput('login');
+        return back()->withErrors(['login' => 'Invalid credentials'])->onlyInput('login');
     }
 
     public function logout(Request $request)
     {
-        if (Auth::guard('web')->check()) {
+        $wasAdmin  = Auth::guard('web')->check();
+        $wasClient = Auth::guard('kas_client')->check();
+
+        if ($wasAdmin) {
             Auth::guard('web')->logout();
         }
-        if (Auth::guard('kas_client')->check()) {
+        if ($wasClient) {
             Auth::guard('kas_client')->logout();
         }
 
