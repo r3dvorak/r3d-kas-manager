@@ -1,0 +1,45 @@
+# Laravel standard
+/vendor/
+/node_modules/
+/public/storage
+/storage/*.key
+.env
+.env.*
+.phpunit.result.cache
+Homestead.yaml
+Homestead.json
+/.idea
+/.vscode
+
+# Composer & NPM
+composer.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Cache / Logs
+/storage/*.key
+/storage/debugbar/
+/bootstrap/cache/*.php
+/bootstrap/cache/*.tmp
+/storage/app/public/*
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/kas_responses/*
+/storage/kas_responses/*
+/storage/app/private/*
+/storage/app/tmp/*
+/storage/dumps/*
+/tests/_output/*
+/tests/_cache/*
+
+# OS-specific
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Laragon-specific
+*.bak
+*.tmp

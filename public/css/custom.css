@@ -1,0 +1,279 @@
+/* =========================
+   R3D KAS Manager Custom UI
+   ========================= */
+/* === Fonts === */
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa&family=Georama&family=Nova+Slim&display=swap');
+
+/* === Colors & Theme === */
+:root {
+    --r3d-green: #00984A;
+    --r3d-dark: #222;
+    --r3d-grey: #f5f5f5;
+    --r3d-muted: #eaeaea;
+}
+/* === UIKit Overrides (R3D Theme) === */
+
+/* Global */
+:root {
+    --uk-color: var(--r3d-dark);
+    --uk-link-color: var(--r3d-link);
+    --uk-link-hover-color: var(--r3d-link-hover);
+    --uk-heading-color: var(--r3d-dark);
+
+    /* Navbar */
+    --uk-navbar-background: var(--r3d-grey);
+    --uk-navbar-nav-item-color: var(--r3d-dark);
+    --uk-navbar-nav-item-hover-color: var(--r3d-accent);
+    --uk-navbar-toggle-color: var(--r3d-dark);
+
+    /* Buttons */
+    --uk-button-primary-background: var(--r3d-green);
+    --uk-button-primary-color: #fff;
+    --uk-button-primary-hover-background: var(--r3d-link-hover);
+
+    /* Alerts */
+    --uk-alert-primary-background: var(--r3d-green);
+    --uk-alert-primary-color: #fff;
+    --uk-alert-success-background: #4F6BC7; /* dein blau */
+    --uk-alert-danger-background: #C96147; /* dein rot */
+    --uk-alert-warning-background: #D4AE4A; /* dein gelb */
+
+    /* Badges & Labels */
+    --uk-label-color: #fff;
+    --uk-label-background: var(--r3d-green);
+
+    /* Pagination */
+    --uk-pagination-item-color: var(--r3d-dark);
+    --uk-pagination-item-hover-color: var(--r3d-green);
+    --uk-pagination-item-active-color: var(--r3d-green);
+
+    /* Tables */
+    --uk-table-header-color: var(--r3d-dark);
+    --uk-table-header-background: var(--r3d-muted);
+}
+
+
+/* Base font */
+body {
+    font-family: 'Georama', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--r3d-dark);
+    background: #fff;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+    font-weight: 600;
+    color: var(--r3d-dark);
+}
+
+h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 1.6rem;
+    margin-bottom: 0.75rem;
+}
+
+h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Navbar + Header */
+.uk-navbar-container {
+    background: var(--r3d-grey);
+    border-bottom: 2px solid var(--r3d-green);
+}
+
+.uk-navbar-container .uk-logo img {
+    height: 36px;
+}
+
+/* Links */
+a { color: #8ABD4B; }
+a:hover { color: #4AD4A9; }
+
+/* Navbar */
+.uk-navbar-nav > li > a {
+    text-transform: uppercase;
+}
+.uk-navbar-nav > li > a:hover {
+    color: #C96147;
+}
+
+/* Footer */
+footer {
+    background: var(--r3d-muted);
+    color: #444;
+    font-size: 0.9rem;
+}
+
+footer a {
+    color: var(--r3d-green);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+/* Sidebar (left + right) */
+aside {
+    font-size: 0.95rem;
+}
+
+aside ul.uk-nav li a {
+    color: var(--r3d-dark);
+}
+
+aside ul.uk-nav li a:hover {
+    color: var(--r3d-green);
+}
+aside {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 80px; /* Höhe des Headers */
+    align-self: flex-start;
+}
+
+/* Content */
+main {
+    background: #fff;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+/* Tables */
+.uk-table th {
+    background: var(--r3d-muted);
+    font-weight: 600;
+}
+
+.uk-table td {
+    font-size: 0.95rem;
+}
+
+/* Search bar smaller */
+.uk-search-input {
+    font-size: 0.85rem;
+}
+
+/* === Responsive Padding === */
+
+/* Desktop (≥961px) */
+.custom-container {
+    padding-left: 45px;
+    padding-right: 45px;
+}
+
+/* Tablet + Mobile (≤960px) */
+@media (max-width: 960px) {
+    .custom-container {
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+}
+
+/* Smaller text in right sidebar */
+@media (max-width: 960px) {
+    aside.uk-border-left {
+        font-size: 0.85rem;
+    }
+}
+
+
+/* Logo & Header */
+.uk-logo img {
+    height: 40px; /* kleineres Logo */
+}
+
+header.uk-background-muted {
+    background: #f5f5f5; /* hellgrau */
+    border-bottom: 1px solid #e5e5e5;
+}
+
+/* Footer */
+footer.uk-background-muted {
+    background: #f5f5f5;
+    border-top: 1px solid #e5e5e5;
+    color: #555;
+    font-size: 0.85rem;
+}
+
+/* Sidebar */
+aside {
+    padding-top: 20px;
+}
+
+/* Suche kleiner */
+.uk-search-default .uk-search-input {
+    font-size: 0.85rem;
+}
+
+/* Padding wie bei UIKit Docs */
+.uk-container-expand {
+    padding-left: 45px !important;
+    padding-right: 45px !important;
+}
+
+@media (max-width: 960px) {
+    section#content {
+    padding-left: 40px !important;
+}
+}
+
+/* =========================
+   Buttons Override (R3D Style)
+   ========================= */
+
+/* Primary Button = R3D Grün */
+.uk-button-primary {
+    background-color: var(--r3d-green) !important;
+    color: #fff !important;
+    border: none;
+}
+.uk-button-primary:hover,
+.uk-button-primary:focus {
+    background-color: #4AD4A9 !important; /* Hover-Türkis */
+    color: #fff !important;
+}
+
+/* Default Button = dezentes Grau */
+.uk-button-default {
+    background-color: var(--r3d-muted) !important;
+    color: var(--r3d-dark) !important;
+    border: 1px solid #ddd !important;
+}
+.uk-button-default:hover,
+.uk-button-default:focus {
+    background-color: #e0e0e0 !important;
+    color: var(--r3d-dark) !important;
+}
+
+/* Secondary Button = Gold */
+.uk-button-secondary {
+    background-color: #D4AE4A !important;
+    color: #fff !important;
+    border: none;
+}
+.uk-button-secondary:hover,
+.uk-button-secondary:focus {
+    background-color: #b89034 !important;
+    color: #fff !important;
+}
+
+/* Danger Button = Rot */
+.uk-button-danger {
+    background-color: #C96147 !important;
+    color: #fff !important;
+    border: none;
+}
+.uk-button-danger:hover,
+.uk-button-danger:focus {
+    background-color: #a5422d !important;
+    color: #fff !important;
+}

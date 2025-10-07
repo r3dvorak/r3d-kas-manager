@@ -1,0 +1,10 @@
+.uk-table td {
+    vertical-align: top;
+}
+.uk-table td:last-child {
+    vertical-align: middle;
+    text-align: center;
+}
+.uk-table .uk-text-small {
+    line-height: 1.4;
+}
