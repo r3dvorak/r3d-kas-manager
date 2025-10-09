@@ -1,33 +1,54 @@
 <?php
 /**
- * R3D KAS Manager
- * 
+ * R3D KAS Manager – RecipeRun Model
+ *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.1.0-alpha
- * @date      2025-09-24
- * 
- * @copyright   (C) 2025 Richard Dvořák, R3D Internet Dienstleistungen
+ * @version   0.24.1
+ * @date      2025-10-09
  * @license   MIT License
- * 
- * Service to execute automation recipes (domains, mailboxes, DNS).
+ *
+ * Represents one execution instance of a Recipe (logging context).
  */
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RecipeRun extends Model
 {
-    protected $fillable = ['recipe_id','user_id','status','variables','result'];
+    protected $guarded = [];
 
     protected $casts = [
-        'variables' => 'array',
-        'result' => 'array',
+        'variables'   => 'array',
+        'result'      => 'array',
+        'started_at'  => 'datetime',
+        'finished_at' => 'datetime',
     ];
 
-    public function recipe()
+    /**
+     * The recipe this run belongs to.
+     */
+    public function recipe(): BelongsTo
     {
         return $this->belongsTo(Recipe::class);
+    }
+
+    /**
+     * The user who initiated this run (nullable).
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
+
+    /**
+     * All history entries produced during this run.
+     */
+    public function history(): HasMany
+    {
+        return $this->hasMany(RecipeActionHistory::class, 'recipe_run_id');
     }
 }
