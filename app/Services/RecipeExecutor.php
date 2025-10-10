@@ -1,7 +1,15 @@
 <?php
 /**
- * RecipeExecutor
+ * R3D KAS Manager - RecipeExecutor
  *
+ * @package   r3d-kas-manager
+ * @author    Richard Dvořák, R3D Internet Dienstleistungen
+ * @version   0.24.2-alpha
+ * @date      2025-10-10
+ * @license   MIT License
+ *
+ * app\Services\RecipeExecutor.php
+ * 
  * Executes Recipe actions in order, logs runs and action history,
  * provides basic KAS API wrapper with flood-protection retry.
  *
@@ -228,23 +236,70 @@ class RecipeExecutor
 
     protected function actionAddDomain(array $params, $run)
     {
-        // required: domain_name, optional php_version, target_path, redirect
-        $domain = $params['domain_name'] ?? $run->domain_name ?? null;
-        if (!$domain) throw new Exception('Missing domain_name');
+        // accept either full domain ("r3d.de") or split domain_name + domain_tld
+        $rawDomain = $params['domain_name'] ?? $run->domain_name ?? null;
+        if (!$rawDomain) {
+            throw new \Exception('Missing domain_name');
+        }
 
+        // build $domainFull (e.g. "r3d.de")
+        if (strpos($rawDomain, '.') === false) {
+            $domainTld = $params['domain_tld'] ?? $run->domain_tld ?? null;
+            if (!$domainTld) {
+                throw new \Exception('Missing domain_tld for domain_name without TLD');
+            }
+            $domainFull = $rawDomain . '.' . $domainTld;
+            $domainName = $rawDomain;
+            $domainTld  = $domainTld;
+        } else {
+            $domainFull = $rawDomain;
+            $parts = explode('.', $domainFull, 2);
+            $domainName = $parts[0] ?? $domainFull;
+            $domainTld  = $parts[1] ?? '';
+        }
+
+        // resolve kas credentials
         $kasLogin = $this->resolveKasLogin($run, $params);
         $pw = $this->kasCredentials[$kasLogin] ?? null;
-        if (!$pw) throw new Exception("Missing credentials for {$kasLogin}");
+        if (!$pw) {
+            throw new \Exception("Missing credentials for {$kasLogin}");
+        }
 
+        // prepare payload expected by KAS add_domain (use domain_name + domain_tld)
         $payload = [
-            'domain' => $domain,
+            'domain_name' => $params['domain_name'] ?? $domainName,
+            'domain_tld'  => $params['domain_tld'] ?? $domainTld,
             'php_version' => $params['php_version'] ?? null,
             'domain_path' => $params['domain_path'] ?? null,
             'domain_redirect_status' => $params['domain_redirect_status'] ?? null,
         ];
 
-        return $this->kasApiCall($kasLogin, $pw, 'add_domain', $payload);
+        // call KAS API
+        $response = $this->kasApiCall($kasLogin, $pw, 'add_domain', $payload);
+
+        // Normalize status — KAS sometimes returns Response.ReturnString = "TRUE" or response.status = "ok"
+        $status = $response['Response']['ReturnString'] ?? $response['response']['status'] ?? $response['status'] ?? null;
+
+        if ($status === 'TRUE' || strtolower((string)$status) === 'ok') {
+            // Try to find a local kas_domains DB row if created earlier by other code
+            $domainModel = \App\Models\KasDomain::where('domain_full', $domainFull)->first();
+            $domainId = $domainModel ? $domainModel->id : null;
+
+            // Import KAS default DNS records — don't break the action if import fails
+            try {
+                $this->importKasDefaultDns($kasLogin, $pw, $domainFull, $domainId);
+            } catch (\Throwable $e) {
+                \Log::warning("importKasDefaultDns failed for {$domainFull}: " . $e->getMessage());
+                // we continue — DNS can be retried later
+            }
+        } else {
+            // Non-success response — you may want to log or convert to exception
+            \Log::warning("add_domain returned non-success for {$domainFull}: " . json_encode($response));
+        }
+
+        return $response;
     }
+
 
     protected function actionApplyTemplate(array $params, $run)
     {
@@ -469,4 +524,247 @@ class RecipeExecutor
         }
         return ['Response' => ['ReturnString' => 'FALSE', 'ReturnInfo' => []]];
     }
+
+    protected function importKasDefaultDns(string $kasLogin, string $kasPassword, string $domainFull, int $domainId = null): array
+    {
+        // soap client
+        $soap = new \SoapClient($this->wsdlUrl ?? 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl');
+
+        $nameservers = ['ns5.kasserver.com','ns6.kasserver.com'];
+        $records = [];
+
+        foreach ($nameservers as $ns) {
+            // build params: kas_action = get_dns_settings
+            $params = [
+                'kas_login' => $kasLogin,
+                'kas_auth_type' => 'plain',
+                'kas_auth_data' => $kasPassword,
+                'kas_action' => 'get_dns_settings',
+                'KasRequestParams' => [
+                    'zone_host' => $domainFull . '.', // KAS example wants trailing dot
+                    'nameserver' => $ns
+                ]
+            ];
+
+            try {
+                $raw = $soap->KasApi(json_encode($params));
+                $decoded = is_string($raw) ? json_decode($raw, true) : (array)$raw;
+                $info = $decoded['Response']['ReturnInfo'] ?? [];
+                if (is_array($info) && !empty($info)) {
+                    $records = $info;
+                    break; // success - stop trying other ns
+                }
+            } catch (\Throwable $e) {
+                // flood-protection or other errors - try next nameserver
+                continue;
+            }
+        }
+
+        // normalize and save to kas_dns_records table
+        foreach ($records as $rec) {
+            // normalize keys: record_zone, record_name, record_type, record_data, record_aux, record_id, record_changeable, record_deleteable
+            \App\Models\KasDnsRecord::create([
+                'kas_login' => $kasLogin,
+                'domain_id' => $domainId, // optional FK if you have domain_id
+                'record_zone' => $rec['record_zone'] ?? $domainFull,
+                'record_name' => $rec['record_name'] ?? '',
+                'record_type' => $rec['record_type'] ?? '',
+                'record_data' => $rec['record_data'] ?? '',
+                'record_aux'  => $rec['record_aux'] ?? 0,
+                'record_id_kas' => $rec['record_id'] ?? null,
+                'record_changeable' => $rec['record_changeable'] ?? 'N',
+                'record_deleteable' => $rec['record_deleteable'] ?? 'N',
+                'data_json' => $rec,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return $records;
+    }
+
+    /**
+     * Update DNS records via KAS API and sync kas_dns_records table.
+     *
+     * Expected $params structure:
+     * [
+     *   'domain_name' => 'r3d.de',
+     *   'record_updates' => [
+     *      ['op'=>'add','type'=>'A','name'=>'','data'=>'178.63.15.195','aux'=>0],
+     *      ['op'=>'update','type'=>'TXT','name'=>'_dmarc','data'=>'v=DMARC1; p=quarantine; ...'],
+     *      ['op'=>'delete','record_id_kas'=>99109546],
+     *      ...
+     *   ]
+     * ]
+     *
+     * Returns array with details about performed operations.
+     */
+    protected function actionUpdateDnsRecords(array $params, $run = null): array
+    {
+        $domain = $params['domain_name'] ?? $run->domain_name ?? null;
+        if (!$domain) {
+            return ['error' => true, 'message' => 'Missing domain_name'];
+        }
+
+        // Resolve KAS credentials (uses your existing resolver)
+        $kasLogin = $this->resolveKasLogin($run, $params);
+        $kasPassword = $this->kasCredentials[$kasLogin] ?? null;
+        if (!$kasPassword) {
+            return ['error' => true, 'message' => "Missing credentials for kas_login {$kasLogin}"];
+        }
+
+        $updates = $params['record_updates'] ?? [];
+        if (empty($updates) || !is_array($updates)) {
+            return ['error' => true, 'message' => 'No record_updates provided'];
+        }
+
+        $results = [];
+        foreach ($updates as $i => $u) {
+            $op = strtolower($u['op'] ?? 'add');
+            $type = strtoupper($u['type'] ?? ($u['record_type'] ?? ''));
+            $name = $u['name'] ?? ($u['record_name'] ?? '');
+            $data = $u['data'] ?? ($u['record_data'] ?? '');
+            $aux  = $u['aux'] ?? ($u['record_aux'] ?? 0);
+            $existingKasId = $u['record_id_kas'] ?? ($u['record_id'] ?? null);
+
+            try {
+                if ($op === 'delete') {
+                    // Prefer delete by KAS id if available
+                    if ($existingKasId) {
+                        $callParams = [
+                            'kas_login' => $kasLogin,
+                            'kas_auth_type' => 'plain',
+                            'kas_auth_data' => $kasPassword,
+                            'kas_action' => 'delete_dns_settings',
+                            'KasRequestParams' => [
+                                'zone' => $domain,
+                                'record_id' => $existingKasId,
+                            ],
+                        ];
+                        $resp = $this->kasApiCall($kasLogin, $kasPassword, 'delete_dns_settings', ['zone' => $domain, 'record_id' => $existingKasId]);
+                    } else {
+                        // Fallback: delete by zone,name,type,data
+                        $resp = $this->kasApiCall($kasLogin, $kasPassword, 'delete_dns_settings', [
+                            'zone' => $domain,
+                            'name' => $name,
+                            'type' => $type,
+                            'data' => $data,
+                            'aux'  => $aux,
+                        ]);
+                    }
+
+                    // Remove from DB if present
+                    $dbRow = \App\Models\KasDnsRecord::where('record_zone', $domain)
+                        ->where('record_type', $type)
+                        ->where('record_name', $name)
+                        ->when($existingKasId, fn($q) => $q->where('record_id_kas', $existingKasId), fn($q) => $q->where('record_data', $data))
+                        ->first();
+                    if ($dbRow) {
+                        $dbRow->delete();
+                    }
+
+                    $results[] = ['index' => $i, 'op' => 'delete', 'status' => 'ok', 'response' => $resp ?? null];
+                    // small pause to be gentle
+                    sleep(1);
+                    continue;
+                }
+
+                // For 'update' we delete existing (if any) then add new
+                if ($op === 'update') {
+                    // Find DB row
+                    $dbRow = \App\Models\KasDnsRecord::where('record_zone', $domain)
+                        ->where('record_type', $type)
+                        ->where('record_name', $name)
+                        ->first();
+
+                    if ($dbRow && $dbRow->record_id_kas) {
+                        // delete by KAS id
+                        $this->kasApiCall($kasLogin, $kasPassword, 'delete_dns_settings', [
+                            'zone' => $domain,
+                            'record_id' => $dbRow->record_id_kas,
+                        ]);
+                        // delete DB row (we will recreate on add)
+                        $dbRow->delete();
+                    } else if ($dbRow) {
+                        // try delete by content (best-effort)
+                        $this->kasApiCall($kasLogin, $kasPassword, 'delete_dns_settings', [
+                            'zone' => $domain,
+                            'name' => $name,
+                            'type' => $type,
+                            'data' => $dbRow->record_data,
+                            'aux'  => $dbRow->record_aux ?? 0,
+                        ]);
+                        $dbRow->delete();
+                    }
+                    // small pause to allow KAS to process
+                    sleep(1);
+                }
+
+                // For 'add' and 'update' (after delete) -> add new record via add_dns_settings
+                if ($op === 'add' || $op === 'update') {
+                    // build add params expected by KAS
+                    $kasParams = [
+                        'zone' => $domain,
+                        'name' => $name,
+                        'type' => $type,
+                        'data' => $data,
+                        'aux'  => $aux,
+                    ];
+
+                    $resp = $this->kasApiCall($kasLogin, $kasPassword, 'add_dns_settings', $kasParams);
+
+                    // attempt to extract a returned record id (varies by KAS response shape)
+                    $returnedId = null;
+                    if (is_array($resp)) {
+                        // common patterns: Response.ReturnInfo[0].record_id or response.data[0].record_id
+                        if (isset($resp['Response']['ReturnInfo'][0]['record_id'])) {
+                            $returnedId = $resp['Response']['ReturnInfo'][0]['record_id'];
+                        } elseif (isset($resp['response']['data'][0]['record_id'])) {
+                            $returnedId = $resp['response']['data'][0]['record_id'];
+                        } elseif (isset($resp['record_id'])) {
+                            $returnedId = $resp['record_id'];
+                        }
+                    }
+
+                    // Save or update DB row
+                    $db = \App\Models\KasDnsRecord::create([
+                        'kas_login' => $kasLogin,
+                        'domain_id' => null,
+                        'record_zone' => $domain,
+                        'record_name' => $name,
+                        'record_type' => $type,
+                        'record_data' => $data,
+                        'record_aux' => $aux,
+                        'record_id_kas' => $returnedId,
+                        'record_changeable' => $u['record_changeable'] ?? 'Y',
+                        'record_deleteable' => $u['record_deleteable'] ?? 'Y',
+                        'data_json' => $u,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    $results[] = ['index' => $i, 'op' => 'add', 'status' => 'ok', 'record_id_kas' => $returnedId, 'response' => $resp ?? null];
+                    // small pause
+                    sleep(1);
+                    continue;
+                }
+
+                // Unknown op
+                $results[] = ['index' => $i, 'op' => $op, 'status' => 'skipped', 'message' => 'Unknown op'];
+            } catch (\SoapFault $sf) {
+                // SOAP fault (maybe flood_protection)
+                $msg = $sf->faultstring ?? $sf->getMessage();
+                if (stripos($msg, 'flood_protection') !== false) {
+                    $results[] = ['index' => $i, 'op' => $op, 'status' => 'retry_needed', 'message' => $msg];
+                } else {
+                    $results[] = ['index' => $i, 'op' => $op, 'status' => 'error', 'message' => $msg];
+                }
+            } catch (\Throwable $e) {
+                $results[] = ['index' => $i, 'op' => $op, 'status' => 'error', 'message' => $e->getMessage()];
+            }
+        } // foreach updates
+
+        return ['ok' => true, 'details' => $results];
+    }
+
 }
