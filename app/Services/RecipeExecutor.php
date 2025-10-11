@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.24.2-alpha
+ * @version   0.25.0-alpha
  * @date      2025-10-10
  * @license   MIT License
  *
@@ -51,6 +51,14 @@ class RecipeExecutor
     public function __construct()
     {
         $this->loadKasCredentials();
+    }
+
+    /**
+     * Backward-compatible alias for artisan/tinker calls.
+     */
+    public function run(Recipe $recipe, array $variables = [], bool $dryRun = false)
+    {
+        return $this->executeRecipe($recipe, $variables, null, ['dryrun' => $dryRun]);
     }
 
     /**
@@ -218,6 +226,10 @@ class RecipeExecutor
                 return $this->actionAddDomain($params, $run);
             case 'apply_template':
                 return $this->actionApplyTemplate($params, $run);
+            case 'add_mailaccount':
+                return $this->actionAddMailaccount($params, $run);
+            case 'add_mail_forward':
+                return $this->actionAddMailForward($params, $run);
             case 'create_mailaccount':
                 return $this->actionCreateMailaccount($params, $run);
             case 'create_forwarders':
@@ -476,44 +488,29 @@ class RecipeExecutor
      * @return array decoded response
      * @throws Exception on permanent failure
      */
-    protected function kasApiCall(string $kasLogin, string $password, string $actionName, array $params = []): array
+    protected function kasApiCall($kasLogin, $kasPassword, $kasAction, array $kasParams)
     {
-        if (empty($kasLogin) || empty($password)) {
-            throw new Exception('Missing KAS credentials for soap call');
-        }
+        echo ">>> Calling KAS action: {$kasAction}\n";
+        echo "    Params: " . json_encode($kasParams) . "\n";
 
-        $soap = new SoapClient($this->kasWsdl, ['exceptions' => true, 'cache_wsdl' => WSDL_CACHE_NONE, 'trace' => false]);
         $request = [
             'kas_login' => $kasLogin,
             'kas_auth_type' => 'plain',
-            'kas_auth_data' => $password,
-            'kas_action' => $actionName,
-            'KasRequestParams' => $params
+            'kas_auth_data' => $kasPassword,
+            'kas_action' => $kasAction,
+            'KasRequestParams' => $kasParams,
         ];
 
-        $raw = null;
-        try {
-            $raw = $soap->KasApi(json_encode($request));
-            $decoded = $this->normalizeResponse($raw);
-            return $decoded;
-        } catch (SoapFault $e) {
-            $msg = $e->faultstring ?? $e->getMessage();
-            // flood protection handling - try once after delay
-            if (stripos($msg, 'flood_protection') !== false || stripos($msg, 'flood') !== false) {
-                sleep($this->delay + 1);
-                try {
-                    $raw2 = $soap->KasApi(json_encode($request));
-                    $decoded2 = $this->normalizeResponse($raw2);
-                    return $decoded2;
-                } catch (\Throwable $e2) {
-                    throw new Exception("KAS SOAP flood retry failed: " . $e2->getMessage());
-                }
-            }
-            throw new Exception("KAS SOAP error: " . $msg);
-        } catch (\Throwable $e) {
-            throw new Exception("KAS call failed: " . $e->getMessage());
-        }
+        $soap = new \SoapClient("https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl");
+        $response = $soap->KasApi(json_encode($request));
+
+        echo "<<< KAS response type: " . gettype($response) . "\n";
+
+        return is_object($response)
+            ? json_decode(json_encode($response), true)
+            : (array)$response;
     }
+
 
     protected function normalizeResponse($raw): array
     {
@@ -766,5 +763,61 @@ class RecipeExecutor
 
         return ['ok' => true, 'details' => $results];
     }
+
+    /**
+     * Create a mailbox (KAS: add_mailaccount)
+     */
+    protected function actionAddMailaccount(array $params, $run)
+    {
+        $domain = $params['domain_name'] ?? $run->domain_name ?? null;
+        if (!$domain) {
+            throw new \Exception('Missing domain_name for mailbox creation.');
+        }
+
+        $kasLogin = $this->resolveKasLogin($run, $params);
+        $pw       = $this->kasCredentials[$kasLogin] ?? null;
+        if (!$pw) {
+            throw new \Exception("Missing credentials for {$kasLogin}");
+        }
+
+        $payload = [
+            'mail_login'         => $params['mail_account'] ?? 'info',
+            'mail_domain'        => $domain,
+            'mail_password'      => $params['mail_password'] ?? $params['default_password'] ?? 'ChangeMe123!',
+            'mail_quota_rule'    => (string)($params['mail_quota_mb'] ?? 1024),
+            'mail_spamcheck'     => 'yes',
+            'mail_spamfilter'    => 'yes',
+            'mail_viruscheck'    => 'yes',
+            'mail_autoreply'     => 'no',
+            'mail_catchall'      => 'no',
+        ];
+
+        return $this->kasApiCall($kasLogin, $pw, 'add_mailaccount', $payload);
+    }
+
+    /**
+     * Create a mail forwarder (KAS: add_mail_forward)
+     */
+    protected function actionAddMailForward(array $params, $run)
+    {
+        $domain = $params['domain_name'] ?? $run->domain_name ?? null;
+        if (!$domain) {
+            throw new \Exception('Missing domain_name for mail forward creation.');
+        }
+
+        $kasLogin = $this->resolveKasLogin($run, $params);
+        $pw       = $this->kasCredentials[$kasLogin] ?? null;
+        if (!$pw) {
+            throw new \Exception("Missing credentials for {$kasLogin}");
+        }
+
+        $payload = [
+            'mail_forward_address' => $params['mail_forward_address'] ?? ($params['mail_forward_from'] ?? 'kontakt') . '@' . $domain,
+            'mail_forward_targets' => $params['mail_forward_targets'] ?? ($params['mail_forward_to'] ?? 'info') . '@' . $domain,
+        ];
+
+        return $this->kasApiCall($kasLogin, $pw, 'add_mail_forward', $payload);
+    }
+
 
 }
