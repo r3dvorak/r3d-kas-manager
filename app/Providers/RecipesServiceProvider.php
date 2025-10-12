@@ -8,7 +8,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.4
+ * @version   0.26.5-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -30,7 +30,6 @@
  *      App\Providers\RecipesServiceProvider::class,
  */
 
-
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
@@ -45,12 +44,12 @@ class RecipesServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        // Single shared KasGateway instance
+        // shared gateway
         $this->app->singleton(KasGateway::class, function ($app) {
             return new KasGateway();
         });
 
-        // Register action handlers as singletons
+        // handlers
         $this->app->singleton(AddDomain::class, function ($app) {
             return new AddDomain($app->make(KasGateway::class));
         });
@@ -64,7 +63,7 @@ class RecipesServiceProvider extends ServiceProvider
             return new AddMailforward($app->make(KasGateway::class));
         });
 
-        // Dispatcher: resolved with the handlers from container
+        // dispatcher wired with the handlers
         $this->app->singleton(Dispatcher::class, function ($app) {
             $handlers = [
                 $app->make(AddDomain::class),
@@ -78,6 +77,6 @@ class RecipesServiceProvider extends ServiceProvider
 
     public function boot()
     {
-        // nothing to boot yet
+        // no boot steps needed currently
     }
 }
