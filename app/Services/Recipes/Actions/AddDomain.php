@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.0-alpha
+ * @version   0.26.8-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -28,59 +28,72 @@ namespace App\Services\Recipes\Actions;
 
 use App\Models\RecipeAction;
 use App\Models\RecipeRun;
-use App\Services\Recipes\Contracts\ActionHandler;
 use App\Services\Recipes\KasGateway;
-use Throwable;
 
-class AddDomain implements ActionHandler
+class AddDomain
 {
-    public function __construct(private KasGateway $kas) {}
+    public function supportedTypes(): array
+    {
+        return ['add_domain'];
+    }
 
     public function supports(string $type): bool
     {
-        return $type === 'add_domain';
+        $t = strtolower(preg_replace('/[^a-z0-9]/', '', $type));
+        return $t === 'adddomain';
     }
 
-    /**
-     * Execute add_domain action.
-     *
-     * @param RecipeAction $action
-     * @param RecipeRun    $run
-     * @param array        $vars
-     * @param bool         $dryRun
-     * @return array
-     */
     public function handle(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
     {
-        if ($dryRun) {
-            return ['success' => true, 'dry_run' => true, 'action' => 'add_domain'];
+        // Accept domain in one piece or split pair
+        $full = $vars['domain'] ?? $vars['domain_name'] ?? $run->domain_name ?? null;
+        $name = $vars['domain_name'] ?? null;
+        $tld  = $vars['domain_tld']  ?? null;
+
+        if ($full && (!$name || !$tld)) {
+            // Split once on the first dot (handles subdomains intentionally not here)
+            if (strpos($full, '.') !== false) {
+                [$n, $t] = explode('.', $full, 2);
+                $name = $name ?? $n;
+                $tld  = $tld  ?? $t;
+            }
         }
 
-        // Resolve kas login and domain name (action params override vars)
-        $p = array_merge($vars, is_array($action->parameters) ? $action->parameters : []);
+        if (!$name || !$tld) {
+            return ['success' => false, 'error' => 'missing_domain_name_or_tld'];
+        }
 
-        $kasLogin = $p['kas_login']   ?? $run->kas_login   ?? null;
-        $domain   = $p['domain_name'] ?? $run->domain_name ?? null;
-        $phpVer   = $p['php_version'] ?? $p['php'] ?? '8.3';
-
+        $kasLogin = $vars['kas_login'] ?? $run->kas_login ?? null;
         if (!$kasLogin) {
-            return ['success' => false, 'error' => 'kas_login missing'];
-        }
-        if (!$domain) {
-            return ['success' => false, 'error' => 'domain_name missing'];
+            return ['success' => false, 'error' => 'missing_kas_login'];
         }
 
-        $payload = [
-            'domain'      => $domain,
-            'php_version' => (string)$phpVer,
+        if ($dryRun) {
+            return [
+                'success' => true,
+                'dry_run' => true,
+                'action'  => 'add_domain',
+                'params'  => ['domain_name' => $name, 'domain_tld' => $tld, 'kas_login' => $kasLogin],
+            ];
+        }
+
+        /** @var KasGateway $gw */
+        $gw = app(KasGateway::class);
+
+        // IMPORTANT: pass split keys exactly as KAS expects
+        $resp = $gw->callForLogin($kasLogin, 'add_domain', [
+            'domain_name' => $name,
+            'domain_tld'  => $tld,
+        ]);
+
+        if (!($resp['success'] ?? false)) {
+            return ['success' => false, 'error' => $resp['error'] ?? 'unknown_error', 'response' => $resp];
+        }
+
+        return [
+            'success' => true,
+            'action'  => 'add_domain',
+            'details' => $resp,
         ];
-
-        try {
-            // Use convenience callForLogin which resolves KasClient and password
-            $resp = $this->kas->callForLogin($kasLogin, 'add_domain', $payload);
-            return $resp;
-        } catch (Throwable $e) {
-            return ['success' => false, 'error' => 'KAS add_domain error: ' . $e->getMessage()];
-        }
     }
 }

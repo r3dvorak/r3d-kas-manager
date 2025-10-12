@@ -8,7 +8,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.7-alpha
+ * @version   0.26.8-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -38,19 +38,21 @@ use App\Services\Recipes\Actions\AddDomain;
 use App\Services\Recipes\Actions\AddMailaccount;
 use App\Services\Recipes\Actions\AddMailforward;
 use App\Services\Recipes\Actions\UpdateDnsRecords;
-use App\Services\Kas\KasGateway;
 
 class RecipesServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        // Register KasGateway (example singleton binding)
-        $this->app->singleton(KasGateway::class, function ($app) {
-            // adapt constructor args as needed; keep minimal here
-            return new KasGateway(config('services.kas'));
-        });
+        // Optionally bind KasGateway if available:
+        $kasClass = 'App\\Services\\Kas\\KasGateway';
+        if (class_exists($kasClass)) {
+            $this->app->singleton($kasClass, function ($app) use ($kasClass) {
+                // if the KasGateway expects config array, adapt as needed
+                return new $kasClass(config('services.kas') ?? []);
+            });
+        }
 
-        // Register handler classes (class names only; Dispatcher will instantiate them)
+        // Handlers list (Dispatcher will instantiate them via container)
         $handlers = [
             AddDomain::class,
             UpdateDnsRecords::class,
@@ -58,21 +60,20 @@ class RecipesServiceProvider extends ServiceProvider
             AddMailforward::class,
         ];
 
-        // Bind the Dispatcher with the handler list
+        // Bind the Dispatcher with handler list
         $this->app->singleton(Dispatcher::class, function ($app) use ($handlers) {
             return new Dispatcher($app, $handlers);
         });
 
-        // Optionally bind handlers individually if other code resolves them directly
-        foreach ($handlers as $handlerClass) {
-            $this->app->singleton($handlerClass, function ($app) use ($handlerClass) {
-                return $app->make($handlerClass);
-            });
+        // If you want handlers resolvable elsewhere, you can also register them
+        // using the class shorthand (no closure required):
+        foreach ($handlers as $h) {
+            $this->app->singleton($h);
         }
     }
 
     public function boot()
     {
-        // nothing special needed here for the Dispatcher change
+        //
     }
 }

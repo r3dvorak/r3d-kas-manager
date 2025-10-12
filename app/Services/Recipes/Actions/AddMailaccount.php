@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.4-alpha
+ * @version   0.26.8-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -46,50 +46,31 @@ class AddMailaccount implements ActionHandler
 
     public function handle(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
     {
+        $kasLogin = $vars['kas_login'] ?? $run->kas_login ?? null;
+        $mailLogin  = $vars['mail_login']  ?? $vars['mail_account'] ?? null;
+        $mailDomain = $vars['mail_domain'] ?? $vars['domain'] ?? $vars['domain_name'] ?? null;
+        $password   = $vars['mail_password'] ?? null;
+        $quotaMb    = $vars['mail_quota_mb'] ?? $vars['mail_quota'] ?? null;
+
+        if (!$kasLogin || !$mailLogin || !$mailDomain || !$password) {
+            return ['success'=>false,'error'=>'missing_parameters'];
+        }
+
         if ($dryRun) {
-            return ['success' => true, 'dry_run' => true, 'action' => 'add_mailaccount'];
+            return ['success'=>true,'dry_run'=>true,'action'=>'add_mailaccount','params'=>compact('mailLogin','mailDomain','quotaMb')];
         }
 
-        $p = array_merge($vars, is_array($action->parameters) ? $action->parameters : []);
-        $kasLogin = $p['kas_login'] ?? $run->kas_login ?? null;
-        $domain = $p['domain_name'] ?? $run->domain_name ?? null;
-        if (!$kasLogin || !$domain) {
-            return ['success' => false, 'error' => 'kas_login or domain_name missing'];
-        }
-
-        $local = $p['mail_account'] ?? $p['local_part'] ?? 'info';
-        $password = $p['mail_password'] ?? $p['default_password'] ?? 'ChangeMe123!';
-        $quotaMb = $p['mail_quota_mb'] ?? $p['quota_mb'] ?? null;
-        $autolog = $p['webmail_autologin'] ?? null;
-
-        $payload = [
-            'local_part' => $local,
-            'domain_part' => $domain,
+        $kas = app(KasGateway::class);
+        $resp = $kas->callForLogin($kasLogin, 'add_mailaccount', [
+            'mail_login'    => $mailLogin,
+            'mail_domain'   => $mailDomain,
             'mail_password' => $password,
-        ];
-        if ($quotaMb !== null) $payload['quota_rule'] = (int)$quotaMb;
-        if ($autolog !== null) $payload['webmail_autologin'] = ($autolog === true || $autolog === 'Y') ? 'Y' : 'N';
+            // KAS usually accepts mail_quota_mb; include only when set
+            ...($quotaMb !== null ? ['mail_quota_mb' => $quotaMb] : []),
+        ]);
 
-        try {
-            $resp = $this->kas->callForLogin($kasLogin, 'add_mailaccount', $payload);
-        } catch (Throwable $e) {
-            return ['success' => false, 'error' => 'KAS add_mailaccount error: ' . $e->getMessage()];
-        }
-
-        $result = $resp;
-        if (($resp['success'] ?? false) === true) {
-            // attempt to sync and get local id
-            try {
-                $localId = $this->kas->syncMailAccount($kasLogin, $local, $domain);
-                if ($localId !== false) {
-                    $result['affected_resource_type'] = 'kas_mailaccount';
-                    $result['affected_resource_id'] = $localId;
-                }
-            } catch (Throwable) {
-                // ignore sync failure but keep success
-            }
-        }
-
-        return $result;
+        return ($resp['success'] ?? false)
+            ? ['success'=>true,'action'=>'add_mailaccount','response'=>$resp]
+            : ['success'=>false,'error'=>$resp['error'] ?? 'kas_failed','response'=>$resp];
     }
 }

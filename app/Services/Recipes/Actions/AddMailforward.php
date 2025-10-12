@@ -66,46 +66,28 @@ class AddMailforward implements ActionHandler
      */
     public function handle(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
     {
+        $kasLogin  = $vars['kas_login'] ?? $run->kas_login ?? null;
+        $mailDomain= $vars['mail_domain'] ?? $vars['domain'] ?? $vars['domain_name'] ?? null;
+        $address   = $vars['mail_forward_address'] ?? $vars['forward_address'] ?? null;
+        $targets   = $vars['mail_forward_targets'] ?? $vars['forward_targets'] ?? null;
+
+        if (!$kasLogin || !$mailDomain || !$address || !$targets) {
+            return ['success'=>false,'error'=>'missing_parameters'];
+        }
+
         if ($dryRun) {
-            return ['success' => true, 'dry_run' => true, 'action' => 'add_mail_forward'];
+            return ['success'=>true,'dry_run'=>true,'action'=>'add_mail_forward','params'=>compact('address','targets','mailDomain')];
         }
 
-        // action->parameters may be stored as JSON string
-        $actionParams = is_array($action->parameters)
-            ? $action->parameters
-            : (is_string($action->parameters) ? json_decode($action->parameters, true) ?? [] : []);
+        $kas = app(KasGateway::class);
+        $resp = $kas->callForLogin($kasLogin, 'add_mail_forward', [
+            'mail_forward_address' => $address,
+            'mail_forward_targets' => $targets,
+            'mail_domain'          => $mailDomain,
+        ]);
 
-        // Vars precedence: $vars already merged by executor (recipe defaults + runtime + action params merged)
-        $merged = array_merge($vars, $actionParams);
-
-        $kasLogin = $merged['kas_login'] ?? $run->kas_login ?? null;
-        $domain   = $merged['domain_name'] ?? $run->domain_name ?? null;
-
-        if (!$kasLogin || !$domain) {
-            return ['success' => false, 'error' => 'kas_login or domain_name missing'];
-        }
-
-        // compute local parts / addresses
-        $fromLocal = $merged['mail_forward_from'] ?? $merged['mail_forward_address'] ?? null;
-        $toTarget  = $merged['mail_forward_to'] ?? $merged['mail_forward_targets'] ?? null;
-
-        // allow either full address or local part; normalize to full addresses
-        $fromAddr = strpos(($fromLocal ?? ''), '@') === false ? ($fromLocal . '@' . $domain) : $fromLocal;
-        $toAddr   = strpos(($toTarget ?? ''), '@') === false ? ($toTarget . '@' . $domain) : $toTarget;
-
-        if (!$fromAddr || !$toAddr) {
-            return ['success' => false, 'error' => 'mail_forward_from or mail_forward_to missing'];
-        }
-
-        try {
-            $payload = [
-                'mail_forward_address' => $fromAddr,
-                'mail_forward_targets' => $toAddr,
-            ];
-            $resp = $this->kas->callForLogin($kasLogin, 'add_mail_forward', $payload);
-            return (is_array($resp) ? $resp : ['success' => false, 'error' => 'Invalid KAS response']);
-        } catch (Throwable $e) {
-            return ['success' => false, 'error' => 'Handler exception: '.$e->getMessage()];
-        }
+        return ($resp['success'] ?? false)
+            ? ['success'=>true,'action'=>'add_mail_forward','response'=>$resp]
+            : ['success'=>false,'error'=>$resp['error'] ?? 'kas_failed','response'=>$resp];
     }
 }
