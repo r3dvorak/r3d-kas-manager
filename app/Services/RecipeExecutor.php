@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.25.2-alpha
+ * @version   0.25.3-alpha
  * @date      2025-10-11
  * @license   MIT License
  */
@@ -18,6 +18,8 @@ use App\Models\RecipeActionHistory;
 use App\Models\KasClient;
 use Exception;
 use SoapClient;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class RecipeExecutor
 {
@@ -299,21 +301,26 @@ class RecipeExecutor
         $domain = $p['domain_name'] ?? $run->domain_name ?? null;
         if (!$domain) throw new \Exception('domain_name missing');
 
-        // KAS expects local_part + domain_part + mail_password
         $payload = [
             'local_part'    => $p['mail_account'] ?? 'info',
             'domain_part'   => $domain,
             'mail_password' => $p['mail_password'] ?? 'ChangeMe123!',
-            // keep it minimal; extra flags are optional and not needed
-            // 'webmail_autologin' => 'Y',
         ];
 
-        return $this->kasApiCall(
+        $resp = $this->kasApiCall(
             $client->account_login,
             $client->account_password,
             'add_mailaccount',
             $payload
         );
+
+        if (($resp['success'] ?? false) === true) {
+            // KAS can need ~1s until GET endpoints reflect new state
+            usleep(600000); // 0.6s
+            $this->syncMailAccountFor($client, $payload['local_part'], $domain);
+        }
+
+        return $resp;
     }
 
     protected function actionAddMailForward(array $p, RecipeRun $run): array
@@ -325,20 +332,167 @@ class RecipeExecutor
         $sourceLocal = $p['mail_forward_from'] ?? 'kontakt';
         $targetLocal = $p['mail_forward_to']   ?? 'info';
 
-        // KAS expects local_part + domain_part + target_1 (full RFC address)
         $payload = [
             'local_part'  => $sourceLocal,
             'domain_part' => $domain,
             'target_1'    => $targetLocal . '@' . $domain,
         ];
 
-        // NOTE: Action name is add_mailforward (no underscore!)
-        return $this->kasApiCall(
+        $resp = $this->kasApiCall(
             $client->account_login,
             $client->account_password,
             'add_mailforward',
             $payload
         );
+
+        if (($resp['success'] ?? false) === true) {
+            usleep(600000);
+            $this->syncMailForwardFor($client, $sourceLocal, $domain);
+        }
+
+        return $resp;
+    }
+
+    /**
+     * Sync one mailbox (local_part@domain) from KAS into kas_mailaccounts.
+     * Uses your columns: kas_login, mail_login, domain, email, status, data_json, client_id.
+     */
+    public function syncMailAccountFor(\App\Models\KasClient $client, string $localPart, string $domain): void
+    {
+        $kasLogin = $client->account_login;
+
+        $res  = $this->kasApiCall($kasLogin, $client->account_password, 'get_mailaccounts', []);
+        $rows = $this->extractArray($res);
+
+        foreach ($rows as $row) {
+            // KAS gives full email in mail_adresses/mail_addresses
+            $email = $row['mail_adresses'] ?? $row['mail_addresses'] ?? null;
+            if (!$email) continue;
+
+            // target only our mailbox
+            if (strcasecmp($email, $localPart . '@' . $domain) !== 0) continue;
+
+            $login  = $row['mail_login'] ?? null;
+            $status = (isset($row['mail_is_active']) && $row['mail_is_active'] === 'Y') ? 'active' : 'missing';
+            $dom    = substr(strrchr($email, '@'), 1) ?: $domain;
+
+            $payload = [
+                'kas_login'  => $kasLogin,
+                'mail_login' => $login ?: $email,   // required by your schema
+                'domain'     => $dom,
+                'email'      => $email,
+                'status'     => $status,
+                'client_id'  => $client->id,
+                'data_json'  => $row,              // JSON column
+            ];
+
+            // unique on (kas_login, mail_login) fits your schema well
+            $this->upsertLocal(
+                'kas_mailaccounts',
+                ['kas_login' => $kasLogin, 'mail_login' => $payload['mail_login']],
+                $payload
+            );
+            break;
+        }
+    }
+
+
+    /**
+     * Sync one forward (local_part@domain) from KAS into kas_mailforwards.
+     * Uses your columns: kas_login, mail_forward_address, mail_forward_targets, status, client_id, data_json.
+     */
+    public function syncMailForwardFor(\App\Models\KasClient $client, string $sourceLocal, string $domain): void
+    {
+        $kasLogin = $client->account_login;
+
+        $res  = $this->kasApiCall($kasLogin, $client->account_password, 'get_mailforwards', []);
+        $rows = $this->extractArray($res);
+
+        foreach ($rows as $row) {
+            $addr    = $row['mail_forward_address'] ?? $row['mail_forward_adress'] ?? null; // both spellings appear
+            if (!$addr) continue;
+
+            if (strcasecmp($addr, $sourceLocal . '@' . $domain) !== 0) continue;
+
+            $targets = $row['mail_forward_targets'] ?? null; // already comma-joined by KAS here
+            $status  = (isset($row['in_progress']) && strtoupper($row['in_progress']) === 'FALSE') ? 'active' : 'missing';
+
+            $payload = [
+                'kas_login'            => $kasLogin,
+                'mail_forward_address' => $addr,
+                'mail_forward_targets' => $targets,
+                'status'               => $status,
+                'client_id'            => $client->id,
+                'data_json'            => $row,
+            ];
+
+            // unique on (kas_login, mail_forward_address)
+            $this->upsertLocal(
+                'kas_mailforwards',
+                ['kas_login' => $kasLogin, 'mail_forward_address' => $addr],
+                $payload
+            );
+            break;
+        }
+    }
+
+    /**
+     * Upsert safely: only persist columns that exist in the table.
+     */
+    protected function upsertLocal(string $table, array $unique, array $data): void
+    {
+        $cols = Schema::getColumnListing($table);
+        $colset = array_flip($cols);
+
+        // JSON-encode any '*_json' field automatically
+        foreach ($data as $k => $v) {
+            if (str_ends_with($k, '_json') && (is_array($v) || is_object($v))) {
+                $data[$k] = json_encode($v, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
+            }
+        }
+
+        $filteredData   = array_intersect_key($data,   $colset);
+        $filteredUnique = array_intersect_key($unique, $colset);
+
+        // sensible fallback unique keys
+        if (empty($filteredUnique)) {
+            if (isset($filteredData['email'])) {
+                $filteredUnique = ['email' => $filteredData['email']];
+            } elseif (isset($filteredData['mail_login'])) {
+                $filteredUnique = ['mail_login' => $filteredData['mail_login']];
+            } elseif (isset($filteredData['mail_forward_address'])) {
+                $filteredUnique = ['mail_forward_address' => $filteredData['mail_forward_address']];
+            } else {
+                DB::table($table)->insert($filteredData);
+                return;
+            }
+        }
+
+        DB::table($table)->updateOrInsert($filteredUnique, $filteredData);
+    }
+
+    /**
+     * Extracts the row list from a KAS response.
+     */
+    protected function extractArray(array $resp): array
+    {
+        $r = $resp['Response']['ReturnInfo'] ?? $resp['Response'] ?? $resp;
+        if (!is_array($r)) return [];
+        return array_is_list($r) ? $r : array_values($r);
+    }
+
+    /** Public helper: fetch all mailaccounts from KAS (normalized list) */
+    public function fetchMailaccounts(\App\Models\KasClient $client): array
+    {
+        $resp = $this->kasApiCall($client->account_login, $client->account_password, 'get_mailaccounts', []);
+        return $this->extractArray($resp); // uses the helper we added earlier
+    }
+
+    /** Public helper: fetch all mailforwards from KAS (normalized list) */
+    public function fetchMailforwards(\App\Models\KasClient $client): array
+    {
+        $resp = $this->kasApiCall($client->account_login, $client->account_password, 'get_mailforwards', []);
+        return $this->extractArray($resp);
     }
 
 }
