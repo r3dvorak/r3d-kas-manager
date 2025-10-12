@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.4-alpha
+ * @version   0.26.6-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -43,82 +43,69 @@ class AddMailforward implements ActionHandler
 {
     public function __construct(private KasGateway $kas) {}
 
+    /**
+     * Accept both naming variants to be robust:
+     * - add_mailforward
+     * - add_mail_forward
+     */
     public function supports(string $type): bool
     {
-        return $type === 'add_mailforward';
+        return in_array($type, ['add_mailforward', 'add_mail_forward'], true);
     }
 
+    /**
+     * Handle creation of a mail forward.
+     *
+     * Expected parameters (action.parameters or run/vars):
+     *  - kas_login
+     *  - domain_name
+     *  - mail_forward_from (local part)
+     *  - mail_forward_to   (target local part or full address)
+     *
+     * Handler normalizes to KAS expected payload.
+     */
     public function handle(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
     {
         if ($dryRun) {
-            return ['success' => true, 'dry_run' => true, 'action' => 'add_mailforward'];
+            return ['success' => true, 'dry_run' => true, 'action' => 'add_mail_forward'];
         }
 
-        $p = array_merge($vars, is_array($action->parameters) ? $action->parameters : []);
-        $kasLogin = $p['kas_login'] ?? $run->kas_login ?? null;
-        $domain = $p['domain_name'] ?? $run->domain_name ?? null;
+        // action->parameters may be stored as JSON string
+        $actionParams = is_array($action->parameters)
+            ? $action->parameters
+            : (is_string($action->parameters) ? json_decode($action->parameters, true) ?? [] : []);
+
+        // Vars precedence: $vars already merged by executor (recipe defaults + runtime + action params merged)
+        $merged = array_merge($vars, $actionParams);
+
+        $kasLogin = $merged['kas_login'] ?? $run->kas_login ?? null;
+        $domain   = $merged['domain_name'] ?? $run->domain_name ?? null;
+
         if (!$kasLogin || !$domain) {
             return ['success' => false, 'error' => 'kas_login or domain_name missing'];
         }
 
-        $sourceRaw = $p['mail_forward_from'] ?? $p['from_local'] ?? null;
-        if (!$sourceRaw) return ['success' => false, 'error' => 'mail_forward_from missing'];
+        // compute local parts / addresses
+        $fromLocal = $merged['mail_forward_from'] ?? $merged['mail_forward_address'] ?? null;
+        $toTarget  = $merged['mail_forward_to'] ?? $merged['mail_forward_targets'] ?? null;
 
-        if (str_contains($sourceRaw, '@')) {
-            [$srcLocal, $srcDomain] = explode('@', $sourceRaw, 2) + [null, null];
-            if ($srcDomain && strcasecmp($srcDomain, $domain) !== 0) {
-                return ['success' => false, 'error' => "mail_forward_from domain ({$srcDomain}) does not match domain_name ({$domain})"];
-            }
-            $localPart = $srcLocal;
-        } else {
-            $localPart = $sourceRaw;
-        }
+        // allow either full address or local part; normalize to full addresses
+        $fromAddr = strpos(($fromLocal ?? ''), '@') === false ? ($fromLocal . '@' . $domain) : $fromLocal;
+        $toAddr   = strpos(($toTarget ?? ''), '@') === false ? ($toTarget . '@' . $domain) : $toTarget;
 
-        $targetsRaw = $p['mail_forward_to'] ?? $p['to_list'] ?? $p['targets'] ?? null;
-        $targets = [];
-        if (is_array($targetsRaw)) $targets = $targetsRaw;
-        elseif (is_string($targetsRaw) && $targetsRaw !== '') {
-            $parts = array_filter(array_map('trim', explode(',', $targetsRaw)));
-            $targets = array_values($parts);
-        }
-
-        if (empty($targets)) return ['success' => false, 'error' => 'No target address(es) provided for forward'];
-
-        $normalizedTargets = [];
-        foreach ($targets as $t) {
-            if ($t === '') continue;
-            $normalizedTargets[] = str_contains($t, '@') ? $t : ($t . '@' . $domain);
-        }
-
-        $payload = [
-            'local_part' => $localPart,
-            'domain_part' => $domain,
-        ];
-        $i = 1;
-        foreach ($normalizedTargets as $tgt) {
-            $payload['target_' . $i] = $tgt;
-            $i++;
+        if (!$fromAddr || !$toAddr) {
+            return ['success' => false, 'error' => 'mail_forward_from or mail_forward_to missing'];
         }
 
         try {
-            $resp = $this->kas->callForLogin($kasLogin, 'add_mailforward', $payload);
+            $payload = [
+                'mail_forward_address' => $fromAddr,
+                'mail_forward_targets' => $toAddr,
+            ];
+            $resp = $this->kas->callForLogin($kasLogin, 'add_mail_forward', $payload);
+            return (is_array($resp) ? $resp : ['success' => false, 'error' => 'Invalid KAS response']);
         } catch (Throwable $e) {
-            return ['success' => false, 'error' => 'KAS add_mailforward error: ' . $e->getMessage()];
+            return ['success' => false, 'error' => 'Handler exception: '.$e->getMessage()];
         }
-
-        $result = $resp;
-        if (($resp['success'] ?? false) === true) {
-            try {
-                $localId = $this->kas->syncMailForward($kasLogin, $localPart, $domain);
-                if ($localId !== false) {
-                    $result['affected_resource_type'] = 'kas_mailforward';
-                    $result['affected_resource_id'] = $localId;
-                }
-            } catch (Throwable) {
-                // ignore
-            }
-        }
-
-        return $result;
     }
 }
