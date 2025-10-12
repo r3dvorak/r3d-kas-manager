@@ -8,7 +8,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.5-alpha
+ * @version   0.26.7-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -33,50 +33,46 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\Recipes\KasGateway;
 use App\Services\Recipes\Dispatcher;
 use App\Services\Recipes\Actions\AddDomain;
-use App\Services\Recipes\Actions\UpdateDnsRecords;
 use App\Services\Recipes\Actions\AddMailaccount;
 use App\Services\Recipes\Actions\AddMailforward;
+use App\Services\Recipes\Actions\UpdateDnsRecords;
+use App\Services\Kas\KasGateway;
 
 class RecipesServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        // shared gateway
+        // Register KasGateway (example singleton binding)
         $this->app->singleton(KasGateway::class, function ($app) {
-            return new KasGateway();
+            // adapt constructor args as needed; keep minimal here
+            return new KasGateway(config('services.kas'));
         });
 
-        // handlers
-        $this->app->singleton(AddDomain::class, function ($app) {
-            return new AddDomain($app->make(KasGateway::class));
-        });
-        $this->app->singleton(UpdateDnsRecords::class, function ($app) {
-            return new UpdateDnsRecords($app->make(KasGateway::class));
-        });
-        $this->app->singleton(AddMailaccount::class, function ($app) {
-            return new AddMailaccount($app->make(KasGateway::class));
-        });
-        $this->app->singleton(AddMailforward::class, function ($app) {
-            return new AddMailforward($app->make(KasGateway::class));
+        // Register handler classes (class names only; Dispatcher will instantiate them)
+        $handlers = [
+            AddDomain::class,
+            UpdateDnsRecords::class,
+            AddMailaccount::class,
+            AddMailforward::class,
+        ];
+
+        // Bind the Dispatcher with the handler list
+        $this->app->singleton(Dispatcher::class, function ($app) use ($handlers) {
+            return new Dispatcher($app, $handlers);
         });
 
-        // dispatcher wired with the handlers
-        $this->app->singleton(Dispatcher::class, function ($app) {
-            $handlers = [
-                $app->make(AddDomain::class),
-                $app->make(UpdateDnsRecords::class),
-                $app->make(AddMailaccount::class),
-                $app->make(AddMailforward::class),
-            ];
-            return new Dispatcher($handlers);
-        });
+        // Optionally bind handlers individually if other code resolves them directly
+        foreach ($handlers as $handlerClass) {
+            $this->app->singleton($handlerClass, function ($app) use ($handlerClass) {
+                return $app->make($handlerClass);
+            });
+        }
     }
 
     public function boot()
     {
-        // no boot steps needed currently
+        // nothing special needed here for the Dispatcher change
     }
 }
