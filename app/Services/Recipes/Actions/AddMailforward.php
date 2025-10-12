@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.1-alpha
+ * @version   0.26.4-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -48,32 +48,21 @@ class AddMailforward implements ActionHandler
         return $type === 'add_mailforward';
     }
 
-    /**
-     * Execute add_mailforward action.
-     *
-     * @return array Normalized response shape
-     */
     public function handle(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
     {
         if ($dryRun) {
             return ['success' => true, 'dry_run' => true, 'action' => 'add_mailforward'];
         }
 
-        // Merge action parameters over recipe vars
         $p = array_merge($vars, is_array($action->parameters) ? $action->parameters : []);
-
-        $kasLogin = $p['kas_login']   ?? $run->kas_login   ?? null;
-        $domain   = $p['domain_name'] ?? $run->domain_name ?? null;
-
+        $kasLogin = $p['kas_login'] ?? $run->kas_login ?? null;
+        $domain = $p['domain_name'] ?? $run->domain_name ?? null;
         if (!$kasLogin || !$domain) {
             return ['success' => false, 'error' => 'kas_login or domain_name missing'];
         }
 
-        // Source address (local-part or full)
         $sourceRaw = $p['mail_forward_from'] ?? $p['from_local'] ?? null;
-        if (!$sourceRaw) {
-            return ['success' => false, 'error' => 'mail_forward_from missing'];
-        }
+        if (!$sourceRaw) return ['success' => false, 'error' => 'mail_forward_from missing'];
 
         if (str_contains($sourceRaw, '@')) {
             [$srcLocal, $srcDomain] = explode('@', $sourceRaw, 2) + [null, null];
@@ -85,31 +74,24 @@ class AddMailforward implements ActionHandler
             $localPart = $sourceRaw;
         }
 
-        // Targets: array or comma-separated string
         $targetsRaw = $p['mail_forward_to'] ?? $p['to_list'] ?? $p['targets'] ?? null;
         $targets = [];
-
-        if (is_array($targetsRaw)) {
-            $targets = $targetsRaw;
-        } elseif (is_string($targetsRaw) && $targetsRaw !== '') {
+        if (is_array($targetsRaw)) $targets = $targetsRaw;
+        elseif (is_string($targetsRaw) && $targetsRaw !== '') {
             $parts = array_filter(array_map('trim', explode(',', $targetsRaw)));
             $targets = array_values($parts);
         }
 
-        if (empty($targets)) {
-            return ['success' => false, 'error' => 'No target address(es) provided for forward'];
-        }
+        if (empty($targets)) return ['success' => false, 'error' => 'No target address(es) provided for forward'];
 
-        // Normalize targets to full addresses
         $normalizedTargets = [];
         foreach ($targets as $t) {
             if ($t === '') continue;
             $normalizedTargets[] = str_contains($t, '@') ? $t : ($t . '@' . $domain);
         }
 
-        // Build payload for KAS: local_part, domain_part, target_1..N
         $payload = [
-            'local_part'  => $localPart,
+            'local_part' => $localPart,
             'domain_part' => $domain,
         ];
         $i = 1;
@@ -124,17 +106,19 @@ class AddMailforward implements ActionHandler
             return ['success' => false, 'error' => 'KAS add_mailforward error: ' . $e->getMessage()];
         }
 
-        // Optional sync
+        $result = $resp;
         if (($resp['success'] ?? false) === true) {
             try {
-                if (method_exists($this->kas, 'syncMailForward')) {
-                    $this->kas->syncMailForward($kasLogin, $localPart, $domain);
+                $localId = $this->kas->syncMailForward($kasLogin, $localPart, $domain);
+                if ($localId !== false) {
+                    $result['affected_resource_type'] = 'kas_mailforward';
+                    $result['affected_resource_id'] = $localId;
                 }
             } catch (Throwable) {
                 // ignore
             }
         }
 
-        return $resp;
+        return $result;
     }
 }

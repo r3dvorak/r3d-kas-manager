@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.3-alpha
+ * @version   0.26.5-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -19,7 +19,16 @@
  *    from the container (app()->make(Dispatcher::class)). If that fails it will
  *    instantiate a default Dispatcher wired with the default handlers and a
  *    KasGateway instance so the class works when constructed manually in Tinker.
+ * 
+ * Orchestrates recipe runs by delegating each RecipeAction to the
+ * App\Services\Recipes\Dispatcher which in turn invokes the ActionHandler
+ * implementations (AddDomain, UpdateDnsRecords, AddMailaccount, AddMailforward, ...).
  *
+ * Changes in 0.26.5:
+ *  - Merge recipe default variables (recipes.variables) with runtime variables
+ *    so kas_login/domain_name from recipe are honoured if not provided at runtime.
+ *  - Persist merged variables in RecipeRun and pass them to action handlers.
+ *  - Store merged request payload into recipe_action_history.request_payload.
  */
 
 namespace App\Services;
@@ -28,7 +37,6 @@ use App\Models\Recipe;
 use App\Models\RecipeRun;
 use App\Models\RecipeAction;
 use App\Models\RecipeActionHistory;
-use App\Models\KasClient;
 use App\Services\Recipes\Dispatcher;
 use App\Services\Recipes\KasGateway;
 use App\Services\Recipes\Actions\AddDomain;
@@ -36,8 +44,8 @@ use App\Services\Recipes\Actions\UpdateDnsRecords;
 use App\Services\Recipes\Actions\AddMailaccount;
 use App\Services\Recipes\Actions\AddMailforward;
 use Illuminate\Support\Facades\Log;
-use Exception;
 use Throwable;
+use Exception;
 
 class RecipeExecutor
 {
@@ -99,6 +107,9 @@ class RecipeExecutor
     /**
      * Execute a recipe: iterate actions and dispatch them to the Dispatcher.
      *
+     * Merges recipe default variables with runtime variables. Runtime variables
+     * override recipe defaults.
+     *
      * @param Recipe $recipe
      * @param array $variables
      * @param mixed $user (optional)
@@ -107,13 +118,27 @@ class RecipeExecutor
      */
     public function executeRecipe(Recipe $recipe, array $variables = [], $user = null, array $options = []): RecipeRun
     {
+        // Decode recipe defaults (defensive)
+        $recipeDefaults = [];
+        if (!empty($recipe->variables)) {
+            if (is_string($recipe->variables)) {
+                $decoded = json_decode($recipe->variables, true);
+                $recipeDefaults = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : [];
+            } elseif (is_array($recipe->variables)) {
+                $recipeDefaults = $recipe->variables;
+            }
+        }
+
+        // Merge defaults with provided variables (runtime vars win)
+        $mergedVars = array_merge($recipeDefaults, $variables);
+
         $run = RecipeRun::create([
             'recipe_id'   => $recipe->id,
             'user_id'     => $user?->id ?? null,
             'status'      => 'running',
-            'kas_login'   => $variables['kas_login'] ?? null,
-            'domain_name' => $variables['domain_name'] ?? null,
-            'variables'   => $variables,
+            'kas_login'   => $mergedVars['kas_login'] ?? null,
+            'domain_name' => $mergedVars['domain_name'] ?? null,
+            'variables'   => $mergedVars,
             'started_at'  => now(),
         ]);
 
@@ -121,22 +146,24 @@ class RecipeExecutor
 
         try {
             foreach ($recipe->actions as $action) {
-                // Merge action.parameters with runtime variables when calling dispatcher
-                $vars = array_merge($variables, is_array($action->parameters) ? $action->parameters : []);
-                // Dispatcher returns a normalized array
+                // Prepare vars for this action:
+                // 1) start from merged recipe vars
+                // 2) overlay action->parameters (action parameters override recipe defaults)
+                $actionParams = is_array($action->parameters) ? $action->parameters : (is_string($action->parameters) ? json_decode($action->parameters, true) ?? [] : []);
+                $varsForAction = array_merge($mergedVars, $actionParams);
+
+                // Dispatch and normalize result
                 try {
-                    $result = $this->dispatcher->dispatch($action, $run, $vars, $dryRun);
-                    // Defensive: ensure result is array
+                    $result = $this->dispatcher->dispatch($action, $run, $varsForAction, $dryRun);
                     if (!is_array($result)) {
                         $result = ['success' => false, 'error' => 'Handler returned invalid response'];
                     }
                 } catch (Throwable $hEx) {
-                    // handler threw — convert to canonical error array
                     $result = ['success' => false, 'error' => $hEx->getMessage()];
                 }
 
-                // store history
-                $this->storeHistory($run, $action, $result);
+                // Store history (store the merged request payload for clarity)
+                $this->storeHistory($run, $action, $varsForAction, $result);
             }
 
             $run->status = 'finished';
@@ -157,16 +184,15 @@ class RecipeExecutor
 
     /**
      * Store action result in recipe_action_history table.
-     * Normalizes and protects against non-array responses.
      *
      * @param RecipeRun $run
      * @param RecipeAction $action
-     * @param array $result
+     * @param array $requestPayload merged request payload passed to handler
+     * @param array $result handler result
      * @return void
      */
-    protected function storeHistory(RecipeRun $run, RecipeAction $action, array $result): void
+    protected function storeHistory(RecipeRun $run, RecipeAction $action, array $requestPayload, array $result): void
     {
-        // Determine status => 'success'|'error'
         $success = $result['success'] ?? false;
         $status  = $success ? 'success' : 'error';
 
@@ -179,7 +205,7 @@ class RecipeExecutor
             'affected_resource_type' => $result['affected_resource_type'] ?? null,
             'affected_resource_id'   => $result['affected_resource_id'] ?? null,
             'action_type'       => $action->type,
-            'request_payload'   => $action->parameters ?? null,
+            'request_payload'   => $requestPayload,
             'response_payload'  => $result,
             'status'            => $status,
             'error_message'     => $result['error'] ?? null,
