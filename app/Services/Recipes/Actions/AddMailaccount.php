@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.0-alpha
+ * @version   0.26.1-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -44,32 +44,37 @@ class AddMailaccount implements ActionHandler
         return $type === 'add_mailaccount';
     }
 
+    /**
+     * Execute add_mailaccount.
+     *
+     * @return array Normalized KAS-style response: ['success'=>bool, 'Response'=>... ] or ['success'=>false,'error'=>...]
+     */
     public function handle(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
     {
         if ($dryRun) {
             return [
-                'success'  => true,
-                'dry_run'  => true,
-                'action'   => 'add_mailaccount',
+                'success' => true,
+                'dry_run' => true,
+                'action'  => 'add_mailaccount',
             ];
         }
 
-        $kasLogin = $vars['kas_login']   ?? $run->kas_login   ?? null;
-        $domain   = $vars['domain_name'] ?? $run->domain_name ?? null;
+        // merge action parameters over recipe vars
+        $p = array_merge($vars, is_array($action->parameters) ? $action->parameters : []);
+
+        $kasLogin = $p['kas_login']   ?? $run->kas_login   ?? null;
+        $domain   = $p['domain_name'] ?? $run->domain_name ?? null;
 
         if (!$kasLogin || !$domain) {
             return ['success' => false, 'error' => 'kas_login or domain_name missing'];
         }
 
-        // Action-level params override recipe vars
-        $p = array_merge($vars, is_array($action->parameters) ? $action->parameters : []);
-
-        $local    = $p['mail_account']      ?? $p['local_part'] ?? 'info';
-        $password = $p['mail_password']     ?? $p['default_password'] ?? 'ChangeMe123!';
-        $quotaMb  = $p['mail_quota_mb']     ?? $p['quota_mb'] ?? null;
+        $local    = $p['mail_account'] ?? $p['local_part'] ?? 'info';
+        $password = $p['mail_password'] ?? $p['default_password'] ?? 'ChangeMe123!';
+        $quotaMb  = $p['mail_quota_mb'] ?? $p['quota_mb'] ?? null;
         $autolog  = $p['webmail_autologin'] ?? null;
 
-        // KAS payload (per All-Inkl spec)
+        // Build KAS payload using the common (local_part/domain_part) keys
         $payload = [
             'local_part'    => $local,
             'domain_part'   => $domain,
@@ -79,25 +84,25 @@ class AddMailaccount implements ActionHandler
         if ($quotaMb !== null) {
             $payload['quota_rule'] = (int) $quotaMb;
         }
-
         if ($autolog !== null) {
             $payload['webmail_autologin'] = ($autolog === true || $autolog === 'Y') ? 'Y' : 'N';
         }
 
         try {
-            $resp = $this->kas->call($kasLogin, 'add_mailaccount', $payload);
+            // callForLogin resolves the KasClient/pw and matches KasGateway signature -> analyzer happy
+            $resp = $this->kas->callForLogin($kasLogin, 'add_mailaccount', $payload);
         } catch (Throwable $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
+            return ['success' => false, 'error' => 'KAS add_mailaccount error: ' . $e->getMessage()];
         }
 
-        // Best-effort post-sync into local DB (if gateway exposes it)
+        // Best-effort: optional local sync if gateway implements it (guarded)
         if (($resp['success'] ?? false) === true) {
             try {
                 if (method_exists($this->kas, 'syncMailAccount')) {
                     $this->kas->syncMailAccount($kasLogin, $local, $domain);
                 }
             } catch (Throwable) {
-                // ignore sync errors; creation already succeeded
+                // ignore sync errors; creation succeeded
             }
         }
 

@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.0-alpha
+ * @version   0.26.1-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -51,11 +51,7 @@ class AddMailforward implements ActionHandler
     /**
      * Execute add_mailforward action.
      *
-     * @param RecipeAction $action
-     * @param RecipeRun    $run
-     * @param array        $vars
-     * @param bool         $dryRun
-     * @return array
+     * @return array Normalized response shape
      */
     public function handle(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
     {
@@ -63,7 +59,7 @@ class AddMailforward implements ActionHandler
             return ['success' => true, 'dry_run' => true, 'action' => 'add_mailforward'];
         }
 
-        // Merge action parameters over recipe vars (action wins)
+        // Merge action parameters over recipe vars
         $p = array_merge($vars, is_array($action->parameters) ? $action->parameters : []);
 
         $kasLogin = $p['kas_login']   ?? $run->kas_login   ?? null;
@@ -73,7 +69,7 @@ class AddMailforward implements ActionHandler
             return ['success' => false, 'error' => 'kas_login or domain_name missing'];
         }
 
-        // Source can be local-part or full address
+        // Source address (local-part or full)
         $sourceRaw = $p['mail_forward_from'] ?? $p['from_local'] ?? null;
         if (!$sourceRaw) {
             return ['success' => false, 'error' => 'mail_forward_from missing'];
@@ -89,7 +85,7 @@ class AddMailforward implements ActionHandler
             $localPart = $sourceRaw;
         }
 
-        // Targets: accept array or comma-separated string or single local-part
+        // Targets: array or comma-separated string
         $targetsRaw = $p['mail_forward_to'] ?? $p['to_list'] ?? $p['targets'] ?? null;
         $targets = [];
 
@@ -100,23 +96,18 @@ class AddMailforward implements ActionHandler
             $targets = array_values($parts);
         }
 
-        // If no explicit targets but mail_forward_to is missing, fail
         if (empty($targets)) {
             return ['success' => false, 'error' => 'No target address(es) provided for forward'];
         }
 
-        // Normalize targets to full addresses (append domain if local-part)
+        // Normalize targets to full addresses
         $normalizedTargets = [];
         foreach ($targets as $t) {
             if ($t === '') continue;
-            if (!str_contains($t, '@')) {
-                $normalizedTargets[] = $t . '@' . $domain;
-            } else {
-                $normalizedTargets[] = $t;
-            }
+            $normalizedTargets[] = str_contains($t, '@') ? $t : ($t . '@' . $domain);
         }
 
-        // Build payload: local_part, domain_part, target_1..N
+        // Build payload for KAS: local_part, domain_part, target_1..N
         $payload = [
             'local_part'  => $localPart,
             'domain_part' => $domain,
@@ -128,21 +119,19 @@ class AddMailforward implements ActionHandler
         }
 
         try {
-            // Use convenience callForLogin so KasGateway resolves the stored password
             $resp = $this->kas->callForLogin($kasLogin, 'add_mailforward', $payload);
         } catch (Throwable $e) {
             return ['success' => false, 'error' => 'KAS add_mailforward error: ' . $e->getMessage()];
         }
 
-        // Best-effort: sync the forward locally if gateway provides helper
+        // Optional sync
         if (($resp['success'] ?? false) === true) {
             try {
                 if (method_exists($this->kas, 'syncMailForward')) {
-                    // syncMailForward signature assumed: (kasLogin, localPart, domain)
                     $this->kas->syncMailForward($kasLogin, $localPart, $domain);
                 }
             } catch (Throwable) {
-                // ignore sync errors — creation succeeded
+                // ignore
             }
         }
 
