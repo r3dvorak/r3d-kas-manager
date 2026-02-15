@@ -16,54 +16,132 @@
 @extends('layouts.app')
 
 @section('content')
+@php($client = Auth::guard('kas_client')->user())
+@php($kasLogin = strtolower((string) ($client?->account_login ?? '')))
+@php($displayName = (string) ($client?->account_comment ?? $client?->name ?? $kasLogin))
+@php($serverHostname = (string) ($client?->server_hostname ?? ''))
+@php($serverIp = (string) ($client?->server_ip ?? ''))
+@php($rootPath = $kasLogin !== '' ? "/www/htdocs/{$kasLogin}/" : '—')
+
+@php($domainsCount = \App\Models\KasDomain::where('kas_client_id', $client?->id)->whereNull('deleted_at')->count())
+@php($subdomainsCount = \App\Models\KasSubdomain::where('kas_client_id', $client?->id)->whereNull('deleted_at')->count())
+@php($mailboxesCount = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->count())
+@php($forwardsCount = \App\Models\KasMailForward::where('kas_login', $kasLogin)->where('status', 'active')->count())
+
+@php($maxDomains = (int) ($client?->max_domain ?? 0))
+@php($maxSubdomains = (int) ($client?->max_subdomain ?? 0))
+@php($maxMailboxes = (int) ($client?->max_mail_account ?? 0))
+@php($maxForwards = (int) ($client?->max_mail_forward ?? 0))
+@php($maxWebspaceMb = (float) ($client?->max_webspace ?? 0))
+@php($usedWebspaceGb = method_exists($client, 'usedSpaceGb') ? (float) $client->usedSpaceGb() : 0.0)
+@php($maxWebspaceGb = $maxWebspaceMb > 0 ? round($maxWebspaceMb / 1024, 2) : 0.0)
+@php($freeWebspaceGb = ($maxWebspaceGb > 0) ? max(0.0, round($maxWebspaceGb - $usedWebspaceGb, 2)) : 0.0)
+
 <div class="uk-container">
-    <h1 class="uk-heading-line"><span>Client Dashboard</span></h1>
+    <h1 class="uk-heading-line"><span>Willkommen in der technischen Verwaltung</span></h1>
+    <p class="uk-text-muted uk-margin-remove-top">
+        Wichtiger Hinweis: Einstellungen werden nicht sofort auf dem Server umgesetzt. Es kann einige Minuten dauern, bis Aenderungen wirksam werden.
+    </p>
 
-    <div class="uk-card uk-card-default uk-card-body uk-margin">
-        <h3 class="uk-card-title">Willkommen, {{ Auth::guard('kas_client')->user()->name }}</h3>
-        <p>Sie sind als KAS-Client eingeloggt.</p>
-
-        <ul class="uk-list uk-list-divider">
-            <li>
-                <strong>Login:</strong> {{ Auth::guard('kas_client')->user()->login }}
-            </li>
-            <li>
-                <strong>Domain:</strong> {{ Auth::guard('kas_client')->user()->domain }}
-            </li>
-            <li>
-                <strong>API-User:</strong> {{ Auth::guard('kas_client')->user()->api_user }}
-            </li>
-        </ul>
+    <div class="uk-alert-primary" uk-alert>
+        <p class="uk-margin-remove">
+            <strong>KAS:</strong> {{ $kasLogin ?: '—' }}
+            <span class="uk-text-muted">|</span>
+            <strong>Account:</strong> {{ $displayName ?: '—' }}
+        </p>
     </div>
 
-    <div class="uk-grid-small uk-child-width-1-2@s" uk-grid>
-        <div>
-            <div class="uk-card uk-card-hover uk-card-default uk-card-body">
-                <h3 class="uk-card-title">Meine Domains</h3>
-                <p>Liste und Verwaltung der Domains dieses Clients.</p>
-                <a href="{{ route('client.domains.index') }}" class="uk-button uk-button-primary">Domains ansehen</a>
+    <div class="uk-card uk-card-default uk-card-body uk-margin">
+        <div class="uk-flex uk-flex-between uk-flex-middle">
+            <h3 class="uk-card-title uk-margin-remove">Direktlinks</h3>
+            <div class="uk-text-small uk-text-muted">
+                {{ $serverHostname ?: '—' }}@if($serverIp) · {{ $serverIp }}@endif
             </div>
         </div>
-        <div>
-            <div class="uk-card uk-card-hover uk-card-default uk-card-body">
-                <h3 class="uk-card-title">Mailkonten</h3>
-                <p>Mailboxen und Weiterleitungen verwalten.</p>
-                <a href="{{ route('client.mailboxes.index') }}" class="uk-button uk-button-primary">Mailkonten ansehen</a>
+
+        <div class="uk-grid-small uk-child-width-auto@s uk-margin-small-top" uk-grid>
+            <div><a class="uk-button uk-button-default" href="{{ route('client.dns.index') }}">DNS-Einstellungen</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route('client.mailboxes.index') }}">E-Mail-Postfach</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route('client.mailforwards.index') }}">E-Mail-Weiterleitung</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route('client.domains.index') }}">Domain</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route('client.recipes.index') }}">Rezepte</a></div>
+        </div>
+
+        <div class="uk-grid-small uk-child-width-1-3@m uk-margin-top" uk-grid>
+            <div>
+                <div class="uk-card uk-card-default uk-card-body uk-padding-small">
+                    <div class="uk-text-small uk-text-muted">aktuelle Server-IP</div>
+                    <div class="uk-text-bold">{{ $serverIp ?: '—' }}</div>
+                </div>
+            </div>
+            <div>
+                <div class="uk-card uk-card-default uk-card-body uk-padding-small">
+                    <div class="uk-text-small uk-text-muted">Servername</div>
+                    <div class="uk-text-bold">{{ $serverHostname ?: '—' }}</div>
+                </div>
+            </div>
+            <div>
+                <div class="uk-card uk-card-default uk-card-body uk-padding-small">
+                    <div class="uk-text-small uk-text-muted">Stammverzeichnis</div>
+                    <div class="uk-text-bold uk-text-break">{{ $rootPath }}</div>
+                </div>
             </div>
         </div>
-        <div>
-            <div class="uk-card uk-card-hover uk-card-default uk-card-body">
-                <h3 class="uk-card-title">DNS Einstellungen</h3>
-                <p>DNS Records dieses Clients verwalten.</p>
-                <a href="{{ route('client.dns.index') }}" class="uk-button uk-button-primary">DNS Einstellungen</a>
-            </div>
+
+        <h4 class="uk-heading-bullet uk-margin-top">Ressourcen</h4>
+        <div class="uk-overflow-auto">
+            <table class="uk-table uk-table-small uk-table-divider uk-table-striped">
+                <thead>
+                    <tr>
+                        <th>Ressourcen</th>
+                        <th class="uk-text-nowrap uk-text-right">angelegt</th>
+                        <th class="uk-text-nowrap uk-text-right">reserviert</th>
+                        <th class="uk-text-nowrap uk-text-right">verbleibend</th>
+                        <th class="uk-text-nowrap uk-text-right">moeglich</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Domain</td>
+                        <td class="uk-text-right">{{ $domainsCount }}</td>
+                        <td class="uk-text-right">0</td>
+                        <td class="uk-text-right">{{ $maxDomains > 0 ? max(0, $maxDomains - $domainsCount) : '—' }}</td>
+                        <td class="uk-text-right">{{ $maxDomains ?: '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Subdomains</td>
+                        <td class="uk-text-right">{{ $subdomainsCount }}</td>
+                        <td class="uk-text-right">0</td>
+                        <td class="uk-text-right">{{ $maxSubdomains > 0 ? max(0, $maxSubdomains - $subdomainsCount) : '—' }}</td>
+                        <td class="uk-text-right">{{ $maxSubdomains ?: '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td>E-Mail-Postfaecher</td>
+                        <td class="uk-text-right">{{ $mailboxesCount }}</td>
+                        <td class="uk-text-right">0</td>
+                        <td class="uk-text-right">{{ $maxMailboxes > 0 ? max(0, $maxMailboxes - $mailboxesCount) : '—' }}</td>
+                        <td class="uk-text-right">{{ $maxMailboxes ?: '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td>E-Mail-Weiterleitungen</td>
+                        <td class="uk-text-right">{{ $forwardsCount }}</td>
+                        <td class="uk-text-right">0</td>
+                        <td class="uk-text-right">{{ $maxForwards > 0 ? max(0, $maxForwards - $forwardsCount) : '—' }}</td>
+                        <td class="uk-text-right">{{ $maxForwards ?: '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Speicherplatz</td>
+                        <td class="uk-text-right">{{ number_format($usedWebspaceGb, 2, ',', '.') }} GB</td>
+                        <td class="uk-text-right">0,00 GB</td>
+                        <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($freeWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
+                        <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($maxWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
-        <div>
-            <div class="uk-card uk-card-hover uk-card-default uk-card-body">
-                <h3 class="uk-card-title">Rezepte</h3>
-                <p>Automatisierungen für Domains, Mailboxen und DNS.</p>
-                <a href="{{ route('client.recipes.index') }}" class="uk-button uk-button-primary">Rezepte öffnen</a>
-            </div>
+
+        <div class="uk-text-small uk-text-muted uk-margin-small-top">
+            Messung vom {{ now()->format('d.m.Y H:i') }} Uhr
         </div>
     </div>
 

@@ -9,7 +9,7 @@
  * @license   MIT License
  *
  * Reads:
- *   - storage/kas_responses/get_accounts.json → credentials
+ *   - storage/kas_responses/account-passwords.csv → credentials (source of truth)
  *   - storage/kas_responses/get_domains_all.json → domains per account
  *
  * Fetches DNS zone settings for each active domain (is_active = Y)
@@ -21,29 +21,33 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
+use App\Services\Kas\AccountPasswordsCsv;
 use SoapClient;
 use Exception;
 
 class KasImportDnsDryRun extends Command
 {
-    protected $signature = 'kas:import-dns-dryrun {--limit=0 : Limit number of domains for testing}';
+    protected $signature = 'kas:import-dns-dryrun
+                            {--limit=0 : Limit number of domains for testing}
+                            {--clients= : Comma-separated list of KAS client logins (e.g. w0213f06)}
+                            {--creds= : Path to account-passwords.csv (default: storage/kas_responses/account-passwords.csv)}';
     protected $description = 'Fetch DNS records (get_dns_settings) for all managed domains via KAS API (dry-run, merged).';
     protected string $apiWsdl = 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl';
     protected int $delay = 3; // seconds between requests
 
     public function handle(): void
     {
-        $accountsPath = storage_path('kas_responses/get_accounts.json');
+        $credsPath = (string)($this->option('creds') ?: storage_path('kas_responses/account-passwords.csv'));
         $domainsPath  = storage_path('kas_responses/get_domains_all.json');
         $outPath      = storage_path('kas_responses/get_dns_all.json');
 
-        if (!File::exists($accountsPath) || !File::exists($domainsPath)) {
-            $this->error('Missing one of the required files: get_accounts.json or get_domains_all.json');
+        if (!File::exists($credsPath) || !File::exists($domainsPath)) {
+            $this->error('Missing one of the required files: account-passwords.csv or get_domains_all.json');
             return;
         }
 
-        // --- Load credentials
-        $accounts = $this->loadAccounts($accountsPath);
+        // --- Load credentials (source of truth)
+        $accounts = app(AccountPasswordsCsv::class)->load($credsPath);
         $this->info('Loaded '.count($accounts).' account credentials.');
 
         // --- Load domain data
@@ -62,10 +66,21 @@ class KasImportDnsDryRun extends Command
 
         $soap = new SoapClient($this->apiWsdl);
         $limit = (int)$this->option('limit');
+        $filter = collect(explode(',', (string)$this->option('clients')))
+            ->map(fn($v) => strtolower(trim($v)))
+            ->filter()
+            ->toArray();
+        if ($filter) {
+            $this->info('🎯 Limiting to clients: ' . implode(', ', $filter));
+        }
         $processed = 0;
         $updated = 0;
 
         foreach ($domainData as $kasLogin => $entry) {
+            $kasLogin = strtolower((string) $kasLogin);
+            if ($filter && !in_array($kasLogin, $filter, true)) {
+                continue;
+            }
             $password = $accounts[$kasLogin] ?? null;
             if (!$password) {
                 $this->warn("Skipping account {$kasLogin}: missing credentials.");
@@ -110,19 +125,7 @@ class KasImportDnsDryRun extends Command
         $this->line("Total domains in file: " . count($merged));
     }
 
-    private function loadAccounts(string $path): array
-    {
-        $raw = json_decode(File::get($path), true);
-        $entries = $raw['Response']['ReturnInfo'] ?? [];
-        $accounts = [];
-
-        foreach ($entries as $entry) {
-            if (!empty($entry['account_login']) && !empty($entry['account_password'])) {
-                $accounts[$entry['account_login']] = $entry['account_password'];
-            }
-        }
-        return $accounts;
-    }
+    // credentials are loaded via AccountPasswordsCsv (source of truth)
 
     /**
      * Execute the KAS API call to get DNS settings with safe normalization.

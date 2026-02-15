@@ -20,6 +20,8 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\Auth\UnifiedLoginController;
 use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\MailboxesController;
+use App\Http\Controllers\Admin\MailforwardsController;
 
 // ============================================================
 // === Unified Login / Logout ===
@@ -51,6 +53,15 @@ Route::middleware(['web', 'useguard:web', 'auth:web'])->group(function () {
     Route::resource('kas-clients', KasClientController::class);
     Route::post('kas-clients/batch', [KasClientController::class, 'batch'])->name('kas-clients.batch');
 
+    // Mail (admin)
+    Route::get('/mailboxes', [MailboxesController::class, 'index'])->name('admin.mailboxes.index');
+    Route::get('/mailboxes/preview', [MailboxesController::class, 'preview'])->name('admin.mailboxes.preview');
+    Route::post('/mailboxes/sync', [MailboxesController::class, 'sync'])->name('admin.mailboxes.sync');
+
+    Route::get('/mailforwards', [MailforwardsController::class, 'index'])->name('admin.mailforwards.index');
+    Route::get('/mailforwards/preview', [MailforwardsController::class, 'preview'])->name('admin.mailforwards.preview');
+    Route::post('/mailforwards/sync', [MailforwardsController::class, 'sync'])->name('admin.mailforwards.sync');
+
     Route::resource('users', UserController::class);
     Route::post('users/batch', [UserController::class, 'batch'])->name('users.batch');
 
@@ -79,8 +90,40 @@ Route::prefix('client')->name('client.')->middleware(['web', 'useguard:kas_clien
     Route::get('/dashboard', fn() => view('client.dashboard'))->name('dashboard');
 
     Route::get('/domains', [App\Http\Controllers\Client\DomainController::class, 'index'])->name('domains.index');
+    Route::get('/domains/preview', [App\Http\Controllers\Client\DomainController::class, 'preview'])->name('domains.preview');
+    Route::post('/domains/sync', [App\Http\Controllers\Client\DomainController::class, 'sync'])->name('domains.sync');
+
+    Route::get('/subdomains', [App\Http\Controllers\Client\SubdomainController::class, 'index'])->name('subdomains.index');
+    Route::get('/subdomains/preview', [App\Http\Controllers\Client\SubdomainController::class, 'preview'])->name('subdomains.preview');
+    Route::post('/subdomains/sync', [App\Http\Controllers\Client\SubdomainController::class, 'sync'])->name('subdomains.sync');
+
     Route::get('/mailboxes', [App\Http\Controllers\Client\MailboxController::class, 'index'])->name('mailboxes.index');
+    Route::get('/mailboxes/preview', [App\Http\Controllers\Client\MailboxController::class, 'preview'])->name('mailboxes.preview');
+    Route::post('/mailboxes/sync', [App\Http\Controllers\Client\MailboxController::class, 'sync'])->name('mailboxes.sync');
+
+    Route::get('/mailforwards', [App\Http\Controllers\Client\MailforwardController::class, 'index'])->name('mailforwards.index');
+    Route::get('/mailforwards/preview', [App\Http\Controllers\Client\MailforwardController::class, 'preview'])->name('mailforwards.preview');
+    Route::post('/mailforwards/sync', [App\Http\Controllers\Client\MailforwardController::class, 'sync'])->name('mailforwards.sync');
+
+    Route::get('/ftp', [App\Http\Controllers\Client\FtpController::class, 'index'])->name('ftp.index');
+    Route::get('/ftp/preview', [App\Http\Controllers\Client\FtpController::class, 'preview'])->name('ftp.preview');
+    Route::post('/ftp/sync', [App\Http\Controllers\Client\FtpController::class, 'sync'])->name('ftp.sync');
+
+    Route::get('/databases', [App\Http\Controllers\Client\DatabaseController::class, 'index'])->name('databases.index');
+    Route::get('/databases/preview', [App\Http\Controllers\Client\DatabaseController::class, 'preview'])->name('databases.preview');
+    Route::post('/databases/sync', [App\Http\Controllers\Client\DatabaseController::class, 'sync'])->name('databases.sync');
+
+    Route::get('/ssl', [App\Http\Controllers\Client\SslController::class, 'index'])->name('ssl.index');
+    Route::get('/ssl/preview', [App\Http\Controllers\Client\SslController::class, 'preview'])->name('ssl.preview');
+    Route::post('/ssl/sync', [App\Http\Controllers\Client\SslController::class, 'sync'])->name('ssl.sync');
+
+    Route::get('/statistics', [App\Http\Controllers\Client\StatisticsController::class, 'index'])->name('statistics.index');
+    Route::get('/statistics/preview', [App\Http\Controllers\Client\StatisticsController::class, 'preview'])->name('statistics.preview');
+    Route::post('/statistics/sync', [App\Http\Controllers\Client\StatisticsController::class, 'sync'])->name('statistics.sync');
+
     Route::get('/dns', [App\Http\Controllers\Client\DnsController::class, 'index'])->name('dns.index');
+    Route::get('/dns/preview', [App\Http\Controllers\Client\DnsController::class, 'preview'])->name('dns.preview');
+    Route::post('/dns/sync', [App\Http\Controllers\Client\DnsController::class, 'sync'])->name('dns.sync');
     Route::get('/recipes', [App\Http\Controllers\Client\RecipeController::class, 'index'])->name('recipes.index');
 });
 

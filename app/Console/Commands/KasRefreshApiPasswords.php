@@ -1,6 +1,6 @@
 <?php
 /**
- * R3D KAS Manager – Refresh API Passwords from get_accounts.json
+ * R3D KAS Manager – Refresh API Passwords from account-passwords.csv
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
@@ -8,51 +8,41 @@
  * @date      2025-10-07
  * @license   MIT License
  *
- * Reads stored get_accounts.json and updates each KasClient.api_password.
+ * Reads storage/kas_responses/account-passwords.csv (source of truth) and updates KasClient.account_password.
  */
 
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\KasClient;
+use App\Services\Kas\AccountPasswordsCsv;
 
 class KasRefreshApiPasswords extends Command
 {
-    protected $signature = 'kas:refresh-api-passwords {--dryrun : Show changes without saving}';
-    protected $description = 'Refreshes api_passwords for all KAS clients from storage/kas_responses/get_accounts.json.';
+    protected $signature = 'kas:refresh-api-passwords {--dryrun : Show changes without saving} {--creds= : Path to account-passwords.csv (default: storage/kas_responses/account-passwords.csv)}';
+    protected $description = 'Refreshes KasClient.account_password for all KAS clients from account-passwords.csv.';
 
     public function handle(): int
     {
-        $path = storage_path('kas_responses/get_accounts.json');
+        $path = (string)($this->option('creds') ?: storage_path('kas_responses/account-passwords.csv'));
 
         if (!file_exists($path)) {
             $this->error("❌ File not found: {$path}");
             return Command::FAILURE;
         }
 
-        $data = json_decode(file_get_contents($path), true);
-        $accounts = $data['Response']['ReturnInfo'] ?? [];
+        $accounts = app(AccountPasswordsCsv::class)->load($path);
 
-        if (empty($accounts)) {
-            $this->error('❌ No accounts found in get_accounts.json');
-            return Command::FAILURE;
-        }
+        $key = (string) config('app.key');
 
         $updated = 0;
         $skipped = 0;
 
-        foreach ($accounts as $acc) {
-            $login = $acc['account_login'] ?? null;
-            $plainPass = $acc['account_password'] ?? null;
-
-            if (!$login || !$plainPass) {
-                $this->warn("⚠️ Skipping incomplete entry: " . json_encode($acc));
-                continue;
-            }
-
+        foreach ($accounts as $login => $plainPass) {
             $client = KasClient::where('account_login', $login)->first();
             if (!$client) {
                 $this->warn("⚠️ No local record for {$login}");
+                $skipped++;
                 continue;
             }
 
@@ -61,14 +51,17 @@ class KasRefreshApiPasswords extends Command
                 continue;
             }
 
-            $client->update(['api_password' => $plainPass]);
+            $client->update([
+                'account_password' => $plainPass,
+                'account_password_fingerprint' => hash_hmac('sha256', $plainPass, $key),
+            ]);
             $updated++;
         }
 
         if ($this->option('dryrun')) {
             $this->info("💡 Dry-run complete. No DB changes made.");
         } else {
-            $this->info("✅ Updated api_password for {$updated} clients.");
+            $this->info("✅ Updated account_password for {$updated} clients.");
         }
 
         return Command::SUCCESS;

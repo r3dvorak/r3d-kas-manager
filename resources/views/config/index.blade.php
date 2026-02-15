@@ -56,6 +56,82 @@
             </div>
         </fieldset>
 
+        {{-- all-inkl --}}
+        <fieldset class="uk-fieldset uk-margin-large-top">
+            <legend class="uk-legend">all-inkl</legend>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Kundennummer</label>
+                <input class="uk-input" type="text" name="all_inkl_customer_number"
+                       value="{{ $settings['all_inkl_customer_number'] ?? '' }}" placeholder="z. B. 858656">
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Vertragsnummer</label>
+                <input class="uk-input" type="text" name="all_inkl_contract_number"
+                       value="{{ $settings['all_inkl_contract_number'] ?? '' }}" placeholder="z. B. 1822536">
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Members Login</label>
+                <input class="uk-input" type="text" name="all_inkl_members_login"
+                       value="{{ $settings['all_inkl_members_login'] ?? '' }}" placeholder="z. B. 858656">
+                <div class="uk-text-meta">Hinweis: ist oft identisch mit der Kundennummer.</div>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Monitor Login</label>
+                <input class="uk-input" type="text" name="all_inkl_monitor_login"
+                       value="{{ $settings['all_inkl_monitor_login'] ?? '' }}" placeholder="z. B. dd20724.srv">
+            </div>
+        </fieldset>
+
+        {{-- Hinweise --}}
+        <fieldset class="uk-fieldset uk-margin-large-top">
+            <legend class="uk-legend">Hinweise (Sidebar)</legend>
+
+            @php
+                $h = fn(string $k, string $d = '1') => (string)($settings[$k] ?? $d) === '1';
+            @endphp
+
+            <div class="uk-margin">
+                <label><input class="uk-checkbox" type="checkbox" name="hints_show_public_ip" {{ $h('hints_show_public_ip','1') ? 'checked' : '' }}> Aktuelle oeffentliche IP</label>
+            </div>
+            <div class="uk-margin">
+                <label><input class="uk-checkbox" type="checkbox" name="hints_show_account_data" {{ $h('hints_show_account_data','1') ? 'checked' : '' }}> Kontodaten (Kundennummer/Vertrag)</label>
+            </div>
+            <div class="uk-margin">
+                <label><input class="uk-checkbox" type="checkbox" name="hints_show_quick_links" {{ $h('hints_show_quick_links','1') ? 'checked' : '' }}> Links (Members/Monitor/KAS API Doku)</label>
+            </div>
+            <div class="uk-margin">
+                <label><input class="uk-checkbox" type="checkbox" name="hints_show_env_versions" {{ $h('hints_show_env_versions','1') ? 'checked' : '' }}> Environment / Versionen</label>
+            </div>
+            <div class="uk-margin">
+                <label><input class="uk-checkbox" type="checkbox" name="hints_show_last_reports" {{ $h('hints_show_last_reports','1') ? 'checked' : '' }}> Letzte Reports (audit/sanitized)</label>
+            </div>
+            <div class="uk-margin">
+                <label><input class="uk-checkbox" type="checkbox" name="hints_show_kas_status" {{ $h('hints_show_kas_status','1') ? 'checked' : '' }}> KAS API Status (letzter Fehler/Erfolg)</label>
+            </div>
+            <div class="uk-margin">
+                <label><input class="uk-checkbox" type="checkbox" name="hints_show_context_help" {{ $h('hints_show_context_help','1') ? 'checked' : '' }}> Kontext Hilfe</label>
+                <div class="uk-text-meta">Hinweis: Admin-only Bereiche (Kontodaten/Links/Reports/Status) werden fuer Klienten trotzdem nicht angezeigt.</div>
+            </div>
+        </fieldset>
+
+        {{-- Mail --}}
+        <fieldset class="uk-fieldset uk-margin-large-top">
+            <legend class="uk-legend">Mail</legend>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Standardfilter (Spam/Virus) fuer neue Mailboxen</label>
+                <input class="uk-input" type="text" name="mail_standardfilter_default"
+                       value="{{ $settings['mail_standardfilter_default'] ?? 'rspamd;pdw;virus_mark;scbl:mark;brbl:mark' }}">
+                <div class="uk-text-meta">
+                    Format: <code>filter1;filter2:action;...</code> (z.B. <code>scbl:mark</code>). Dieser Wert wird von <code>kas:apply-mailstandardfilter-from-csv</code> verwendet.
+                </div>
+            </div>
+        </fieldset>
+
         {{-- Branding / Logo --}}
         <fieldset class="uk-fieldset uk-margin-large-top">
             <legend class="uk-legend">Branding</legend>

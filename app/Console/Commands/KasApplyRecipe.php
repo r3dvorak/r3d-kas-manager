@@ -8,6 +8,8 @@
  * @date      2025-10-07
  * @license   MIT License
  *
+ * app\Console\Commands\KasApplyRecipe.php
+ * 
  * Usage:
  *  php artisan kas:apply-recipe {recipe_id} [--kas_login=] [--domain=] [--vars='{"foo":"bar"}'] [--dryrun]
  *

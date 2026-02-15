@@ -31,6 +31,18 @@ class ConfigController extends Controller
             'support_email'         => 'nullable|email',
             'site_name'             => 'nullable|string|max:255',
             'logo_file'             => 'nullable|file|mimes:svg,png,jpg,jpeg,gif|max:1024',
+            'all_inkl_customer_number' => 'nullable|string|max:32',
+            'all_inkl_contract_number' => 'nullable|string|max:32',
+            'all_inkl_members_login'   => 'nullable|string|max:32',
+            'all_inkl_monitor_login'   => 'nullable|string|max:255',
+            'hints_show_public_ip'      => 'nullable',
+            'hints_show_account_data'   => 'nullable',
+            'hints_show_env_versions'   => 'nullable',
+            'hints_show_last_reports'   => 'nullable',
+            'hints_show_kas_status'     => 'nullable',
+            'hints_show_quick_links'    => 'nullable',
+            'hints_show_context_help'   => 'nullable',
+            'mail_standardfilter_default' => 'nullable|string|max:512',
         ]);
 
         // Handle logo upload
@@ -43,7 +55,21 @@ class ConfigController extends Controller
         }
 
         // Save other settings
-        foreach ($request->except(['_token','logo_file']) as $key => $value) {
+        $booleanKeys = [
+            'hints_show_public_ip',
+            'hints_show_account_data',
+            'hints_show_env_versions',
+            'hints_show_last_reports',
+            'hints_show_kas_status',
+            'hints_show_quick_links',
+            'hints_show_context_help',
+        ];
+
+        foreach ($booleanKeys as $key) {
+            AppSetting::set($key, $request->has($key) ? '1' : '0');
+        }
+
+        foreach ($request->except(array_merge(['_token','logo_file'], $booleanKeys)) as $key => $value) {
             AppSetting::set($key, $value);
         }
 

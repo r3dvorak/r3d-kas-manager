@@ -1,12 +1,34 @@
 <?php
 /**
- * R3D KAS Manager
+ * R3D KAS Manager – Recipe Executor (Dispatcher-based)
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.25.3-alpha
- * @date      2025-10-11
+ * @version   0.26.5-alpha
+ * @date      2025-10-12
  * @license   MIT License
+ *
+ * app/Services/RecipeExecutor.php
+ *
+ * Orchestrates recipe runs by delegating each RecipeAction to the
+ * App\Services\Recipes\Dispatcher which in turn invokes the ActionHandler
+ * implementations (AddDomain, UpdateDnsRecords, AddMailaccount, AddMailforward, ...).
+ *
+ * Backwards / convenience behaviour:
+ *  - If a Dispatcher is not provided, the executor will attempt to resolve one
+ *    from the container (app()->make(Dispatcher::class)). If that fails it will
+ *    instantiate a default Dispatcher wired with the default handlers and a
+ *    KasGateway instance so the class works when constructed manually in Tinker.
+ * 
+ * Orchestrates recipe runs by delegating each RecipeAction to the
+ * App\Services\Recipes\Dispatcher which in turn invokes the ActionHandler
+ * implementations (AddDomain, UpdateDnsRecords, AddMailaccount, AddMailforward, ...).
+ *
+ * Changes in 0.26.5:
+ *  - Merge recipe default variables (recipes.variables) with runtime variables
+ *    so kas_login/domain_name from recipe are honoured if not provided at runtime.
+ *  - Persist merged variables in RecipeRun and pass them to action handlers.
+ *  - Store merged request payload into recipe_action_history.request_payload.
  */
 
 namespace App\Services;
@@ -15,41 +37,133 @@ use App\Models\Recipe;
 use App\Models\RecipeRun;
 use App\Models\RecipeAction;
 use App\Models\RecipeActionHistory;
-use App\Models\KasClient;
+use App\Services\Recipes\Dispatcher;
+use App\Services\Recipes\KasGateway;
+use App\Services\Recipes\Actions\AddDomain;
+use App\Services\Recipes\Actions\UpdateDnsRecords;
+use App\Services\Recipes\Actions\AddMailaccount;
+use App\Services\Recipes\Actions\AddMailforward;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 use Exception;
-use SoapClient;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class RecipeExecutor
 {
+    protected Dispatcher $dispatcher;
+    protected KasGateway $kas;
+
     /**
-     * Execute a recipe and all actions.
+     * Constructor.
+     *
+     * @param Dispatcher|null $dispatcher (optional) Injected dispatcher
+     * @param KasGateway|null $kas         (optional) injected gateway for manual fallback
+     */
+    public function __construct(?Dispatcher $dispatcher = null, ?KasGateway $kas = null)
+    {
+        $this->kas = $kas ?? new KasGateway();
+
+        if ($dispatcher !== null) {
+            $this->dispatcher = $dispatcher;
+            return;
+        }
+
+        // Prefer container-resolved Dispatcher (if app() is available and bound)
+        try {
+            if (function_exists('app')) {
+                $resolved = app(Dispatcher::class);
+                if ($resolved instanceof Dispatcher) {
+                    $this->dispatcher = $resolved;
+                    return;
+                }
+            }
+        } catch (Throwable $e) {
+            // ignore and fall back to local construction
+            Log::debug('RecipeExecutor: container resolution of Dispatcher failed: ' . $e->getMessage());
+        }
+
+        // Fallback: instantiate a Dispatcher with default handlers wired to a KasGateway
+        $handlers = [
+            new AddDomain($this->kas),
+            new UpdateDnsRecords($this->kas),
+            new AddMailaccount($this->kas),
+            new AddMailforward($this->kas),
+        ];
+        $this->dispatcher = new Dispatcher($handlers);
+    }
+
+    /**
+     * Convenience run method.
+     *
+     * @param Recipe $recipe
+     * @param array $variables
+     * @param bool $dryRun
+     * @return RecipeRun
+     */
+    public function run(Recipe $recipe, array $variables = [], bool $dryRun = false): RecipeRun
+    {
+        return $this->executeRecipe($recipe, $variables, null, ['dryrun' => $dryRun]);
+    }
+
+    /**
+     * Execute a recipe: iterate actions and dispatch them to the Dispatcher.
+     *
+     * Merges recipe default variables with runtime variables. Runtime variables
+     * override recipe defaults.
+     *
+     * @param Recipe $recipe
+     * @param array $variables
+     * @param mixed $user (optional)
+     * @param array $options (optional) ['dryrun' => bool]
+     * @return RecipeRun
      */
     public function executeRecipe(Recipe $recipe, array $variables = [], $user = null, array $options = []): RecipeRun
     {
-        $dryRun = $options['dryrun'] ?? false;
+        // Decode recipe defaults (defensive)
+        $recipeDefaults = [];
+        if (!empty($recipe->variables)) {
+            if (is_string($recipe->variables)) {
+                $decoded = json_decode($recipe->variables, true);
+                $recipeDefaults = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : [];
+            } elseif (is_array($recipe->variables)) {
+                $recipeDefaults = $recipe->variables;
+            }
+        }
 
-        // merge recipe JSON variables with provided
-        $stored = is_array($recipe->variables)
-            ? $recipe->variables
-            : (json_decode($recipe->variables, true) ?? []);
-        $variables = array_merge($stored, $variables);
+        // Merge defaults with provided variables (runtime vars win)
+        $mergedVars = array_merge($recipeDefaults, $variables);
 
         $run = RecipeRun::create([
             'recipe_id'   => $recipe->id,
             'user_id'     => $user?->id ?? null,
             'status'      => 'running',
-            'kas_login'   => $variables['kas_login'] ?? null,
-            'domain_name' => $variables['domain_name'] ?? null,
-            'variables'   => $variables,
+            'kas_login'   => $mergedVars['kas_login'] ?? null,
+            'domain_name' => $mergedVars['domain_name'] ?? null,
+            'variables'   => $mergedVars,
             'started_at'  => now(),
         ]);
 
+        $dryRun = !empty($options['dryrun']);
+
         try {
             foreach ($recipe->actions as $action) {
-                $resp = $this->dispatchAction($action, $run, $variables, $dryRun);
-                $this->logHistory($run, $action, $resp);
+                // Prepare vars for this action:
+                // 1) start from merged recipe vars
+                // 2) overlay action->parameters (action parameters override recipe defaults)
+                $actionParams = is_array($action->parameters) ? $action->parameters : (is_string($action->parameters) ? json_decode($action->parameters, true) ?? [] : []);
+                $varsForAction = array_merge($mergedVars, $actionParams);
+
+                // Dispatch and normalize result
+                try {
+                    $result = $this->dispatcher->dispatch($action, $run, $varsForAction, $dryRun);
+                    if (!is_array($result)) {
+                        $result = ['success' => false, 'error' => 'Handler returned invalid response'];
+                    }
+                } catch (Throwable $hEx) {
+                    $result = ['success' => false, 'error' => $hEx->getMessage()];
+                }
+
+                // Store history (store the merged request payload for clarity)
+                $this->storeHistory($run, $action, $varsForAction, $result);
             }
 
             $run->status = 'finished';
@@ -57,6 +171,9 @@ class RecipeExecutor
         } catch (Exception $e) {
             $run->status = 'error';
             $run->result = ['error' => $e->getMessage()];
+            Log::error('RecipeExecutor.executeRecipe fatal: ' . $e->getMessage(), [
+                'recipe_id' => $recipe->id,
+            ]);
         }
 
         $run->finished_at = now();
@@ -66,433 +183,35 @@ class RecipeExecutor
     }
 
     /**
-     * Dispatch a recipe action.
+     * Store action result in recipe_action_history table.
+     *
+     * @param RecipeRun $run
+     * @param RecipeAction $action
+     * @param array $requestPayload merged request payload passed to handler
+     * @param array $result handler result
+     * @return void
      */
-    protected function dispatchAction(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
+    protected function storeHistory(RecipeRun $run, RecipeAction $action, array $requestPayload, array $result): void
     {
-        $method = match ($action->type) {
-            'add_domain'         => 'actionAddDomain',
-            'update_dns_records' => 'actionUpdateDnsRecords',
-            'add_mailaccount'    => 'actionAddMailaccount',
-            'add_mail_forward'   => 'actionAddMailForward',
-            default              => null,
-        };
-
-        if (!$method || !method_exists($this, $method)) {
-            return ['success' => false, 'error' => "Unknown action type: {$action->type}"];
-        }
-
-        if ($dryRun) {
-            return ['success' => true, 'dry_run' => true, 'action' => $action->type];
-        }
-
-        try {
-            return $this->$method($vars, $run) ?? ['success' => false, 'error' => 'null response'];
-        } catch (Exception $e) {
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
-
-    /**
-     * Log action results.
-     */
-    protected function logHistory(RecipeRun $run, RecipeAction $action, ?array $resp = null): void
-    {
-        $resp = $resp ?? ['success' => false, 'error' => 'null response'];
+        $success = $result['success'] ?? false;
+        $status  = $success ? 'success' : 'error';
 
         RecipeActionHistory::create([
-            'recipe_id'        => $run->recipe_id,
-            'recipe_run_id'    => $run->id,
-            'recipe_action_id' => $action->id,
-            'kas_login'        => $run->kas_login,
-            'domain_name'      => $run->domain_name,
-            'action_type'      => $action->type,
-            'response_payload' => $resp,
-            'status'           => ($resp['success'] ?? false) ? 'success' : 'error',
-            'error_message'    => $resp['error'] ?? null,
-            'created_at'       => now(),
+            'recipe_id'         => $run->recipe_id,
+            'recipe_run_id'     => $run->id,
+            'recipe_action_id'  => $action->id,
+            'kas_login'         => $run->kas_login,
+            'domain_name'       => $run->domain_name,
+            'affected_resource_type' => $result['affected_resource_type'] ?? null,
+            'affected_resource_id'   => $result['affected_resource_id'] ?? null,
+            'action_type'       => $action->type,
+            'request_payload'   => $requestPayload,
+            'response_payload'  => $result,
+            'status'            => $status,
+            'error_message'     => $result['error'] ?? null,
+            'started_at'        => now(),
+            'finished_at'       => now(),
+            'created_at'        => now(),
         ]);
     }
-
-    /**
-     * Normalize KAS SOAP responses.
-     */
-    protected function normalizeResponse($raw): array
-    {
-        if (is_array($raw)) {
-            return $raw;
-        }
-
-        if (is_object($raw)) {
-            return json_decode(json_encode($raw), true) ?? [];
-        }
-
-        if (is_string($raw)) {
-            $decoded = json_decode($raw, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                return $decoded;
-            }
-            return ['Response' => ['ReturnString' => 'FALSE', 'ReturnInfo' => [], 'Raw' => $raw]];
-        }
-
-        return ['Response' => ['ReturnString' => 'FALSE', 'ReturnInfo' => []]];
-    }
-
-    /**
-     * Safe KAS API call (bypasses SoapClient decoding issues).
-     */
-    protected function kasApiCall(string $kasLogin, string $password, string $actionName, array $params = []): array
-    {
-        if (empty($kasLogin) || empty($password)) {
-            throw new \Exception('Missing KAS credentials for SOAP call');
-        }
-
-        $wsdl = 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl';
-        $soap = new \SoapClient($wsdl, [
-            'exceptions' => true,
-            'cache_wsdl' => WSDL_CACHE_NONE,
-            'trace'      => true,
-            'features'   => SOAP_SINGLE_ELEMENT_ARRAYS,
-        ]);
-
-        // KAS expects a SINGLE JSON STRING argument to KasApi
-        $payload = [
-            'kas_login'        => $kasLogin,
-            'kas_auth_type'    => 'plain',
-            'kas_auth_data'    => $password,
-            'kas_action'       => $actionName,
-            'KasRequestParams' => $params,
-        ];
-        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-        try {
-            // IMPORTANT: pass THE JSON STRING, not an array
-            $raw = $soap->__soapCall('KasApi', [$json]);
-
-            // ---- robust normalization (no double-decode) ----
-            if (is_string($raw)) {
-                $decoded = json_decode($raw, true);
-                $raw = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : ['Response' => ['Raw' => $raw]];
-            } elseif (is_object($raw)) {
-                $raw = json_decode(json_encode($raw), true) ?? [];
-            } elseif (!is_array($raw)) {
-                $raw = ['Response' => ['Raw' => $raw]];
-            }
-            // -------------------------------------------------
-
-            // Unify shape
-            $response = $raw['Response'] ?? $raw;
-            $return   = $response['ReturnString'] ?? ($raw['ReturnString'] ?? null);
-            $success  = (string)$return === 'TRUE';
-
-            return [
-                'success'  => $success,
-                'Response' => $response,
-            ];
-        } catch (\SoapFault $e) {
-            $msg = $e->faultstring ?? $e->getMessage();
-
-            // KAS flood protection edge case
-            if (stripos($msg, 'flood_protection') !== false) {
-                sleep(2);
-                $raw = $soap->__soapCall('KasApi', [$json]);
-                if (is_string($raw)) {
-                    $decoded = json_decode($raw, true);
-                    $raw = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : ['Response' => ['Raw' => $raw]];
-                } elseif (is_object($raw)) {
-                    $raw = json_decode(json_encode($raw), true) ?? [];
-                } elseif (!is_array($raw)) {
-                    $raw = ['Response' => ['Raw' => $raw]];
-                }
-                $response = $raw['Response'] ?? $raw;
-                $return   = $response['ReturnString'] ?? ($raw['ReturnString'] ?? null);
-                $success  = (string)$return === 'TRUE';
-
-                return [
-                    'success'  => $success,
-                    'Response' => $response,
-                ];
-            }
-
-            // surface server message (what you were seeing)
-            throw new \Exception("KAS SOAP error: {$msg}");
-        } catch (\Throwable $e) {
-            throw new \Exception("KAS SOAP error: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Resolve the active KasClient.
-     */
-    protected function kasClient(array $params, RecipeRun $run): KasClient
-    {
-        $login = $params['kas_login'] ?? $run->kas_login ?? null;
-        if (!$login) {
-            throw new Exception('kas_login missing');
-        }
-
-        $client = KasClient::where('account_login', $login)->first();
-        if (!$client) {
-            throw new Exception("Unknown KAS account: {$login}");
-        }
-
-        return $client;
-    }
-
-    // ------------------------------------------------------------------
-    // Actions
-    // ------------------------------------------------------------------
-
-    protected function actionAddDomain(array $p, RecipeRun $run): array
-    {
-        $client = $this->kasClient($p, $run);
-        $domain = $p['domain_name'] ?? $run->domain_name ?? null;
-        if (!$domain) throw new Exception('domain_name missing');
-
-        $payload = [
-            'domain'      => $domain,
-            'php_version' => $p['php_version'] ?? '8.3',
-        ];
-
-        return $this->kasApiCall(
-            $client->account_login,
-            $client->account_password,
-            'add_domain',
-            $payload
-        );
-    }
-
-    protected function actionUpdateDnsRecords(array $p, RecipeRun $run): array
-    {
-        $client = $this->kasClient($p, $run);
-        $domain = $p['domain_name'] ?? $run->domain_name ?? null;
-        if (!$domain) throw new Exception('domain_name missing');
-
-        $records = [
-            ['record_type' => 'A',   'record_name' => '',       'record_data' => '178.63.15.195'],
-            ['record_type' => 'TXT', 'record_name' => '',       'record_data' => 'v=spf1 mx a ip4:178.63.15.195 -all'],
-            ['record_type' => 'TXT', 'record_name' => '_dmarc', 'record_data' => 'v=DMARC1; p=quarantine; sp=quarantine; adkim=s; aspf=s'],
-        ];
-
-        $responses = [];
-        foreach ($records as $rec) {
-            $responses[] = $this->kasApiCall(
-                $client->account_login,
-                $client->account_password,
-                'add_dns_settings',
-                [
-                    'zone_host'   => $domain,
-                    'record_type' => $rec['record_type'],
-                    'record_name' => $rec['record_name'],
-                    'record_data' => $rec['record_data'],
-                ]
-            );
-        }
-
-        return [
-            'success'  => true,
-            'Response' => ['ReturnString' => 'TRUE', 'ReturnInfo' => array_values($responses)],
-        ];
-    }
-
-    protected function actionAddMailaccount(array $p, RecipeRun $run): array
-    {
-        $client = $this->kasClient($p, $run);
-        $domain = $p['domain_name'] ?? $run->domain_name ?? null;
-        if (!$domain) throw new \Exception('domain_name missing');
-
-        $payload = [
-            'local_part'    => $p['mail_account'] ?? 'info',
-            'domain_part'   => $domain,
-            'mail_password' => $p['mail_password'] ?? 'ChangeMe123!',
-        ];
-
-        $resp = $this->kasApiCall(
-            $client->account_login,
-            $client->account_password,
-            'add_mailaccount',
-            $payload
-        );
-
-        if (($resp['success'] ?? false) === true) {
-            // KAS can need ~1s until GET endpoints reflect new state
-            usleep(600000); // 0.6s
-            $this->syncMailAccountFor($client, $payload['local_part'], $domain);
-        }
-
-        return $resp;
-    }
-
-    protected function actionAddMailForward(array $p, RecipeRun $run): array
-    {
-        $client = $this->kasClient($p, $run);
-        $domain = $p['domain_name'] ?? $run->domain_name ?? null;
-        if (!$domain) throw new \Exception('domain_name missing');
-
-        $sourceLocal = $p['mail_forward_from'] ?? 'kontakt';
-        $targetLocal = $p['mail_forward_to']   ?? 'info';
-
-        $payload = [
-            'local_part'  => $sourceLocal,
-            'domain_part' => $domain,
-            'target_1'    => $targetLocal . '@' . $domain,
-        ];
-
-        $resp = $this->kasApiCall(
-            $client->account_login,
-            $client->account_password,
-            'add_mailforward',
-            $payload
-        );
-
-        if (($resp['success'] ?? false) === true) {
-            usleep(600000);
-            $this->syncMailForwardFor($client, $sourceLocal, $domain);
-        }
-
-        return $resp;
-    }
-
-    /**
-     * Sync one mailbox (local_part@domain) from KAS into kas_mailaccounts.
-     * Uses your columns: kas_login, mail_login, domain, email, status, data_json, client_id.
-     */
-    public function syncMailAccountFor(\App\Models\KasClient $client, string $localPart, string $domain): void
-    {
-        $kasLogin = $client->account_login;
-
-        $res  = $this->kasApiCall($kasLogin, $client->account_password, 'get_mailaccounts', []);
-        $rows = $this->extractArray($res);
-
-        foreach ($rows as $row) {
-            // KAS gives full email in mail_adresses/mail_addresses
-            $email = $row['mail_adresses'] ?? $row['mail_addresses'] ?? null;
-            if (!$email) continue;
-
-            // target only our mailbox
-            if (strcasecmp($email, $localPart . '@' . $domain) !== 0) continue;
-
-            $login  = $row['mail_login'] ?? null;
-            $status = (isset($row['mail_is_active']) && $row['mail_is_active'] === 'Y') ? 'active' : 'missing';
-            $dom    = substr(strrchr($email, '@'), 1) ?: $domain;
-
-            $payload = [
-                'kas_login'  => $kasLogin,
-                'mail_login' => $login ?: $email,   // required by your schema
-                'domain'     => $dom,
-                'email'      => $email,
-                'status'     => $status,
-                'client_id'  => $client->id,
-                'data_json'  => $row,              // JSON column
-            ];
-
-            // unique on (kas_login, mail_login) fits your schema well
-            $this->upsertLocal(
-                'kas_mailaccounts',
-                ['kas_login' => $kasLogin, 'mail_login' => $payload['mail_login']],
-                $payload
-            );
-            break;
-        }
-    }
-
-
-    /**
-     * Sync one forward (local_part@domain) from KAS into kas_mailforwards.
-     * Uses your columns: kas_login, mail_forward_address, mail_forward_targets, status, client_id, data_json.
-     */
-    public function syncMailForwardFor(\App\Models\KasClient $client, string $sourceLocal, string $domain): void
-    {
-        $kasLogin = $client->account_login;
-
-        $res  = $this->kasApiCall($kasLogin, $client->account_password, 'get_mailforwards', []);
-        $rows = $this->extractArray($res);
-
-        foreach ($rows as $row) {
-            $addr    = $row['mail_forward_address'] ?? $row['mail_forward_adress'] ?? null; // both spellings appear
-            if (!$addr) continue;
-
-            if (strcasecmp($addr, $sourceLocal . '@' . $domain) !== 0) continue;
-
-            $targets = $row['mail_forward_targets'] ?? null; // already comma-joined by KAS here
-            $status  = (isset($row['in_progress']) && strtoupper($row['in_progress']) === 'FALSE') ? 'active' : 'missing';
-
-            $payload = [
-                'kas_login'            => $kasLogin,
-                'mail_forward_address' => $addr,
-                'mail_forward_targets' => $targets,
-                'status'               => $status,
-                'client_id'            => $client->id,
-                'data_json'            => $row,
-            ];
-
-            // unique on (kas_login, mail_forward_address)
-            $this->upsertLocal(
-                'kas_mailforwards',
-                ['kas_login' => $kasLogin, 'mail_forward_address' => $addr],
-                $payload
-            );
-            break;
-        }
-    }
-
-    /**
-     * Upsert safely: only persist columns that exist in the table.
-     */
-    protected function upsertLocal(string $table, array $unique, array $data): void
-    {
-        $cols = Schema::getColumnListing($table);
-        $colset = array_flip($cols);
-
-        // JSON-encode any '*_json' field automatically
-        foreach ($data as $k => $v) {
-            if (str_ends_with($k, '_json') && (is_array($v) || is_object($v))) {
-                $data[$k] = json_encode($v, JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES);
-            }
-        }
-
-        $filteredData   = array_intersect_key($data,   $colset);
-        $filteredUnique = array_intersect_key($unique, $colset);
-
-        // sensible fallback unique keys
-        if (empty($filteredUnique)) {
-            if (isset($filteredData['email'])) {
-                $filteredUnique = ['email' => $filteredData['email']];
-            } elseif (isset($filteredData['mail_login'])) {
-                $filteredUnique = ['mail_login' => $filteredData['mail_login']];
-            } elseif (isset($filteredData['mail_forward_address'])) {
-                $filteredUnique = ['mail_forward_address' => $filteredData['mail_forward_address']];
-            } else {
-                DB::table($table)->insert($filteredData);
-                return;
-            }
-        }
-
-        DB::table($table)->updateOrInsert($filteredUnique, $filteredData);
-    }
-
-    /**
-     * Extracts the row list from a KAS response.
-     */
-    protected function extractArray(array $resp): array
-    {
-        $r = $resp['Response']['ReturnInfo'] ?? $resp['Response'] ?? $resp;
-        if (!is_array($r)) return [];
-        return array_is_list($r) ? $r : array_values($r);
-    }
-
-    /** Public helper: fetch all mailaccounts from KAS (normalized list) */
-    public function fetchMailaccounts(\App\Models\KasClient $client): array
-    {
-        $resp = $this->kasApiCall($client->account_login, $client->account_password, 'get_mailaccounts', []);
-        return $this->extractArray($resp); // uses the helper we added earlier
-    }
-
-    /** Public helper: fetch all mailforwards from KAS (normalized list) */
-    public function fetchMailforwards(\App\Models\KasClient $client): array
-    {
-        $resp = $this->kasApiCall($client->account_login, $client->account_password, 'get_mailforwards', []);
-        return $this->extractArray($resp);
-    }
-
 }

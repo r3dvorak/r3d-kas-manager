@@ -9,7 +9,7 @@
  * @license   MIT License
  *
  * Reads:
- *   - storage/kas_responses/get_accounts.json → credentials
+ *   - storage/kas_responses/account-passwords.csv → credentials (source of truth)
  * Queries each subaccount via SOAP API (get_mailforwards)
  * Merges results into storage/kas_responses/get_mailforwards_all.json
  */
@@ -17,42 +17,43 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Services\Kas\AccountPasswordsCsv;
 use SoapClient;
 use SoapFault;
 
 class KasImportMailforwardersDryRun extends Command
 {
-    protected $signature   = 'kas:import-mailforwarders-dryrun {--limit=}';
-    protected $description = '0.20.5-alpha Dry-run: import mail forwarders from get_accounts.json via KAS API';
+    protected $signature   = 'kas:import-mailforwarders-dryrun
+                              {--limit= : Limit number of clients (for testing)}
+                              {--clients= : Comma-separated list of KAS client logins (e.g. w0213f06)}
+                              {--creds= : Path to account-passwords.csv (default: storage/kas_responses/account-passwords.csv)}';
+    protected $description = 'Dry-run: import mail forwarders using credentials from account-passwords.csv via KAS API';
     protected string $apiWsdl = 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl';
     protected int $delay = 2; // seconds between requests
 
     public function handle()
     {
-        $accountsPath = base_path('storage/kas_responses/get_accounts.json');
+        $credsPath = (string)($this->option('creds') ?: base_path('storage/kas_responses/account-passwords.csv'));
         $outPath      = base_path('storage/kas_responses/get_mailforwards_all.json');
 
-        if (!file_exists($accountsPath)) {
-            $this->error("Missing {$accountsPath}");
+        if (!file_exists($credsPath)) {
+            $this->error("Missing {$credsPath}");
             return 1;
         }
 
-        // --- Load account credentials
-        $rawAccounts = json_decode(file_get_contents($accountsPath), true);
-        $entries = $rawAccounts['Response']['ReturnInfo'] ?? null;
-        if (!$entries || !is_array($entries)) {
-            $this->error('Invalid accounts JSON structure – expected Response.ReturnInfo[]');
-            return 1;
-        }
+        // --- Load account credentials (source of truth)
+        $accounts = app(AccountPasswordsCsv::class)->load($credsPath);
 
-        $accounts = [];
-        foreach ($entries as $entry) {
-            if (!empty($entry['account_login']) && !empty($entry['account_password'])) {
-                $accounts[$entry['account_login']] = $entry['account_password'];
-            }
+        // Optional client filter
+        $filter = collect(explode(',', (string)$this->option('clients')))
+            ->map(fn($v) => strtolower(trim($v)))
+            ->filter()
+            ->toArray();
+        if ($filter) {
+            $accounts = array_intersect_key($accounts, array_flip($filter));
+            $this->info('🎯 Limiting to clients: ' . implode(', ', array_keys($accounts)));
         }
-
-        $this->info('Loaded '.count($accounts).' account credentials from get_accounts.json');
+        $this->info('Loaded '.count($accounts).' account credentials from account-passwords.csv');
 
         // --- Merge with existing forwarders file
         $merged = [];

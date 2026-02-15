@@ -20,11 +20,7 @@
             <div class="uk-width-auto@m">
                 <select class="uk-select" name="action">
                     <option value="">Batch-Aktion auswählen</option>
-                    <option value="activate">Aktivieren</option>
-                    <option value="deactivate">Deaktivieren</option>
-                    <option value="archive">Archivieren</option>
                     <option value="delete">Löschen</option>
-                    <option value="duplicate">Duplizieren</option>
                 </select>
             </div>
             <div class="uk-width-auto@m">
@@ -65,6 +61,20 @@
                                 @endif
                             </div>
                         </div>
+
+                        {{-- Server --}}
+                        @if($client->server_hostname || $client->server_ip || $client->server_internal_domain)
+                            <div class="uk-text-small uk-text-muted">
+                                <strong>Server:</strong>
+                                {{ $client->server_hostname ?: '—' }}
+                                @if($client->server_ip)
+                                    · {{ $client->server_ip }}
+                                @endif
+                                @if($client->server_internal_domain)
+                                    · {{ $client->server_internal_domain }}
+                                @endif
+                            </div>
+                        @endif
 
                         {{-- Domains --}}
                         @if($client->domains->count())

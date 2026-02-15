@@ -25,7 +25,12 @@ class KasClientController extends Controller
     /** Display a listing of the resource. */
     public function index()
     {
-        $kasClients = KasClient::with('domains')->get();
+        // Sort by description/comment (ascending) so the list is stable and predictable.
+        $kasClients = KasClient::with('domains')
+            ->orderByRaw('account_comment IS NULL')
+            ->orderBy('account_comment', 'asc')
+            ->orderBy('account_login', 'asc')
+            ->get();
         return view('kas_clients.index', compact('kasClients'));
     }
 
@@ -39,21 +44,27 @@ class KasClientController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'login'    => 'required|string|max:255|unique:kas_clients,login',
-            'email'    => 'nullable|email|max:255',
-            'password' => 'required|string|min:8',
+            'account_comment'       => 'required|string|max:255',
+            'account_login'         => 'required|string|max:20|unique:kas_clients,account_login',
+            'account_contact_mail'  => 'nullable|email|max:255',
+            'server_internal_domain'=> 'nullable|string|max:255',
+            'server_hostname'       => 'nullable|string|max:255',
+            'server_ip'             => 'nullable|string|max:45',
+            'all_inkl_customer_number' => 'nullable|string|max:32',
+            'all_inkl_contract_number' => 'nullable|string|max:32',
         ]);
 
         try {
             KasClient::create([
-                'name'         => $request->name,
-                'login'        => $request->login,
-                'email'        => $request->email,
-                'api_user'     => $request->login,
-                'api_password' => $request->password,
-                'password'     => bcrypt($request->password),
-                'role'         => 'client',
+                // NOTE: Secrets (KAS API password / login password) are managed via CSV sync commands.
+                'account_comment'        => $request->account_comment,
+                'account_login'          => strtolower(trim((string) $request->account_login)),
+                'account_contact_mail'   => $request->account_contact_mail,
+                'server_internal_domain' => $request->server_internal_domain,
+                'server_hostname'        => $request->server_hostname,
+                'server_ip'              => $request->server_ip,
+                'all_inkl_customer_number' => $request->all_inkl_customer_number,
+                'all_inkl_contract_number' => $request->all_inkl_contract_number,
             ]);
 
             return redirect()
@@ -83,12 +94,24 @@ class KasClientController extends Controller
     public function update(Request $request, KasClient $kasClient)
     {
         $request->validate([
-            'name'         => 'required|string|max:255',
-            'api_user'     => 'required|string|max:255',
-            'api_password' => 'required|string|max:255',
+            'account_comment'       => 'required|string|max:255',
+            'account_contact_mail'  => 'nullable|email|max:255',
+            'server_internal_domain'=> 'nullable|string|max:255',
+            'server_hostname'       => 'nullable|string|max:255',
+            'server_ip'             => 'nullable|string|max:45',
+            'all_inkl_customer_number' => 'nullable|string|max:32',
+            'all_inkl_contract_number' => 'nullable|string|max:32',
         ]);
 
-        $kasClient->update($request->all());
+        $kasClient->update($request->only([
+            'account_comment',
+            'account_contact_mail',
+            'server_internal_domain',
+            'server_hostname',
+            'server_ip',
+            'all_inkl_customer_number',
+            'all_inkl_contract_number',
+        ]));
 
         return redirect()->route('kas-clients.index')
             ->with('success', 'Clientdaten erfolgreich aktualisiert.');
@@ -115,16 +138,6 @@ class KasClientController extends Controller
         }
 
         switch ($action) {
-            case 'activate':
-                KasClient::whereIn('id', $ids)->update(['active' => 1]);
-                $msg = 'Ausgewählte Clients wurden aktiviert.';
-                break;
-
-            case 'deactivate':
-                KasClient::whereIn('id', $ids)->update(['active' => 0]);
-                $msg = 'Ausgewählte Clients wurden deaktiviert.';
-                break;
-
             case 'delete':
                 KasClient::whereIn('id', $ids)->delete();
                 $msg = 'Ausgewählte Clients wurden gelöscht.';
@@ -167,8 +180,9 @@ class KasClientController extends Controller
         Auth::guard('kas_client')->login($kasClient);
         session(['impersonate' => true]);
 
+        $label = (string) ($kasClient->account_comment ?: $kasClient->account_login);
         return redirect()->route('client.dashboard')
-            ->with('success', 'Eingeloggt als ' . $kasClient->name);
+            ->with('success', 'Eingeloggt als ' . $label);
     }
 
     /** Leave impersonation and return to admin panel. */

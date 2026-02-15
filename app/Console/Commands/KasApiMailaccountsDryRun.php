@@ -8,7 +8,7 @@
  * @date      2025-10-07
  * @license   MIT License
  *
- * Reads plain credentials from storage/kas_responses/get_accounts.json
+ * Reads plain credentials from storage/kas_responses/account-passwords.csv (source of truth)
  * (All-inkl API format) and fetches mail accounts for every client.
  * Handles flood-protection throttling automatically.
  */
@@ -16,12 +16,16 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Services\Kas\AccountPasswordsCsv;
 use SoapClient;
 use SoapFault;
 
 class KasApiMailaccountsDryRun extends Command
 {
-    protected $signature   = 'kas:dryrun-mailaccounts {--limit=}';
+    protected $signature   = 'kas:dryrun-mailaccounts
+                              {--limit= : Limit number of clients (for testing)}
+                              {--clients= : Comma-separated list of KAS client logins (e.g. w0213f06)}
+                              {--creds= : Path to account-passwords.csv (default: storage/kas_responses/account-passwords.csv)}';
     protected $description = '0.18.9-alpha Dry-run: fetch all mail accounts per client and store JSON (no DB writes)';
 
     protected string $apiWsdl = 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl';
@@ -31,26 +35,22 @@ class KasApiMailaccountsDryRun extends Command
     {
         $limit = $this->option('limit');
 
-        // --- Load get_accounts.json (real file under /storage/kas_responses)
-        $accountsJsonPath = base_path('storage/kas_responses/get_accounts.json');
-        if (!file_exists($accountsJsonPath)) {
-            $this->error("Missing {$accountsJsonPath}");
+        // --- Load credentials (source of truth)
+        $credsPath = (string)($this->option('creds') ?: base_path('storage/kas_responses/account-passwords.csv'));
+        if (!file_exists($credsPath)) {
+            $this->error("Missing {$credsPath}");
             return 1;
         }
+        $accounts = app(AccountPasswordsCsv::class)->load($credsPath);
 
-        $raw = json_decode(file_get_contents($accountsJsonPath), true);
-        $entries = $raw['Response']['ReturnInfo'] ?? null;
-        if (!$entries || !is_array($entries)) {
-            $this->error('Invalid accounts JSON structure – expected Response.ReturnInfo[]');
-            return 1;
-        }
-
-        // Build simple lookup map [login => password]
-        $accounts = [];
-        foreach ($entries as $entry) {
-            if (!empty($entry['account_login']) && !empty($entry['account_password'])) {
-                $accounts[$entry['account_login']] = $entry['account_password'];
-            }
+        // Optional client filter
+        $filter = collect(explode(',', (string)$this->option('clients')))
+            ->map(fn($v) => strtolower(trim($v)))
+            ->filter()
+            ->toArray();
+        if ($filter) {
+            $accounts = array_intersect_key($accounts, array_flip($filter));
+            $this->info('🎯 Limiting to clients: ' . implode(', ', array_keys($accounts)));
         }
 
         ksort($accounts);

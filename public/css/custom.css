@@ -277,3 +277,20 @@ aside {
     background-color: #a5422d !important;
     color: #fff !important;
 }
+
+/* =========================
+   Laravel Pagination (Tailwind markup) - UIKit site
+   =========================
+   Laravel's default paginator uses Tailwind utility classes like "w-5 h-5".
+   We don't ship Tailwind CSS, so SVGs can render at huge default sizes.
+*/
+nav[role="navigation"] svg,
+.pagination svg {
+    width: 20px;
+    height: 20px;
+    max-width: 20px;
+    max-height: 20px;
+    flex: 0 0 auto;
+    display: inline-block;
+    vertical-align: middle;
+}

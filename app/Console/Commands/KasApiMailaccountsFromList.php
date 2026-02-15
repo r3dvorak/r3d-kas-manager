@@ -1,6 +1,6 @@
 <?php
 /**
- * R3D KAS Manager – Import Mailaccounts from List (using get_accounts.json)
+ * R3D KAS Manager – Import Mailaccounts from List (using account-passwords.csv)
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
@@ -9,7 +9,7 @@
  * @license   MIT License
  *
  * Reads:
- *   - storage/kas_responses/get_accounts.json  → credentials
+ *   - storage/kas_responses/account-passwords.csv  → credentials (source of truth)
  *   - storage/kas_responses/mail-logins.csv    → mail logins list
  * Fetches each mailbox via SOAP API (get_mailaccounts)
  * Writes merged JSON to storage/kas_responses/get_mailaccounts_all.json
@@ -21,10 +21,11 @@ use Illuminate\Console\Command;
 use SoapClient;
 use SoapFault;
 use League\Csv\Reader;
+use App\Services\Kas\AccountPasswordsCsv;
 
 class KasApiMailaccountsFromList extends Command
 {
-    protected $signature   = 'kas:import-mailaccounts-from-list {--limit=}';
+    protected $signature   = 'kas:import-mailaccounts-from-list {--limit=} {--creds= : Path to account-passwords.csv (default: storage/kas_responses/account-passwords.csv)}';
     protected $description = '0.19.3-alpha Dry-run: import mail accounts from CSV list and fetch details via KAS API';
     protected string $apiWsdl = 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl';
     protected int $delay = 2; // seconds between requests
@@ -32,33 +33,20 @@ class KasApiMailaccountsFromList extends Command
     public function handle()
     {
         $csvPath = base_path('storage/kas_responses/mail-logins.csv');
-        $accountsPath = base_path('storage/kas_responses/get_accounts.json');
+        $credsPath = (string)($this->option('creds') ?: base_path('storage/kas_responses/account-passwords.csv'));
 
         if (!file_exists($csvPath)) {
             $this->error("Missing {$csvPath}");
             return 1;
         }
-        if (!file_exists($accountsPath)) {
-            $this->error("Missing {$accountsPath}");
+        if (!file_exists($credsPath)) {
+            $this->error("Missing {$credsPath}");
             return 1;
         }
 
-        // --- Load account credentials from get_accounts.json
-        $rawAccounts = json_decode(file_get_contents($accountsPath), true);
-        $entries = $rawAccounts['Response']['ReturnInfo'] ?? null;
-        if (!$entries || !is_array($entries)) {
-            $this->error('Invalid accounts JSON structure – expected Response.ReturnInfo[]');
-            return 1;
-        }
-
-        $accounts = [];
-        foreach ($entries as $entry) {
-            if (!empty($entry['account_login']) && !empty($entry['account_password'])) {
-                $accounts[$entry['account_login']] = $entry['account_password'];
-            }
-        }
-
-        $this->info('Loaded '.count($accounts).' account credentials from get_accounts.json');
+        // --- Load credentials (source of truth)
+        $accounts = app(AccountPasswordsCsv::class)->load($credsPath);
+        $this->info('Loaded '.count($accounts).' account credentials from account-passwords.csv');
 
         // --- Load CSV
         $this->info("Reading CSV: {$csvPath}");

@@ -21,14 +21,24 @@ use Throwable;
 
 class KasApiSubdomainsDryRun extends Command
 {
-    protected $signature   = 'kas:dryrun-subdomains {--limit= : Limit number of clients (for testing)}';
+    protected $signature   = 'kas:dryrun-subdomains
+                              {--limit= : Limit number of clients (for testing)}
+                              {--clients= : Comma-separated list of KAS client logins (e.g. w0213f06)}';
     protected $description = 'Performs a KAS API dry-run (get_subdomains) for all clients and saves the full JSON response.';
 
     public function handle(): int
     {
         $this->info('🔎 Connecting to KAS API — action: get_subdomains');
 
-        $clients = KasClient::orderBy('account_login')->get();
+        $filter = collect(explode(',', (string)$this->option('clients')))
+            ->map(fn($v) => strtolower(trim($v)))
+            ->filter()
+            ->toArray();
+
+        $clients = $filter
+            ? KasClient::whereIn('account_login', $filter)->orderBy('account_login')->get()
+            : KasClient::orderBy('account_login')->get();
+
         if ($limit = $this->option('limit')) {
             $clients = $clients->take((int)$limit);
         }

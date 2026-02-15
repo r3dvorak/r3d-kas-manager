@@ -14,17 +14,18 @@
 
 namespace App\Console\Commands;
 
+use App\Services\Kas\KasSoapService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\KasClient;
-use SoapClient;
 use Throwable;
 
 class KasImportClients extends Command
 {
     protected $signature = 'kas:import-clients 
                             {--dryrun : Show data without saving}
-                            {--fresh : Truncate the kas_clients table before importing}';
+                            {--fresh : Truncate the kas_clients table before importing}
+                            {--otp= : Current 2FA code for session auth}';
 
     protected $description = 'Imports all client accounts from the All-Inkl KAS API into kas_clients table.';
 
@@ -32,10 +33,15 @@ class KasImportClients extends Command
     {
         $this->info('🔎 Fetching KAS accounts...');
 
-        // KAS master credentials (later from config)
-        $kasUser = 'w01954e3';
-        $kasPass = 'Paad.Int-2023';
-        $kasWsdl = 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl';
+        $kasUser = (string) env('KAS_USER');
+        $kasPass = (string) env('KAS_PASSWORD');
+        $kasWsdl = (string) env('KAS_WSDL', 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl');
+        $otp = (string) $this->option('otp');
+
+        if ($kasUser === '' || $kasPass === '') {
+            $this->error('❌ Missing KAS_USER or KAS_PASSWORD in .env');
+            return Command::FAILURE;
+        }
 
         try {
             // optional fresh reset
@@ -46,24 +52,10 @@ class KasImportClients extends Command
                 $this->info('✅ kas_clients table truncated and AUTO_INCREMENT reset.');
             }
 
-            // connect
-            $client = new SoapClient($kasWsdl, [
-                'trace' => true,
-                'exceptions' => true,
-                'connection_timeout' => 25,
-            ]);
-
-            // request
-            $jsonRequest = json_encode([
-                'kas_login'        => $kasUser,
-                'kas_auth_type'    => 'plain',
-                'kas_auth_data'    => $kasPass,
-                'kas_action'       => 'get_accounts',
-                'KasRequestParams' => new \stdClass(),
-            ], JSON_UNESCAPED_SLASHES);
-
-            $response = $client->KasApi($jsonRequest);
-            $data     = json_decode(json_encode($response), true);
+            $kas = app(KasSoapService::class);
+            $soap = $kas->createClient($kasWsdl);
+            $result = $kas->callAction($soap, $kasUser, $kasPass, 'get_accounts', [], ['otp' => $otp]);
+            $data = $result['data'];
             $accounts = $data['Response']['ReturnInfo'] ?? [];
 
             if (empty($accounts)) {
@@ -71,6 +63,7 @@ class KasImportClients extends Command
                 return Command::FAILURE;
             }
 
+            $this->info("🔐 Auth mode used: {$result['auth_mode']}");
             // sort by login (oldest → newest)
             usort($accounts, fn($a, $b) => strcmp($a['account_login'] ?? '', $b['account_login'] ?? ''));
 
