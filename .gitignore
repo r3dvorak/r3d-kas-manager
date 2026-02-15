@@ -5,6 +5,7 @@
 /storage/*.key
 .env
 .env.*
+!.env.example
 .phpunit.result.cache
 Homestead.yaml
 Homestead.json
@@ -27,11 +28,22 @@ pnpm-lock.yaml
 /storage/framework/cache/*
 /storage/framework/sessions/*
 /storage/framework/views/*
-/storage/kas_responses/*
-/storage/kas_responses/*
-# Explicit secrets (redundant due to /storage/kas_responses/*, but kept for clarity)
-/storage/kas_responses/account-passwords.csv
-/storage/kas_responses/get_accounts.raw.json
+/storage/kas_responses/**
+!/storage/kas_responses/.gitignore
+
+# Explicit secrets (defense in depth)
+**/*account-passwords*.csv
+**/*mail-logins*mitPW*.csv
+**/*-mitPW*.csv
+**/*passwoerter*.csv
+**/*password*.csv
+**/*credentials*.csv
+**/Zugangsdaten*.txt
+**/*.kdbx
+**/*.eml
+**/*.xls
+**/*.xlsx
+**/*.xlsm
 /storage/app/private/*
 /storage/app/tmp/*
 /storage/dumps/*
