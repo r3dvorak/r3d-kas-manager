@@ -28,43 +28,66 @@
         <form id="kasClientForm" class="uk-form-stacked" method="POST" action="{{ route('kas-clients.store') }}">
             @csrf
 
-            {{-- Client Name --}}
+            {{-- Beschreibung --}}
             <div class="uk-margin">
-                <label class="uk-form-label" for="name">Name</label>
+                <label class="uk-form-label" for="account_comment">Beschreibung</label>
                 <div class="uk-form-controls">
-                    <input class="uk-input" id="name" name="name" type="text"
-                        placeholder="z. B. 000 R3D & Trimains" required>
-                    <small class="uk-text-danger uk-hidden" id="error-name">Bitte einen Namen eingeben.</small>
+                    <input class="uk-input" id="account_comment" name="account_comment" type="text"
+                        placeholder="z. B. 000 R3D" required>
+                    <small class="uk-text-danger uk-hidden" id="error-account_comment">Bitte eine Beschreibung eingeben.</small>
                 </div>
             </div>
 
             {{-- Login --}}
             <div class="uk-margin">
-                <label class="uk-form-label" for="login">Login</label>
+                <label class="uk-form-label" for="account_login">Login</label>
                 <div class="uk-form-controls">
-                    <input class="uk-input" id="login" name="login" type="text"
+                    <input class="uk-input" id="account_login" name="account_login" type="text"
                         placeholder="z. B. w01e77bc" required>
-                    <small class="uk-text-danger uk-hidden" id="error-login">Bitte einen Login angeben.</small>
+                    <small class="uk-text-danger uk-hidden" id="error-account_login">Bitte einen Login angeben.</small>
                 </div>
             </div>
 
-            {{-- Email --}}
+            {{-- Kontakt E-Mail --}}
             <div class="uk-margin">
-                <label class="uk-form-label" for="email">E-Mail</label>
+                <label class="uk-form-label" for="account_contact_mail">Kontakt E-Mail</label>
                 <div class="uk-form-controls">
-                    <input class="uk-input" id="email" name="email" type="email"
+                    <input class="uk-input" id="account_contact_mail" name="account_contact_mail" type="email"
                         placeholder="z. B. faktura@domain.de">
-                    <small class="uk-text-danger uk-hidden" id="error-email">Bitte eine gültige E-Mail eingeben.</small>
+                    <small class="uk-text-danger uk-hidden" id="error-account_contact_mail">Bitte eine gültige E-Mail eingeben.</small>
                 </div>
             </div>
 
-            {{-- Password (used for both API + Login) --}}
+            <hr>
+            <p class="uk-text-small uk-text-muted">
+                Hinweis: Passwörter (KAS/API + App-Login) werden per CSV/Sync verwaltet, nicht in dieser Maske.
+            </p>
+
+            <hr>
+
+            <h4 class="uk-margin-remove-top">Server-Metadaten (optional)</h4>
+
             <div class="uk-margin">
-                <label class="uk-form-label" for="password">Passwort</label>
+                <label class="uk-form-label" for="server_internal_domain">Interne Account-Domain</label>
                 <div class="uk-form-controls">
-                    <input class="uk-input" id="password" name="password" type="password"
-                        placeholder="Mindestens 8 Zeichen" required minlength="8">
-                    <small class="uk-text-danger uk-hidden" id="error-password">Passwort muss mindestens 8 Zeichen haben.</small>
+                    <input class="uk-input" id="server_internal_domain" name="server_internal_domain" type="text"
+                        placeholder="z. B. dd20724.srv">
+                </div>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="server_hostname">Server-Hostname</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="server_hostname" name="server_hostname" type="text"
+                        placeholder="z. B. w0213ab8.kasserver.com">
+                </div>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="server_ip">Server-IP</label>
+                <div class="uk-form-controls">
+                    <input class="uk-input" id="server_ip" name="server_ip" type="text"
+                        placeholder="z. B. 85.13.140.203">
                 </div>
             </div>
 
@@ -87,7 +110,7 @@ document.getElementById('kasClientForm').addEventListener('submit', function (e)
     
     let valid = true;
 
-    const fields = ['name', 'login', 'email', 'password'];
+    const fields = ['account_comment', 'account_login', 'account_contact_mail'];
 
     fields.forEach(id => {
         const input = document.getElementById(id);
@@ -96,31 +119,24 @@ document.getElementById('kasClientForm').addEventListener('submit', function (e)
         error.classList.add('uk-hidden');
     });
 
-    // Validate Name
-    const name = document.getElementById('name');
-    if (!name.value.trim()) {
-        showError('name');
+    // Validate Beschreibung
+    const comment = document.getElementById('account_comment');
+    if (!comment.value.trim()) {
+        showError('account_comment');
         valid = false;
     }
 
     // Validate Login
-    const login = document.getElementById('login');
+    const login = document.getElementById('account_login');
     if (!login.value.trim()) {
-        showError('login');
+        showError('account_login');
         valid = false;
     }
 
     // Validate Email (if filled)
-    const email = document.getElementById('email');
+    const email = document.getElementById('account_contact_mail');
     if (email.value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.value)) {
-        showError('email');
-        valid = false;
-    }
-
-    // Validate Password
-    const password = document.getElementById('password');
-    if (password.value.length < 8) {
-        showError('password');
+        showError('account_contact_mail');
         valid = false;
     }
 

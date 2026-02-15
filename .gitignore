@@ -29,6 +29,9 @@ pnpm-lock.yaml
 /storage/framework/views/*
 /storage/kas_responses/*
 /storage/kas_responses/*
+# Explicit secrets (redundant due to /storage/kas_responses/*, but kept for clarity)
+/storage/kas_responses/account-passwords.csv
+/storage/kas_responses/get_accounts.raw.json
 /storage/app/private/*
 /storage/app/tmp/*
 /storage/dumps/*

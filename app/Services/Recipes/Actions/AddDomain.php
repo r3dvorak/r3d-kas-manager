@@ -4,24 +4,27 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.9-alpha
+ * @version   0.26.10-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
- * app/Services/Recipes/Actions/AddDomain.php
- *
- * Purpose:
- *  Create a domain on KAS (All-Inkl) using action type "add_domain".
- *
+ * app/Services/Recipes/Actions/AddDomain.php 
+ * Responsibilities:
+ *  - Handle 'add_domain' action type
+ *  - Normalize input variables (domain, kas_login, etc.)
+ *  - Call KasGateway to add the domain
+ *  - On success, mirror domain into local kas_domains table
  * Expected inputs (vars + action parameters; action wins on conflicts):
- *  - kas_login   (string)  required; falls back to $run->kas_login
- *  - domain_name (string)  required; falls back to $run->domain_name
- *  - php_version (string)  optional; action param or recipe var or default "8.3"
- *
+ * - kas_login     (string)  required; falls back to $run->kas_login
+ * - domain_name   (string)  required; falls back to $run->domain_name
+ * - domain_tld    (string)  required; falls back to $run->domain_tld
+ * - domain_path   (string)  optional; defaults to "/{domain_name}.{domain_tld}/"
+ * - php_version   (string)  optional; defaults to "8.4"
  * Returns (array):
- *  - success  (bool)
- *  - Response (mixed)    raw/normalized KAS response when available
- *  - error    (string?)  present on failure
+ * - success  (bool)
+ * - Response (mixed)    raw/normalized KAS response when available
+ * - error    (string?)  present on <failure>
+ * - warning  (string?)  present on <success/failure>
  */
 
 namespace App\Services\Recipes\Actions;
@@ -49,7 +52,6 @@ class AddDomain
         $name = $vars['domain_name'] ?? null;
         $tld  = $vars['domain_tld']  ?? null;
 
-        // Split full domain if needed
         if ($full && strpos($full, '.') !== false) {
             [$n, $t] = explode('.', $full, 2);
             $name = $n;
@@ -67,6 +69,10 @@ class AddDomain
 
         $fqdn = "{$name}.{$tld}";
 
+        // Optional extras
+        $domainPath = $vars['domain_path'] ?? "/{$fqdn}/";
+        $phpVersion = $vars['php_version'] ?? '8.4';
+
         if ($dryRun) {
             return [
                 'success' => true,
@@ -75,6 +81,8 @@ class AddDomain
                 'params'  => [
                     'domain_name' => $name,
                     'domain_tld'  => $tld,
+                    'domain_path' => $domainPath,
+                    'php_version' => $phpVersion,
                     'kas_login'   => $kasLogin,
                 ],
             ];
@@ -85,6 +93,8 @@ class AddDomain
         $resp = $gw->callForLogin($kasLogin, 'add_domain', [
             'domain_name' => $name,
             'domain_tld'  => $tld,
+            'domain_path' => $domainPath,
+            'php_version' => $phpVersion,
         ]);
 
         if (!($resp['success'] ?? false)) {
@@ -95,7 +105,7 @@ class AddDomain
             ];
         }
 
-        // Mirror into kas_domains (by domain_full)
+        // Mirror into kas_domains
         try {
             $cols = Schema::getColumnListing('kas_domains');
             $hasFull = in_array('domain_full', $cols, true);
@@ -117,16 +127,17 @@ class AddDomain
                     'domain_name' => $name,
                     'domain_tld'  => $tld,
                     'domain_full' => $fqdn,
+                    'domain_path' => $domainPath,
+                    'php_version' => $phpVersion,
                     'is_active'   => 'Y',
                     'in_progress' => 'N',
                     'dummy_host'  => 'N',
                     'ssl_proxy'   => 'N',
                     'ssl_certificate_ip'  => 'N',
-                    'ssl_certificate_sni' => 'N',
+                    'ssl_certificate_sni' => 'Y',
                     'fpse_active' => 'N',
                     'domain_redirect_status' => 0,
                     'php_deprecated' => 'N',
-                    'php_version' => null,
                     'updated_at' => $now,
                     'created_at' => $now,
                 ];

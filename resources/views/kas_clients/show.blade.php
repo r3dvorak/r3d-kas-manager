@@ -4,12 +4,23 @@
 <div class="uk-flex uk-flex-center">
     <div class="uk-card uk-card-default uk-card-body uk-width-1-1@m" style="max-width:800px;">
 
-        <h2 class="uk-heading-line"><span>{{ $kasClient->name }}</span></h2>
+        <h2 class="uk-heading-line"><span>{{ $kasClient->account_comment ?: 'KAS Client' }}</span></h2>
 
         <div class="uk-margin-small-bottom uk-text-small uk-text-muted">
-            <strong>Login:</strong> {{ $kasClient->login }} &nbsp;|&nbsp;
-            <strong>Email:</strong> {{ $kasClient->email ?? '—' }} &nbsp;|&nbsp;
-            <strong>API User:</strong> {{ $kasClient->api_user }}
+            <strong>Login:</strong> {{ $kasClient->account_login ?? '—' }} &nbsp;|&nbsp;
+            <strong>Kontakt:</strong> {{ $kasClient->account_contact_mail ?: '—' }}
+        </div>
+
+        <hr class="uk-margin-small">
+
+        {{-- Server --}}
+        <h4 class="uk-margin-remove-top">Server</h4>
+        <div class="uk-text-small">
+            <div><strong>all-inkl Kundennummer:</strong> {{ $kasClient->all_inkl_customer_number ?: '—' }}</div>
+            <div><strong>all-inkl Vertragsnummer:</strong> {{ $kasClient->all_inkl_contract_number ?: '—' }}</div>
+            <div><strong>Interne Account-Domain:</strong> {{ $kasClient->server_internal_domain ?: '—' }}</div>
+            <div><strong>Server-Hostname:</strong> {{ $kasClient->server_hostname ?: '—' }}</div>
+            <div><strong>Server-IP:</strong> {{ $kasClient->server_ip ?: '—' }}</div>
         </div>
 
         <hr class="uk-margin-small">

@@ -11,6 +11,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 
 class AppSetting extends Model
@@ -18,6 +19,11 @@ class AppSetting extends Model
     protected $fillable = ['key', 'value'];
 
     public $timestamps = false;
+
+    // app_settings has no numeric auto-increment id; the key is the identifier.
+    protected $primaryKey = 'key';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     /**
      * Get a setting by key, with optional default.
@@ -33,6 +39,25 @@ class AppSetting extends Model
      */
     public static function setValue(string $key, $value): void
     {
-        static::updateOrCreate(['key' => $key], ['value' => $value]);
+        DB::table('app_settings')->updateOrInsert(
+            ['key' => $key],
+            ['value' => (string) $value]
+        );
+    }
+
+    /**
+     * Backwards-compatible shorthand used across the app.
+     */
+    public static function set(string $key, $value): void
+    {
+        static::setValue($key, $value);
+    }
+
+    /**
+     * Backwards-compatible shorthand.
+     */
+    public static function get(string $key, $default = null)
+    {
+        return static::getValue($key, $default);
     }
 }

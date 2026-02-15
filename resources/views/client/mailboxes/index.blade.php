@@ -1,8 +1,117 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="uk-container">
-    <h2>Mailboxes</h2>
-    <p>Hier erscheinen später alle Mailboxes dieses KAS Clients.</p>
+<h1 class="uk-heading-line"><span>E-Mail-Postfach</span></h1>
+<p class="uk-text-small uk-text-muted uk-margin-remove-top">
+    Verwenden Sie E-Mail-Postfaecher, um mit Ihren E-Mail-Adressen E-Mails senden und empfangen zu koennen.
+    Der Postein- und Ausgangsserver lautet:
+    <strong>{{ $client?->server_hostname ?: '—' }}</strong>
+</p>
+
+@if(session('success'))
+    <div class="uk-alert-success" uk-alert><p>{{ session('success') }}</p></div>
+@endif
+@if(session('error'))
+    <div class="uk-alert-danger" uk-alert><p>{{ session('error') }}</p></div>
+@endif
+
+<div class="uk-flex uk-flex-between uk-flex-middle uk-margin-small">
+    <div class="uk-text-small">
+        <strong>Angelegte Postfaecher:</strong> {{ $mailboxes->total() }}
+        @if($mailboxes->total() > 0)
+            <span class="uk-text-muted">| Anzeigen {{ $mailboxes->firstItem() }} - {{ $mailboxes->lastItem() }} von {{ $mailboxes->total() }}</span>
+        @endif
+    </div>
+    <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
+        <div>
+            <a class="uk-button uk-button-default" href="{{ route('client.mailboxes.preview') }}">Pruefung (KAS vs DB)</a>
+        </div>
+        <div>
+            <form action="{{ route('client.mailboxes.sync') }}" method="POST" style="display:inline;">
+                @csrf
+                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')">Sync jetzt</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<form class="uk-grid-small uk-margin" uk-grid method="GET" action="{{ route('client.mailboxes.index') }}">
+    <div class="uk-width-1-2@m">
+        <input class="uk-input" type="text" name="q" value="{{ $q }}" placeholder="Suche...">
+    </div>
+    <div class="uk-width-1-4@m">
+        <select class="uk-select" name="domain" onchange="this.form.submit()">
+            <option value="">Alle Domains</option>
+            @foreach($domainOptions as $d)
+                <option value="{{ $d }}" @selected(strtolower($domain) === strtolower($d))>{{ $d }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="uk-width-auto@m">
+        <button class="uk-button uk-button-primary" type="submit">Suche</button>
+    </div>
+</form>
+
+<div class="uk-overflow-auto">
+    <table class="uk-table uk-table-small uk-table-divider uk-table-striped">
+        <thead>
+            <tr>
+                <th>Domain/Postfach</th>
+                <th class="uk-text-nowrap">Status</th>
+                <th class="uk-text-nowrap">Benutzername</th>
+                <th class="uk-text-nowrap">Speicheruebersicht</th>
+                <th class="uk-text-nowrap">Aktion</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php($lastDomain = null)
+            @forelse($mailboxes as $m)
+                @if($lastDomain !== ($m->domain ?: '—'))
+                    @php($lastDomain = ($m->domain ?: '—'))
+                    <tr class="uk-background-muted">
+                        <td colspan="5" class="uk-text-bold">
+                            {{ $lastDomain }}
+                            @if(isset($domainTotals[strtolower($lastDomain)]) || isset($domainTotals[$lastDomain]))
+                                @php($cnt = $domainTotals[strtolower($lastDomain)] ?? $domainTotals[$lastDomain] ?? null)
+                                @if($cnt !== null)
+                                    <span class="uk-text-muted">| E-Mail-Postfaecher: {{ $cnt }}</span>
+                                @endif
+                            @endif
+                        </td>
+                    </tr>
+                @endif
+
+                <tr>
+                    <td style="max-width: 520px; white-space: normal;">
+                        {{ $m->email }}
+                    </td>
+                    <td class="uk-text-nowrap">
+                        @if($m->spamfilterLabel() !== '—')
+                            <span uk-icon="icon: shield"></span>
+                        @else
+                            <span class="uk-text-muted">—</span>
+                        @endif
+                    </td>
+                    <td class="uk-text-nowrap">{{ $m->mail_login }}</td>
+                    <td class="uk-text-nowrap">
+                        @php($mb = $m->usedSpaceMb())
+                        @php($gb = $mb === null ? null : round($mb / 1024, 2))
+                        {{ $gb === null ? '—' : number_format($gb, 2, ',', '.') . ' GB' }}
+                    </td>
+                    <td class="uk-text-nowrap uk-text-muted">
+                        <span uk-icon="icon: info"></span>
+                        <span uk-icon="icon: pencil"></span>
+                        <span uk-icon="icon: trash"></span>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="5" class="uk-text-muted">Noch keine Daten in der DB. Bitte Sync ausfuehren.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+<div class="uk-margin-top">
+    {{ $mailboxes->links() }}
 </div>
 @endsection

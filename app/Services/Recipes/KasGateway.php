@@ -25,64 +25,40 @@
 namespace App\Services\Recipes;
 
 use App\Models\KasClient;
+use App\Services\Kas\KasSoapService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use SoapClient;
 use Throwable;
 
 class KasGateway
 {
     public function call(string $kasLogin, string $password, string $action, array $params = []): array
     {
-        $wsdl = 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl';
-        $soap = new SoapClient($wsdl, [
-            'exceptions' => true,
-            'cache_wsdl' => WSDL_CACHE_NONE,
-            'trace'      => true,
-            'features'   => SOAP_SINGLE_ELEMENT_ARRAYS,
-        ]);
-
-        $payload = [
-            'kas_login'        => $kasLogin,
-            'kas_auth_type'    => 'plain',
-            'kas_auth_data'    => $password,
-            'kas_action'       => $action,
-            'KasRequestParams' => $params,
-        ];
-
-        $json = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $wsdl = (string) env('KAS_WSDL', 'https://kasapi.kasserver.com/soap/wsdl/KasApi.wsdl');
+        $kas = app(KasSoapService::class);
+        $soap = $kas->createClient($wsdl);
 
         try {
-            $raw = $soap->__soapCall('KasApi', [$json]);
-
-            if (is_string($raw)) {
-                $decoded = json_decode($raw, true);
-                $raw = (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) ? $decoded : ['Response' => ['Raw' => $raw]];
-            } elseif (is_object($raw)) {
-                $raw = json_decode(json_encode($raw), true) ?? [];
-            } elseif (!is_array($raw)) {
-                $raw = ['Response' => ['Raw' => $raw]];
-            }
+            $result = $kas->callAction($soap, $kasLogin, $password, $action, $params);
+            $raw = $result['data'];
 
             $resp = $raw['Response'] ?? $raw;
             $ok   = (string)($resp['ReturnString'] ?? $raw['ReturnString'] ?? 'TRUE') === 'TRUE';
 
             return ['success' => $ok, 'Response' => $resp, 'raw' => $raw];
-        } catch (\SoapFault $e) {
-            $msg = $e->faultstring ?? $e->getMessage();
+        } catch (Throwable $e) {
+            $msg = $e->getMessage();
             if (stripos($msg, 'flood_protection') !== false) {
                 sleep(2);
                 try {
-                    $raw = $soap->__soapCall('KasApi', [$json]);
-                    $raw = is_object($raw) ? json_decode(json_encode($raw), true) : (array)$raw;
+                    $retry = $kas->callAction($soap, $kasLogin, $password, $action, $params);
+                    $raw = $retry['data'];
                     return ['success' => true, 'Response' => ($raw['Response'] ?? $raw)];
                 } catch (Throwable $e2) {
                     return ['success' => false, 'error' => 'KAS SOAP error (retry): ' . $e2->getMessage()];
                 }
             }
             return ['success' => false, 'error' => "KAS SOAP error: {$msg}"];
-        } catch (Throwable $e) {
-            return ['success' => false, 'error' => "KAS SOAP error: " . $e->getMessage()];
         }
     }
 

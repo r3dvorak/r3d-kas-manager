@@ -50,7 +50,7 @@ class UnifiedLoginController extends Controller
         }
 
         // --- 2️⃣ Try Client Login (by login name) ---
-        if (Auth::guard('kas_client')->attempt(['login' => $login, 'password' => $password], $remember)) {
+        if (Auth::guard('kas_client')->attempt(['account_login' => $login, 'password' => $password], $remember)) {
             return redirect()->intended(route('client.dashboard'));
         }
 
@@ -64,7 +64,7 @@ class UnifiedLoginController extends Controller
             ->first();
 
         if ($client && Auth::guard('kas_client')->attempt([
-            'login'    => $client->account_login,
+            'account_login' => $client->account_login,
             'password' => $password,
         ], $remember)) {
             return redirect()->intended(route('client.dashboard'));

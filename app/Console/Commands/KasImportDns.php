@@ -24,7 +24,9 @@ use App\Models\KasDomain;
 
 class KasImportDns extends Command
 {
-    protected $signature = 'kas:import-dns {--truncate}';
+    protected $signature = 'kas:import-dns
+                            {--truncate}
+                            {--domains= : Comma-separated list of domain_full to import (e.g. r3d.de,example.com)}';
     protected $description = 'Import DNS records from get_dns_all.json into kas_dns_records and align kas_login with owning client.';
 
     public function handle()
@@ -50,14 +52,32 @@ class KasImportDns extends Command
         $domains = KasDomain::all(['id', 'domain_full']);
         $map = $domains->pluck('id', 'domain_full')->toArray();
 
+        $filterDomains = collect(explode(',', (string)$this->option('domains')))
+            ->map(fn($v) => strtolower(trim($v)))
+            ->filter()
+            ->toArray();
+        if ($filterDomains) {
+            $this->info('🎯 Limiting to domains: ' . implode(', ', $filterDomains));
+        }
+
         $inserted = 0;
 
         foreach ($json as $domainName => $records) {
+            $domainName = strtolower((string) $domainName);
+            if ($filterDomains && !in_array($domainName, $filterDomains, true)) {
+                continue;
+            }
+
             $domainId = $map[$domainName] ?? null;
 
             if (!$domainId) {
                 $this->warn("⚠ Domain not found in DB: {$domainName}");
                 continue;
+            }
+
+            // Idempotent import per domain: remove old records for that domain unless full truncate is requested.
+            if (!$this->option('truncate')) {
+                KasDnsRecord::where('domain_id', $domainId)->delete();
             }
 
             foreach ($records as $r) {

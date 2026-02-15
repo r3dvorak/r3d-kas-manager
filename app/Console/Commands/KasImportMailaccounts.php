@@ -23,7 +23,9 @@ use Illuminate\Support\Facades\File;
 
 class KasImportMailaccounts extends Command
 {
-    protected $signature = 'kas:import-mailaccounts {--truncate : Empty the table before import}';
+    protected $signature = 'kas:import-mailaccounts
+                            {--truncate : Empty the table before import}
+                            {--clients= : Comma-separated list of KAS client logins (e.g. w0213f06)}';
     protected $description = '0.19.3-alpha - Imports KAS mail account data from get_mailaccounts_all.json into kas_mailaccounts table, linking to kas_domains and kas_clients.';
 
     public function handle(): void
@@ -51,39 +53,108 @@ class KasImportMailaccounts extends Command
         $domains = DB::table('kas_domains')->pluck('id', 'domain_full')->toArray();
         $clients = DB::table('kas_clients')->pluck('id', 'account_login')->toArray();
 
+        $filter = collect(explode(',', (string)$this->option('clients')))
+            ->map(fn($v) => strtolower(trim($v)))
+            ->filter()
+            ->toArray();
+        if ($filter) {
+            $this->info('🎯 Limiting to clients: ' . implode(', ', $filter));
+        }
+
         $insertCount = 0;
         $missingCount = 0;
         $linkedDomains = 0;
         $linkedClients = 0;
 
         foreach ($data as $kasLogin => $mailboxes) {
-            foreach ($mailboxes as $mailLogin => $info) {
-                $domainName = $info['domain'] ?? null;
-                $domainId = $domainName && isset($domains[$domainName]) ? $domains[$domainName] : null;
-                if ($domainId) $linkedDomains++;
+            $kasLogin = strtolower((string) $kasLogin);
+            if ($filter && !in_array($kasLogin, $filter, true)) {
+                continue;
+            }
 
-                $clientId = isset($clients[$kasLogin]) ? $clients[$kasLogin] : null;
-                if ($clientId) $linkedClients++;
+            // Idempotent import: remove previous snapshot for this client
+            if (!$this->option('truncate')) {
+                DB::table('kas_mailaccounts')->where('kas_login', $kasLogin)->delete();
+            }
 
-                $record = [
-                    'kas_login'   => $kasLogin,
-                    'mail_login'  => $mailLogin,
-                    'domain'      => $domainName,
-                    'email'       => $info['email'] ?? null,
-                    'domain_id'   => $domainId,
-                    'client_id'   => $clientId,
-                    'status'      => empty($info['data']) ? 'missing' : 'active',
-                    'data_json'   => json_encode($info['data'] ?? []),
-                    'created_at'  => now(),
-                    'updated_at'  => now(),
-                ];
+            // Accept both formats:
+            // A) from kas:dryrun-mailaccounts  => ['count'=>N,'mailaccounts'=>[ {...}, ... ]]
+            // B) legacy map format            => [ mail_login => ['domain'=>..,'email'=>..,'data'=>..], ... ]
+            $list = null;
+            if (is_array($mailboxes) && array_key_exists('mailaccounts', $mailboxes) && is_array($mailboxes['mailaccounts'] ?? null)) {
+                $list = $mailboxes['mailaccounts'];
+            }
 
-                DB::table('kas_mailaccounts')->insert($record);
+            $clientId = isset($clients[$kasLogin]) ? $clients[$kasLogin] : null;
+            if ($clientId) $linkedClients++;
 
-                if ($record['status'] === 'missing') {
-                    $missingCount++;
-                } else {
+            if ($list !== null) {
+                foreach ($list as $mb) {
+                    if (!is_array($mb)) continue;
+
+                    $mailLogin = (string)($mb['mail_login'] ?? $mb['mailbox_login'] ?? $mb['login'] ?? '');
+                    $mailLogin = trim($mailLogin);
+                    if ($mailLogin === '') continue;
+
+                    $email = (string)($mb['email'] ?? $mb['mail_address'] ?? $mb['mail'] ?? '');
+                    $email = trim($email);
+
+                    $domainName = (string)($mb['domain'] ?? $mb['mail_domain'] ?? '');
+                    $domainName = trim($domainName);
+
+                    if ($domainName === '' && str_contains($email, '@')) {
+                        $domainName = explode('@', $email, 2)[1];
+                    }
+
+                    // fallback email
+                    if ($email === '' && $domainName !== '') {
+                        $email = $mailLogin . '@' . $domainName;
+                    }
+
+                    $domainId = ($domainName !== '' && isset($domains[$domainName])) ? $domains[$domainName] : null;
+                    if ($domainId) $linkedDomains++;
+
+                    $record = [
+                        'kas_login'   => $kasLogin,
+                        'mail_login'  => $mailLogin,
+                        'domain'      => $domainName !== '' ? $domainName : null,
+                        'email'       => $email !== '' ? $email : null,
+                        'domain_id'   => $domainId,
+                        'client_id'   => $clientId,
+                        'status'      => 'active',
+                        'data_json'   => json_encode($mb),
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ];
+                    DB::table('kas_mailaccounts')->insert($record);
                     $insertCount++;
+                }
+            } else {
+                foreach ($mailboxes as $mailLogin => $info) {
+                    $domainName = $info['domain'] ?? null;
+                    $domainId = $domainName && isset($domains[$domainName]) ? $domains[$domainName] : null;
+                    if ($domainId) $linkedDomains++;
+
+                    $record = [
+                        'kas_login'   => $kasLogin,
+                        'mail_login'  => (string)$mailLogin,
+                        'domain'      => $domainName,
+                        'email'       => $info['email'] ?? null,
+                        'domain_id'   => $domainId,
+                        'client_id'   => $clientId,
+                        'status'      => empty($info['data']) ? 'missing' : 'active',
+                        'data_json'   => json_encode($info['data'] ?? []),
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ];
+
+                    DB::table('kas_mailaccounts')->insert($record);
+
+                    if ($record['status'] === 'missing') {
+                        $missingCount++;
+                    } else {
+                        $insertCount++;
+                    }
                 }
             }
         }

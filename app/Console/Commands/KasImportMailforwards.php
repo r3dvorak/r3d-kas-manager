@@ -24,7 +24,9 @@ use Illuminate\Support\Facades\File;
 
 class KasImportMailforwards extends Command
 {
-    protected $signature = 'kas:import-mailforwards {--truncate : Empty the table before import}';
+    protected $signature = 'kas:import-mailforwards
+                            {--truncate : Empty the table before import}
+                            {--clients= : Comma-separated list of KAS client logins (e.g. w0213f06)}';
     protected $description = 'Imports KAS mail forwarder data from get_mailforwards_all.json into kas_mailforwards table.';
 
     public function handle(): void
@@ -52,12 +54,30 @@ class KasImportMailforwards extends Command
         $domains = DB::table('kas_domains')->pluck('id', 'domain_full')->toArray();
         $clients = DB::table('kas_clients')->pluck('id', 'account_login')->toArray();
 
+        $filter = collect(explode(',', (string)$this->option('clients')))
+            ->map(fn($v) => strtolower(trim($v)))
+            ->filter()
+            ->toArray();
+        if ($filter) {
+            $this->info('🎯 Limiting to clients: ' . implode(', ', $filter));
+        }
+
         $insertCount = 0;
         $missingCount = 0;
         $linkedDomains = 0;
         $linkedClients = 0;
 
         foreach ($data as $kasLogin => $forwarders) {
+            $kasLogin = strtolower((string) $kasLogin);
+            if ($filter && !in_array($kasLogin, $filter, true)) {
+                continue;
+            }
+
+            // Idempotent import: remove previous snapshot for this client
+            if (!$this->option('truncate')) {
+                DB::table('kas_mailforwards')->where('kas_login', $kasLogin)->delete();
+            }
+
             $clientId = $clients[$kasLogin] ?? null;
             if ($clientId) $linkedClients++;
 

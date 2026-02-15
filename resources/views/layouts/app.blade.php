@@ -76,17 +76,25 @@
 
 {{-- Offcanvas for mobile --}}
 <div id="offcanvas-nav" uk-offcanvas="overlay: true">
-    <div class="uk-offcanvas-bar">
-        <ul class="uk-nav uk-nav-default">
-            @if(Auth::guard('kas_client')->check())
-                <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
-                <li><a href="{{ route('client.domains.index') }}">Domains</a></li>
-                <li><a href="{{ route('client.mailboxes.index') }}">Mailkonten</a></li>
-                <li><a href="{{ route('client.dns.index') }}">DNS</a></li>
-                <li><a href="{{ route('client.recipes.index') }}">Rezepte</a></li>
-            @elseif(Auth::guard('web')->check())
-                <li><a href="{{ route('dashboard') }}">Startseite</a></li>
-                <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
+            <div class="uk-offcanvas-bar">
+                <ul class="uk-nav uk-nav-default">
+                    @if(Auth::guard('kas_client')->check())
+                        <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
+                        <li><a href="{{ route('client.domains.index') }}">Domain</a></li>
+                        <li><a href="{{ route('client.subdomains.index') }}">Subdomain</a></li>
+                        <li><a href="{{ route('client.mailboxes.index') }}">E-Mail-Postfach</a></li>
+                        <li><a href="{{ route('client.mailforwards.index') }}">E-Mail-Weiterleitung</a></li>
+                        <li><a href="{{ route('client.ftp.index') }}">FTP</a></li>
+                        <li><a href="{{ route('client.databases.index') }}">Datenbanken</a></li>
+                        <li><a href="{{ route('client.dns.index') }}">DNS-Einstellungen</a></li>
+                        <li><a href="{{ route('client.ssl.index') }}">SSL-Schutz</a></li>
+                        <li><a href="{{ route('client.statistics.index') }}">Statistik</a></li>
+                        <li><a href="{{ route('client.recipes.index') }}">Rezepte</a></li>
+                    @elseif(Auth::guard('web')->check())
+                        <li><a href="{{ route('dashboard') }}">Startseite</a></li>
+                        <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
+                <li><a href="{{ route('admin.mailboxes.index') }}">Mailkonten</a></li>
+                <li><a href="{{ route('admin.mailforwards.index') }}">Weiterleitungen</a></li>
                 <li><a href="{{ route('users.index') }}">User</a></li>
                 <li><a href="{{ route('docs') }}">Doku</a></li>
                 <li><a href="{{ route('stats') }}">Stats</a></li>
@@ -124,13 +132,21 @@
                 <ul class="uk-nav uk-nav-default">
                     @if(Auth::guard('kas_client')->check())
                         <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ route('client.domains.index') }}">Domains</a></li>
-                        <li><a href="{{ route('client.mailboxes.index') }}">Mailkonten</a></li>
-                        <li><a href="{{ route('client.dns.index') }}">DNS</a></li>
+                        <li><a href="{{ route('client.domains.index') }}">Domain</a></li>
+                        <li><a href="{{ route('client.subdomains.index') }}">Subdomain</a></li>
+                        <li><a href="{{ route('client.mailboxes.index') }}">E-Mail-Postfach</a></li>
+                        <li><a href="{{ route('client.mailforwards.index') }}">E-Mail-Weiterleitung</a></li>
+                        <li><a href="{{ route('client.ftp.index') }}">FTP</a></li>
+                        <li><a href="{{ route('client.databases.index') }}">Datenbanken</a></li>
+                        <li><a href="{{ route('client.dns.index') }}">DNS-Einstellungen</a></li>
+                        <li><a href="{{ route('client.ssl.index') }}">SSL-Schutz</a></li>
+                        <li><a href="{{ route('client.statistics.index') }}">Statistik</a></li>
                         <li><a href="{{ route('client.recipes.index') }}">Rezepte</a></li>
                     @elseif(Auth::guard('web')->check())
                         <li><a href="{{ route('dashboard') }}">Startseite</a></li>
                         <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
+                        <li><a href="{{ route('admin.mailboxes.index') }}">Mailkonten</a></li>
+                        <li><a href="{{ route('admin.mailforwards.index') }}">Weiterleitungen</a></li>
                         <li><a href="{{ route('users.index') }}">User</a></li>
                         <li><a href="{{ route('docs') }}">Doku</a></li>
                         <li><a href="{{ route('stats') }}">Stats</a></li>
@@ -146,7 +162,11 @@
 
             <aside class="uk-width-1-6@m uk-visible@m uk-border-left uk-padding-small">
                 <h4 class="uk-heading-line"><span>Hinweise</span></h4>
-                <p>Hier könnten Tipps oder Logs erscheinen.</p>
+                @hasSection('hints')
+                    @yield('hints')
+                @else
+                    @include('partials.hints')
+                @endif
             </aside>
         </div>
     </div>

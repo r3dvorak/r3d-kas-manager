@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 
+
+
 class KasClient extends Authenticatable
 {
     use HasFactory;
@@ -28,9 +30,15 @@ class KasClient extends Authenticatable
     protected $fillable = [
         'account_login',
         'account_password',   // for API (encrypted or plain)
+        'account_password_fingerprint', // stable change detection for encrypted secret
         'password',           // hashed for Laravel login
         'account_comment',
         'account_contact_mail',
+        'server_internal_domain',
+        'server_hostname',
+        'server_ip',
+        'all_inkl_customer_number',
+        'all_inkl_contract_number',
         'max_account',
         'max_domain',
         'max_subdomain',
@@ -70,6 +78,7 @@ class KasClient extends Authenticatable
      */
     protected $hidden = [
         'account_password',
+        'account_password_fingerprint',
         'password',
         'remember_token',
     ];
@@ -129,11 +138,13 @@ class KasClient extends Authenticatable
     }
 
     /**
-     * One client has many subdomains (through domains).
+     * One client has many subdomains.
      */
     public function subdomains()
     {
-        return $this->hasManyThrough(KasSubdomain::class, KasDomain::class);
+        // The `kas_subdomains` table has a direct `kas_client_id` foreign key.
+        // Using hasMany avoids incorrect default hasManyThrough key guessing (kas_domain_id vs domain_id).
+        return $this->hasMany(KasSubdomain::class, 'kas_client_id');
     }
 
     /**
@@ -158,6 +169,22 @@ class KasClient extends Authenticatable
     public function databases()
     {
         return $this->hasMany(KasDatabase::class);
+    }
+
+    /**
+     * One client has many FTP users.
+     */
+    public function ftpusers()
+    {
+        return $this->hasMany(KasFtpUser::class, 'client_id');
+    }
+
+    /**
+     * One client has many space reports.
+     */
+    public function spaceReports()
+    {
+        return $this->hasMany(KasSpaceReport::class, 'client_id');
     }
 
     /**

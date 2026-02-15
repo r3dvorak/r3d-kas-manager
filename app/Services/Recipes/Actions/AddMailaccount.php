@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.8-alpha
+ * @version   0.26.10-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -39,10 +39,7 @@ class AddMailaccount implements ActionHandler
 {
     public function __construct(private KasGateway $kas) {}
 
-    public function supports(string $type): bool
-    {
-        return $type === 'add_mailaccount';
-    }
+    public function supports(string $type): bool { $t=strtolower(preg_replace("/[^a-z0-9]/","",$type)); return in_array($t,["addmailaccount","addmailacct"]); }
 
     public function handle(RecipeAction $action, RecipeRun $run, array $vars, bool $dryRun = false): array
     {
@@ -51,6 +48,20 @@ class AddMailaccount implements ActionHandler
         $mailDomain = $vars['mail_domain'] ?? $vars['domain'] ?? $vars['domain_name'] ?? null;
         $password   = $vars['mail_password'] ?? null;
         $quotaMb    = $vars['mail_quota_mb'] ?? $vars['mail_quota'] ?? null;
+
+        // --- normalize aliases (legacy recipe vars) ---
+        if (isset($vars['mail_adresses']) && !isset($vars['mail_addresses'])) {
+            $vars['mail_addresses'] = $vars['mail_adresses'];
+        }
+        if (isset($vars['mail_quota_rule']) && !isset($vars['mail_quota'])) {
+            $vars['mail_quota'] = $vars['mail_quota_rule'];
+        }
+        if (!isset($vars['mail_domain']) && isset($vars['domain_name'])) {
+            $vars['mail_domain'] = $vars['domain_name'];
+        }
+        if (!isset($vars['mail_login']) && isset($vars['mail_account'])) {
+            $vars['mail_login'] = $vars['mail_account'];
+        }
 
         if (!$kasLogin || !$mailLogin || !$mailDomain || !$password) {
             return ['success'=>false,'error'=>'missing_parameters'];
@@ -62,11 +73,12 @@ class AddMailaccount implements ActionHandler
 
         $kas = app(KasGateway::class);
         $resp = $kas->callForLogin($kasLogin, 'add_mailaccount', [
-            'mail_login'    => $mailLogin,
-            'mail_domain'   => $mailDomain,
+            // KAS API expects local_part/domain_part for add_mailaccount.
+            'local_part' => $mailLogin,
+            'domain_part' => $mailDomain,
             'mail_password' => $password,
-            // KAS usually accepts mail_quota_mb; include only when set
-            ...($quotaMb !== null ? ['mail_quota_mb' => $quotaMb] : []),
+            'webmail_autologin' => 'Y',
+            // Note: mailbox quota is not settable via the documented API.
         ]);
 
         return ($resp['success'] ?? false)

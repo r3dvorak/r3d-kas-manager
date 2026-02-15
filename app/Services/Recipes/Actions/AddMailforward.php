@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.6-alpha
+ * @version   0.26.10-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -48,9 +48,9 @@ class AddMailforward implements ActionHandler
      * - add_mailforward
      * - add_mail_forward
      */
-    public function supports(string $type): bool
-    {
-        return in_array($type, ['add_mailforward', 'add_mail_forward'], true);
+    public function supports(string $type): bool { 
+        $t=strtolower(preg_replace("/[^a-z0-9]/","",$type)); 
+        return in_array($t,["addmailforward","addmailfwd"]); 
     }
 
     /**
@@ -80,11 +80,31 @@ class AddMailforward implements ActionHandler
         }
 
         $kas = app(KasGateway::class);
-        $resp = $kas->callForLogin($kasLogin, 'add_mail_forward', [
-            'mail_forward_address' => $address,
-            'mail_forward_targets' => $targets,
-            'mail_domain'          => $mailDomain,
-        ]);
+        [$local, $domain] = str_contains($address, '@')
+            ? explode('@', strtolower($address), 2)
+            : [strtolower($address), strtolower($mailDomain)];
+
+        $targetsList = is_array($targets)
+            ? $targets
+            : preg_split('/[\\s,;]+/', (string) $targets) ?: [];
+
+        $params = [
+            'local_part' => $local,
+            'domain_part' => $domain,
+        ];
+
+        $i = 0;
+        foreach ($targetsList as $t) {
+            $t = strtolower(trim((string) $t));
+            if ($t === '') continue;
+            if (!str_contains($t, '@')) {
+                $t = $t . '@' . $domain;
+            }
+            $i++;
+            $params['target_' . $i] = $t;
+        }
+
+        $resp = $kas->callForLogin($kasLogin, 'add_mailforward', $params);
 
         return ($resp['success'] ?? false)
             ? ['success'=>true,'action'=>'add_mail_forward','response'=>$resp]

@@ -8,23 +8,49 @@
         @method('PUT')
 
         <div class="uk-margin">
-            <label class="uk-form-label">Name</label>
+            <label class="uk-form-label">Beschreibung</label>
             <div class="uk-form-controls">
-                <input class="uk-input" type="text" name="name" value="{{ $kasClient->name }}" required>
+                <input class="uk-input" type="text" name="account_comment" value="{{ $kasClient->account_comment }}" required>
             </div>
         </div>
 
         <div class="uk-margin">
             <label class="uk-form-label">Login</label>
             <div class="uk-form-controls">
-                <input class="uk-input" type="text" name="login" value="{{ $kasClient->login }}" required>
+                <input class="uk-input" type="text" value="{{ $kasClient->account_login }}" readonly>
+                <small class="uk-text-muted">Login wird per CSV/Sync verwaltet.</small>
             </div>
         </div>
 
         <div class="uk-margin">
-            <label class="uk-form-label">API Passwort (leer lassen = unverändert)</label>
+            <label class="uk-form-label">Kontakt E-Mail</label>
             <div class="uk-form-controls">
-                <input class="uk-input" type="password" name="api_password">
+                <input class="uk-input" type="email" name="account_contact_mail" value="{{ $kasClient->account_contact_mail }}">
+            </div>
+        </div>
+
+        <hr>
+
+        <h4 class="uk-margin-remove-top">Server-Metadaten (optional)</h4>
+
+        <div class="uk-margin">
+            <label class="uk-form-label">Interne Account-Domain</label>
+            <div class="uk-form-controls">
+                <input class="uk-input" type="text" name="server_internal_domain" value="{{ $kasClient->server_internal_domain }}" placeholder="z. B. dd20724.srv">
+            </div>
+        </div>
+
+        <div class="uk-margin">
+            <label class="uk-form-label">Server-Hostname</label>
+            <div class="uk-form-controls">
+                <input class="uk-input" type="text" name="server_hostname" value="{{ $kasClient->server_hostname }}" placeholder="z. B. w0213ab8.kasserver.com">
+            </div>
+        </div>
+
+        <div class="uk-margin">
+            <label class="uk-form-label">Server-IP</label>
+            <div class="uk-form-controls">
+                <input class="uk-input" type="text" name="server_ip" value="{{ $kasClient->server_ip }}" placeholder="z. B. 85.13.140.203">
             </div>
         </div>
 

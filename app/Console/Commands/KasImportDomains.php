@@ -24,6 +24,7 @@ class KasImportDomains extends Command
 {
     protected $signature = 'kas:import-domains 
                             {--fresh : Truncate kas_domains table before import}
+                            {--clients= : Comma-separated list of KAS client logins (e.g. w0213f06)}
                             {--source= : Optional JSON source file (default: storage/kas_responses/get_domains_all.json)}';
 
     protected $description = 'Imports all KAS domains (from JSON) into kas_domains table, preserving client order.';
@@ -53,8 +54,18 @@ class KasImportDomains extends Command
             $this->info('✅ kas_domains table truncated and reset.');
         }
 
+        $filter = collect(explode(',', (string)$this->option('clients')))
+            ->map(fn($v) => strtolower(trim($v)))
+            ->filter()
+            ->toArray();
+        if ($filter) {
+            $this->info('🎯 Limiting to clients: ' . implode(', ', $filter));
+        }
+
         // Get clients sorted by account_login ascending
-        $clients = KasClient::orderBy('account_login', 'asc')->get();
+        $clients = $filter
+            ? KasClient::whereIn('account_login', $filter)->orderBy('account_login', 'asc')->get()
+            : KasClient::orderBy('account_login', 'asc')->get();
         $totalClients = $clients->count();
 
         $created = 0;
