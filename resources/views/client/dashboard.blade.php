@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.26.11-alpha
+ * @version   0.27.0-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
