@@ -45,9 +45,22 @@ class MailboxController extends Controller
             ->pluck('cnt', 'domain')
             ->all();
 
+        // Totals across all matching mailboxes (not just the current page).
+        $totalUsedMb = (clone $base)
+            ->reorder()
+            ->where('status', 'active')
+            ->get(['data_json'])
+            ->sum(function ($row) {
+                $json = $row->data_json ?? null;
+                $v = is_array($json) ? ($json['used_mailaccount_space'] ?? null) : null;
+                return (is_numeric($v) ? (float) $v : 0.0);
+            });
+
+        $totalUsedGb = $totalUsedMb > 0 ? round($totalUsedMb / 1024, 2) : 0.0;
+
         $mailboxes = $base->paginate(25)->withQueryString();
 
-        return view('client.mailboxes.index', compact('mailboxes', 'q', 'domain', 'domainOptions', 'domainTotals', 'kasLogin', 'client'));
+        return view('client.mailboxes.index', compact('mailboxes', 'q', 'domain', 'domainOptions', 'domainTotals', 'kasLogin', 'client', 'totalUsedGb', 'totalUsedMb'));
     }
 
     public function preview(MailSnapshotService $svc)

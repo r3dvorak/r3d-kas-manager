@@ -34,6 +34,18 @@
 @php
     $usedKb = $latest?->used_kb;
     $maxKb  = $latest?->max_kb;
+
+    // Backward-compatible fallback: older snapshots might have NULL columns but contain the raw ReturnInfo.
+    if ($latest && (!is_numeric($usedKb) || !is_numeric($maxKb)) && is_array($latest->data_json ?? null)) {
+        $raw = $latest->data_json;
+        $ri = $raw['Response']['ReturnInfo'] ?? $raw['ReturnInfo'] ?? null;
+        $info = (is_array($ri) && isset($ri[0]) && is_array($ri[0])) ? $ri[0] : (is_array($ri) ? $ri : null);
+        if (is_array($info)) {
+            if (!is_numeric($usedKb) && is_numeric($info['used_webspace'] ?? null)) $usedKb = (int) $info['used_webspace'];
+            if (!is_numeric($maxKb) && is_numeric($info['max_webspace'] ?? null))  $maxKb  = (int) $info['max_webspace'];
+        }
+    }
+
     $usedGb = is_numeric($usedKb) ? round(((float)$usedKb) / 1024 / 1024, 2) : null;
     $maxGb  = is_numeric($maxKb) ? round(((float)$maxKb) / 1024 / 1024, 2) : null;
 @endphp
@@ -65,4 +77,3 @@
     Hinweis: Die Darstellung ist konservativ. Details (htdocs/E-Mail/Datenbanken) koennen wir spaeter aus <code>get_space --show_details=Y</code> ableiten.
 </div>
 @endsection
-

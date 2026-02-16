@@ -78,12 +78,31 @@ class StatisticsSnapshotService
 
         $raw = $resp['raw'] ?? $resp['Response'] ?? $resp;
         $info = $raw['Response']['ReturnInfo'] ?? $raw['ReturnInfo'] ?? $raw['Response'] ?? [];
+        // KAS often returns ReturnInfo as a list with a single element at index 0.
+        if (is_array($info) && array_key_exists(0, $info) && is_array($info[0])) {
+            $info = $info[0];
+        }
 
         $used = null;
         $max = null;
         if (is_array($info)) {
-            $used = $this->toInt($info['space_used'] ?? $info['used'] ?? null);
-            $max = $this->toInt($info['space_max'] ?? $info['max'] ?? null);
+            // get_space (KAS) uses these keys (values are in KB).
+            $used = $this->toInt(
+                $info['used_webspace']
+                    ?? $info['space_used']
+                    ?? $info['space_used_kb']
+                    ?? $info['used_kb']
+                    ?? $info['used']
+                    ?? null
+            );
+            $max = $this->toInt(
+                $info['max_webspace']
+                    ?? $info['space_max']
+                    ?? $info['space_max_kb']
+                    ?? $info['max_kb']
+                    ?? $info['max']
+                    ?? null
+            );
         }
 
         return ['used_kb' => $used, 'max_kb' => $max, 'raw' => is_array($raw) ? $raw : []];
@@ -96,4 +115,3 @@ class StatisticsSnapshotService
         return null;
     }
 }
-

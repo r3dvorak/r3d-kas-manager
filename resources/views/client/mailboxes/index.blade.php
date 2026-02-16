@@ -108,6 +108,20 @@
                 <tr><td colspan="5" class="uk-text-muted">Noch keine Daten in der DB. Bitte Sync ausfuehren.</td></tr>
             @endforelse
         </tbody>
+        @if($mailboxes->total() > 0)
+            <tfoot>
+                <tr class="uk-background-muted">
+                    <td colspan="3" class="uk-text-bold">Summe (alle Postfaecher)</td>
+                    <td class="uk-text-nowrap uk-text-bold">
+                        {{ number_format((float)($totalUsedGb ?? 0), 2, ',', '.') }} GB
+                        <div class="uk-text-muted uk-text-small">
+                            {{ number_format((float)($totalUsedMb ?? 0), 0, ',', '.') }} MB
+                        </div>
+                    </td>
+                    <td></td>
+                </tr>
+            </tfoot>
+        @endif
     </table>
 </div>
 
