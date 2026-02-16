@@ -40,7 +40,13 @@
 @php($usedWebspaceSource = $usedWebspaceGbFromStats > 0 ? 'KAS get_space' : ($usedWebspaceGbFromMailboxes > 0 ? 'Summe Postfaecher (DB)' : '—'))
 @php($maxWebspaceGb = $maxWebspaceMb > 0 ? round($maxWebspaceMb / 1024, 2) : 0.0)
 @php($freeWebspaceGb = ($maxWebspaceGb > 0) ? max(0.0, round($maxWebspaceGb - $usedWebspaceGb, 2)) : 0.0)
-@php($lastSpaceReportAt = \App\Models\KasSpaceReport::where('kas_login', $kasLogin)->orderByDesc('measured_at')->value('measured_at'))
+@php($latestSpaceReport = \App\Models\KasSpaceReport::where('kas_login', $kasLogin)->orderByDesc('measured_at')->first())
+@php($lastSpaceReportAt = $latestSpaceReport?->measured_at)
+@php($spaceInfo = is_array($latestSpaceReport?->data_json ?? null) ? (($latestSpaceReport->data_json['Response']['ReturnInfo'] ?? $latestSpaceReport->data_json['ReturnInfo'] ?? null) : null) : null)
+@php($spaceInfo0 = (is_array($spaceInfo) && isset($spaceInfo[0]) && is_array($spaceInfo[0])) ? $spaceInfo[0] : (is_array($spaceInfo) ? $spaceInfo : null))
+@php($usedMailGb = (is_array($spaceInfo0) && is_numeric($spaceInfo0['used_mailaccount_space'] ?? null)) ? round(((float)$spaceInfo0['used_mailaccount_space']) / 1024 / 1024, 2) : null)
+@php($usedDbGb = (is_array($spaceInfo0) && is_numeric($spaceInfo0['used_database_space'] ?? null)) ? round(((float)$spaceInfo0['used_database_space']) / 1024 / 1024, 2) : null)
+@php($usedHtdocsGb = (is_array($spaceInfo0) && is_numeric($spaceInfo0['used_htdocs_space'] ?? null)) ? round(((float)$spaceInfo0['used_htdocs_space']) / 1024 / 1024, 2) : null)
 
 <div class="uk-container">
     <h1 class="uk-heading-line"><span>Willkommen in der technischen Verwaltung</span></h1>
@@ -142,7 +148,16 @@
                                 <div class="uk-text-muted uk-text-small">Quelle: {{ $usedWebspaceSource }}</div>
                             @endif
                         </td>
-                        <td class="uk-text-right">0,00 GB</td>
+                        <td class="uk-text-right">
+                            0,00 GB
+                            @if($usedMailGb !== null || $usedHtdocsGb !== null || $usedDbGb !== null)
+                                <div class="uk-text-muted uk-text-small">
+                                    @if($usedMailGb !== null) E-Mail: {{ number_format($usedMailGb, 2, ',', '.') }} GB @endif
+                                    @if($usedHtdocsGb !== null) | htdocs: {{ number_format($usedHtdocsGb, 2, ',', '.') }} GB @endif
+                                    @if($usedDbGb !== null) | DB: {{ number_format($usedDbGb, 2, ',', '.') }} GB @endif
+                                </div>
+                            @endif
+                        </td>
                         <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($freeWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
                         <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($maxWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
                     </tr>
