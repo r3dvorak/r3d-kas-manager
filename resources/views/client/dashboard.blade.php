@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.6-alpha
+ * @version   0.26.11-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
@@ -33,9 +33,14 @@
 @php($maxMailboxes = (int) ($client?->max_mail_account ?? 0))
 @php($maxForwards = (int) ($client?->max_mail_forward ?? 0))
 @php($maxWebspaceMb = (float) ($client?->max_webspace ?? 0))
-@php($usedWebspaceGb = method_exists($client, 'usedSpaceGb') ? (float) $client->usedSpaceGb() : 0.0)
+@php($usedWebspaceGbFromStats = method_exists($client, 'usedSpaceGb') ? (float) $client->usedSpaceGb() : 0.0)
+@php($mailboxesUsedMb = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->get()->sum(fn($m) => (float)($m->usedSpaceMb() ?? 0)))
+@php($usedWebspaceGbFromMailboxes = $mailboxesUsedMb > 0 ? round($mailboxesUsedMb / 1024, 2) : 0.0)
+@php($usedWebspaceGb = $usedWebspaceGbFromStats > 0 ? $usedWebspaceGbFromStats : $usedWebspaceGbFromMailboxes)
+@php($usedWebspaceSource = $usedWebspaceGbFromStats > 0 ? 'KAS get_space' : ($usedWebspaceGbFromMailboxes > 0 ? 'Summe Postfaecher (DB)' : '—'))
 @php($maxWebspaceGb = $maxWebspaceMb > 0 ? round($maxWebspaceMb / 1024, 2) : 0.0)
 @php($freeWebspaceGb = ($maxWebspaceGb > 0) ? max(0.0, round($maxWebspaceGb - $usedWebspaceGb, 2)) : 0.0)
+@php($lastSpaceReportAt = \App\Models\KasSpaceReport::where('kas_login', $kasLogin)->orderByDesc('measured_at')->value('measured_at'))
 
 <div class="uk-container">
     <h1 class="uk-heading-line"><span>Willkommen in der technischen Verwaltung</span></h1>
@@ -131,7 +136,12 @@
                     </tr>
                     <tr>
                         <td>Speicherplatz</td>
-                        <td class="uk-text-right">{{ number_format($usedWebspaceGb, 2, ',', '.') }} GB</td>
+                        <td class="uk-text-right">
+                            {{ number_format($usedWebspaceGb, 2, ',', '.') }} GB
+                            @if($usedWebspaceSource !== '—')
+                                <div class="uk-text-muted uk-text-small">Quelle: {{ $usedWebspaceSource }}</div>
+                            @endif
+                        </td>
                         <td class="uk-text-right">0,00 GB</td>
                         <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($freeWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
                         <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($maxWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
@@ -141,7 +151,7 @@
         </div>
 
         <div class="uk-text-small uk-text-muted uk-margin-small-top">
-            Messung vom {{ now()->format('d.m.Y H:i') }} Uhr
+            Messung vom {{ $lastSpaceReportAt ? \Carbon\Carbon::parse($lastSpaceReportAt)->format('d.m.Y H:i') : now()->format('d.m.Y H:i') }} Uhr
         </div>
     </div>
 
