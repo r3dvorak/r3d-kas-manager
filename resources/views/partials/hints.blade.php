@@ -11,6 +11,8 @@
     $showContextHelp = (string) AppSetting::getValue('hints_show_context_help', '1') === '1';
 
     $isAdmin = Auth::guard('web')->check();
+    $isClient = Auth::guard('kas_client')->check();
+    $isAuthenticated = $isAdmin || $isClient;
 
     $customer = (string) AppSetting::getValue('all_inkl_customer_number', '');
     $contract = (string) AppSetting::getValue('all_inkl_contract_number', '');
@@ -71,7 +73,7 @@
         <hr class="uk-margin-small">
     @endif
 
-    @if($showEnv)
+    @if($showEnv && $isAuthenticated)
         <div class="uk-margin-small-bottom">
             <strong>Environment / Versionen</strong>
             <div class="uk-text-muted">APP_ENV: {{ config('app.env') }}</div>
@@ -116,7 +118,7 @@
         @endif
         <div class="uk-margin-small-bottom">
             <strong>Kontext Hilfe</strong>
-            <div class="uk-text-muted">Spaeter: kontextbezogene Hinweise zur aktuellen Seite.</div>
+            <div class="uk-text-muted">Geben Sie Ihren Admin-Login oder Ihre Domain ein – die Anmeldung erkennt automatisch den Typ.</div>
         </div>
     @endif
 </div>

@@ -67,9 +67,6 @@
             </div>
         </form>
 
-        <div class="uk-margin-small uk-text-center uk-text-meta">
-            <span>Geben Sie Ihren Admin-Login <em>oder</em> Ihre Domain ein – die Anmeldung erkennt automatisch den Typ.</span>
-        </div>
     </div>
 </div>
 @endsection
