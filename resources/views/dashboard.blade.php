@@ -66,6 +66,7 @@
     $forwardsPossible = (int)($master?->max_mail_forward ?? 0);
 
     $dbCreated = KasDatabase::where('status', 'active')->count();
+    $dbSnapshotAvailable = KasDatabase::count() > 0;
     $dbReserved = (int)$children->sum('max_databases');
     $dbPossible = (int)($master?->max_databases ?? 0);
 
@@ -171,9 +172,16 @@
                 </tr>
                 <tr>
                     <td>Datenbanken</td>
-                    <td class="uk-text-right">{{ number_format($dbCreated, 0, ',', '.') }}</td>
+                    <td class="uk-text-right">
+                        @if($dbSnapshotAvailable)
+                            {{ number_format($dbCreated, 0, ',', '.') }}
+                        @else
+                            —
+                            <div class="uk-text-muted uk-text-small">noch nicht synchronisiert</div>
+                        @endif
+                    </td>
                     <td class="uk-text-right">{{ number_format($dbReserved, 0, ',', '.') }}</td>
-                    <td class="uk-text-right">{{ $remainingToLabel($dbPossible, $dbCreated + $dbReserved) }}</td>
+                    <td class="uk-text-right">{{ $dbSnapshotAvailable ? $remainingToLabel($dbPossible, $dbCreated + $dbReserved) : '—' }}</td>
                     <td class="uk-text-right">{{ $maxToLabel($dbPossible) }}</td>
                 </tr>
                 <tr>
