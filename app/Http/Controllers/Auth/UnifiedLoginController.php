@@ -24,6 +24,14 @@ class UnifiedLoginController extends Controller
      */
     public function showLoginForm()
     {
+        if (Auth::guard('web')->check()) {
+            return redirect()->route('dashboard');
+        }
+
+        if (Auth::guard('kas_client')->check()) {
+            return redirect()->route('client.dashboard');
+        }
+
         return view('auth.login');
     }
 
@@ -46,12 +54,12 @@ class UnifiedLoginController extends Controller
             Auth::guard('web')->attempt(['login' => $login, 'password' => $password], $remember) ||
             Auth::guard('web')->attempt(['email' => $login, 'password' => $password], $remember)
         ) {
-            return redirect()->intended(route('dashboard'));
+            return redirect()->route('dashboard');
         }
 
         // --- 2️⃣ Try Client Login (by login name) ---
         if (Auth::guard('kas_client')->attempt(['account_login' => $login, 'password' => $password], $remember)) {
-            return redirect()->intended(route('client.dashboard'));
+            return redirect()->route('client.dashboard');
         }
 
         // --- 3️⃣ Try Client Login by related Domain or Subdomain ---
@@ -67,7 +75,7 @@ class UnifiedLoginController extends Controller
             'account_login' => $client->account_login,
             'password' => $password,
         ], $remember)) {
-            return redirect()->intended(route('client.dashboard'));
+            return redirect()->route('client.dashboard');
         }
 
         // --- 4️⃣ If all failed ---
