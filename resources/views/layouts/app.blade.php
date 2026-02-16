@@ -92,13 +92,13 @@
                         <li><a href="{{ route('client.recipes.index') }}"><span uk-icon="nut" class="uk-margin-small-right"></span>Rezepte</a></li>
                     @elseif(Auth::guard('web')->check())
                         <li><a href="{{ route('dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>Startseite</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}"><span uk-icon="book" class="uk-margin-small-right"></span>Accounts</a></li>
-                        <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>User Management</a></li>
+                        <li><a href="{{ route('kas-clients.index') }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>Accounts</a></li>
                 <li><a href="{{ route('admin.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>Mailkonten</a></li>
                 <li><a href="{{ route('admin.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>Weiterleitungen</a></li>
                 <li><a href="{{ route('docs') }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>Doku</a></li>
-                <li><a href="{{ route('stats') }}"><span uk-icon="bar-chart" class="uk-margin-small-right"></span>Stats</a></li>
+                <li><a href="{{ route('stats') }}"><span uk-icon="grid" class="uk-margin-small-right"></span>Stats</a></li>
                 <li class="uk-nav-divider"></li>
+                <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>User Management</a></li>
                 <li><a href="{{ route('config.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>Einstellungen</a></li>
             @endif
 
@@ -144,13 +144,13 @@
                         <li><a href="{{ route('client.recipes.index') }}"><span uk-icon="nut" class="uk-margin-small-right"></span>Rezepte</a></li>
                     @elseif(Auth::guard('web')->check())
                         <li><a href="{{ route('dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>Startseite</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}"><span uk-icon="book" class="uk-margin-small-right"></span>Accounts</a></li>
-                        <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>User Management</a></li>
+                        <li><a href="{{ route('kas-clients.index') }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>Accounts</a></li>
                         <li><a href="{{ route('admin.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>Mailkonten</a></li>
                         <li><a href="{{ route('admin.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>Weiterleitungen</a></li>
                         <li><a href="{{ route('docs') }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>Doku</a></li>
-                        <li><a href="{{ route('stats') }}"><span uk-icon="bar-chart" class="uk-margin-small-right"></span>Stats</a></li>
+                        <li><a href="{{ route('stats') }}"><span uk-icon="grid" class="uk-margin-small-right"></span>Stats</a></li>
                         <li class="uk-nav-divider"></li>
+                        <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>User Management</a></li>
                         <li><a href="{{ route('config.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>Einstellungen</a></li>
                     @endif
                 </ul>

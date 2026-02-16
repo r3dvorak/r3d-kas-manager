@@ -44,32 +44,36 @@
     $accountsCreated = (int)$children->count();
     $accountsReserved = (int)$children->sum('max_account');
     $accountsPossible = (int)($master?->max_account ?? 0);
+    if ($accountsPossible <= 0) {
+        $accountsPossible = 500;
+    }
 
-    $domainsCreated = $master ? KasDomain::where('kas_client_id', $master->id)->whereNull('deleted_at')->count() : 0;
+    // "angelegt" should reflect total current inventory in our DB snapshots (not only master account itself).
+    $domainsCreated = KasDomain::whereNull('deleted_at')->count();
     $domainsReserved = (int)$children->sum('max_domain');
     $domainsPossible = (int)($master?->max_domain ?? 0);
 
-    $subdomainsCreated = $master ? KasSubdomain::where('kas_client_id', $master->id)->whereNull('deleted_at')->count() : 0;
+    $subdomainsCreated = KasSubdomain::whereNull('deleted_at')->count();
     $subdomainsReserved = (int)$children->sum('max_subdomain');
     $subdomainsPossible = (int)($master?->max_subdomain ?? 0);
 
-    $mailboxesCreated = $master ? KasMailAccount::where('kas_login', strtolower((string)$master->account_login))->where('status', 'active')->count() : 0;
+    $mailboxesCreated = KasMailAccount::where('status', 'active')->count();
     $mailboxesReserved = (int)$children->sum('max_mail_account');
     $mailboxesPossible = (int)($master?->max_mail_account ?? 0);
 
-    $forwardsCreated = $master ? KasMailForward::where('kas_login', strtolower((string)$master->account_login))->where('status', 'active')->count() : 0;
+    $forwardsCreated = KasMailForward::where('status', 'active')->count();
     $forwardsReserved = (int)$children->sum('max_mail_forward');
     $forwardsPossible = (int)($master?->max_mail_forward ?? 0);
 
-    $dbCreated = $master ? KasDatabase::where('kas_login', strtolower((string)$master->account_login))->where('status', 'active')->count() : 0;
+    $dbCreated = KasDatabase::where('status', 'active')->count();
     $dbReserved = (int)$children->sum('max_databases');
     $dbPossible = (int)($master?->max_databases ?? 0);
 
-    $ftpCreated = $master ? KasFtpUser::where('kas_login', strtolower((string)$master->account_login))->where('status', 'active')->count() : 0;
+    $ftpCreated = KasFtpUser::where('status', 'active')->count();
     $ftpReserved = (int)$children->sum('max_ftpuser');
     $ftpPossible = (int)($master?->max_ftpuser ?? 0);
 
-    $spaceCreatedMb = (float)($master?->used_account_space ?? 0);
+    $spaceCreatedMb = (float)$allClients->sum('used_account_space');
     $spaceReservedMb = (float)$children->sum('max_webspace');
     $spacePossibleMb = (float)($master?->max_webspace ?? 0);
 @endphp
@@ -89,22 +93,6 @@
     </div>
 
     <div class="uk-card uk-card-default uk-card-body uk-margin">
-        <div class="uk-flex uk-flex-between uk-flex-middle">
-            <h3 class="uk-card-title uk-margin-remove">Direktlinks</h3>
-            <div class="uk-text-small uk-text-muted">
-                {{ $serverHostname }}@if($serverIp !== '—') · {{ $serverIp }}@endif
-            </div>
-        </div>
-
-        <div class="uk-grid-small uk-child-width-auto@s uk-margin-small-top" uk-grid>
-            <div><a class="uk-button uk-button-default" href="{{ route('kas-clients.index') }}">Accounts</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('users.index') }}">User Management</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('admin.mailboxes.index') }}">Mailkonten</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('admin.mailforwards.index') }}">Weiterleitungen</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('stats') }}">Statistik</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('config.index') }}">Einstellungen</a></div>
-        </div>
-
         <div class="uk-grid-small uk-child-width-1-3@m uk-margin-top" uk-grid>
             <div>
                 <div class="uk-card uk-card-default uk-card-body uk-padding-small">
