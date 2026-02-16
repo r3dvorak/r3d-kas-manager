@@ -15,6 +15,7 @@
 
 namespace App\Providers;
 
+use Throwable;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use App\Models\AppSetting;
@@ -34,11 +35,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (Schema::hasTable('app_settings')) {
-            config([
-                'r3d.session_timeout' => AppSetting::getValue('session_timeout', 30),
-            ]);
+        // Always provide a safe default, then override from DB when available.
+        config([
+            'r3d.session_timeout' => 30,
+        ]);
+
+        try {
+            if (Schema::hasTable('app_settings')) {
+                config([
+                    'r3d.session_timeout' => AppSetting::getValue('session_timeout', 30),
+                ]);
+            }
+        } catch (Throwable $e) {
+            // DB may be unavailable in tooling contexts (IDE indexers, CI bootstrap, etc.).
+            // Keep boot non-fatal and continue with defaults.
         }
-        //
     }
 }

@@ -22,6 +22,9 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
+            <a class="uk-button uk-button-primary" href="{{ route('client.dns.create') }}">Neuer DNS-Eintrag</a>
+        </div>
+        <div>
             <a class="uk-button uk-button-default" href="{{ route('client.dns.preview') }}">Pruefung (KAS vs DB)</a>
         </div>
         <div>
@@ -59,6 +62,7 @@
                 <th>Name</th>
                 <th>Data/Value</th>
                 <th class="uk-text-nowrap">Aux</th>
+                <th class="uk-text-nowrap">Aktion</th>
             </tr>
         </thead>
         <tbody>
@@ -69,9 +73,17 @@
                     <td class="uk-text-nowrap">{{ $r->record_name === '' ? '—' : $r->record_name }}</td>
                     <td style="max-width: 620px; white-space: normal;">{{ $r->record_data }}</td>
                     <td class="uk-text-nowrap uk-text-right">{{ (int) ($r->record_aux ?? 0) }}</td>
+                    <td class="uk-text-nowrap">
+                        <a class="uk-button uk-button-text" href="{{ route('client.dns.edit', $r) }}">Bearbeiten</a>
+                        <form action="{{ route('client.dns.destroy', $r) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button class="uk-button uk-button-text uk-text-danger" type="submit" onclick="return confirm('DNS-Eintrag wirklich loeschen?')">Loeschen</button>
+                        </form>
+                    </td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="uk-text-muted">Noch keine DNS-Daten in der DB. Bitte Sync ausfuehren.</td></tr>
+                <tr><td colspan="6" class="uk-text-muted">Noch keine DNS-Daten in der DB. Bitte Sync ausfuehren oder manuell anlegen.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -81,4 +93,3 @@
     {{ $records->links() }}
 </div>
 @endsection
-

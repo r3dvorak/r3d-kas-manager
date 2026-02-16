@@ -17,7 +17,10 @@ namespace App\Providers;
 
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
+use App\Models\KasClient;
 use App\Models\User;
+use App\Policies\KasClientPolicy;
+use App\Policies\UserPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -27,7 +30,8 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        User::class => UserPolicy::class,
+        KasClient::class => KasClientPolicy::class,
     ];
 
     /**
@@ -39,6 +43,10 @@ class AuthServiceProvider extends ServiceProvider
 
         // Admin-Check für Impersonation
         Gate::define('impersonate', function (User $user) {
+            return $user->role === 'admin' || $user->is_admin === 1;
+        });
+
+        Gate::define('access-admin-panel', function (User $user) {
             return $user->role === 'admin' || $user->is_admin === 1;
         });
     }

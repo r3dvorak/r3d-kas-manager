@@ -33,6 +33,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_admin',
         'kas_client_id',
     ];
 

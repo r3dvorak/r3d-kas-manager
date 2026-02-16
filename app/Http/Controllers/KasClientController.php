@@ -13,6 +13,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreKasClientRequest;
+use App\Http\Requests\UpdateKasClientRequest;
 use App\Models\KasClient;
 use App\Models\KasDomain;
 use App\Models\ImpersonationToken;
@@ -41,30 +43,21 @@ class KasClientController extends Controller
     }
 
     /** Store a newly created resource in storage. */
-    public function store(Request $request)
+    public function store(StoreKasClientRequest $request)
     {
-        $request->validate([
-            'account_comment'       => 'required|string|max:255',
-            'account_login'         => 'required|string|max:20|unique:kas_clients,account_login',
-            'account_contact_mail'  => 'nullable|email|max:255',
-            'server_internal_domain'=> 'nullable|string|max:255',
-            'server_hostname'       => 'nullable|string|max:255',
-            'server_ip'             => 'nullable|string|max:45',
-            'all_inkl_customer_number' => 'nullable|string|max:32',
-            'all_inkl_contract_number' => 'nullable|string|max:32',
-        ]);
+        $validated = $request->validated();
 
         try {
             KasClient::create([
                 // NOTE: Secrets (KAS API password / login password) are managed via CSV sync commands.
-                'account_comment'        => $request->account_comment,
-                'account_login'          => strtolower(trim((string) $request->account_login)),
-                'account_contact_mail'   => $request->account_contact_mail,
-                'server_internal_domain' => $request->server_internal_domain,
-                'server_hostname'        => $request->server_hostname,
-                'server_ip'              => $request->server_ip,
-                'all_inkl_customer_number' => $request->all_inkl_customer_number,
-                'all_inkl_contract_number' => $request->all_inkl_contract_number,
+                'account_comment' => $validated['account_comment'],
+                'account_login' => strtolower(trim((string) $validated['account_login'])),
+                'account_contact_mail' => $validated['account_contact_mail'] ?? null,
+                'server_internal_domain' => $validated['server_internal_domain'] ?? null,
+                'server_hostname' => $validated['server_hostname'] ?? null,
+                'server_ip' => $validated['server_ip'] ?? null,
+                'all_inkl_customer_number' => $validated['all_inkl_customer_number'] ?? null,
+                'all_inkl_contract_number' => $validated['all_inkl_contract_number'] ?? null,
             ]);
 
             return redirect()
@@ -91,27 +84,9 @@ class KasClientController extends Controller
     }
 
     /** Update the specified resource in storage. */
-    public function update(Request $request, KasClient $kasClient)
+    public function update(UpdateKasClientRequest $request, KasClient $kasClient)
     {
-        $request->validate([
-            'account_comment'       => 'required|string|max:255',
-            'account_contact_mail'  => 'nullable|email|max:255',
-            'server_internal_domain'=> 'nullable|string|max:255',
-            'server_hostname'       => 'nullable|string|max:255',
-            'server_ip'             => 'nullable|string|max:45',
-            'all_inkl_customer_number' => 'nullable|string|max:32',
-            'all_inkl_contract_number' => 'nullable|string|max:32',
-        ]);
-
-        $kasClient->update($request->only([
-            'account_comment',
-            'account_contact_mail',
-            'server_internal_domain',
-            'server_hostname',
-            'server_ip',
-            'all_inkl_customer_number',
-            'all_inkl_contract_number',
-        ]));
+        $kasClient->update($request->validated());
 
         return redirect()->route('kas-clients.index')
             ->with('success', 'Clientdaten erfolgreich aktualisiert.');

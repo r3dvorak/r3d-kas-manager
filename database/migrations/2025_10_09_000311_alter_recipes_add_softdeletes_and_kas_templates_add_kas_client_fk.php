@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration {
     public function up(): void
     {
+        $driver = DB::getDriverName();
+
         // 1) add softDeletes to recipes (if not present)
         if (Schema::hasTable('recipes') && !Schema::hasColumn('recipes', 'deleted_at')) {
             Schema::table('recipes', function (Blueprint $table) {
@@ -47,7 +49,7 @@ return new class extends Migration {
             });
 
             // Add foreign key constraint only if kas_clients table exists
-            if (Schema::hasTable('kas_clients')) {
+            if (Schema::hasTable('kas_clients') && $driver === 'mysql') {
                 // Determine a safe constraint name
                 $fkName = 'kas_templates_kas_client_id_foreign';
                 // Use raw statement to add FK (some DB drivers care about index naming)
@@ -61,7 +63,12 @@ return new class extends Migration {
             }
         } else {
             // If column exists but not FK, try to add FK (best-effort)
-            if (Schema::hasTable('kas_templates') && Schema::hasColumn('kas_templates', 'kas_client_id') && Schema::hasTable('kas_clients')) {
+            if (
+                $driver === 'mysql' &&
+                Schema::hasTable('kas_templates') &&
+                Schema::hasColumn('kas_templates', 'kas_client_id') &&
+                Schema::hasTable('kas_clients')
+            ) {
                 // Check existing foreign keys via information_schema (MySQL)
                 $database = DB::getDatabaseName();
                 $hasFk = DB::selectOne(
@@ -86,10 +93,15 @@ return new class extends Migration {
 
     public function down(): void
     {
+        $driver = DB::getDriverName();
+
         // 1) drop FK on kas_templates if exists, then drop column if we added it
         if (Schema::hasTable('kas_templates') && Schema::hasColumn('kas_templates', 'kas_client_id')) {
             // Attempt to drop FK by name; MySQL created name may differ, so use information_schema to find it
             try {
+                if ($driver !== 'mysql') {
+                    throw new \RuntimeException('Skip FK lookup for non-MySQL driver.');
+                }
                 $database = DB::getDatabaseName();
                 $fk = DB::selectOne("
                     SELECT CONSTRAINT_NAME AS fk_name

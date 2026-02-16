@@ -24,6 +24,9 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
+            <a class="uk-button uk-button-primary" href="{{ route('client.mailboxes.create') }}">Neues Postfach</a>
+        </div>
+        <div>
             <a class="uk-button uk-button-default" href="{{ route('client.mailboxes.preview') }}">Pruefung (KAS vs DB)</a>
         </div>
         <div>
@@ -102,9 +105,12 @@
                         @endif
                     </td>
                     <td class="uk-text-nowrap uk-text-muted">
-                        <span uk-icon="icon: info"></span>
-                        <span uk-icon="icon: pencil"></span>
-                        <span uk-icon="icon: trash"></span>
+                        <a class="uk-button uk-button-text" href="{{ route('client.mailboxes.edit', $m) }}">Bearbeiten</a>
+                        <form action="{{ route('client.mailboxes.destroy', $m) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button class="uk-button uk-button-text uk-text-danger" type="submit" onclick="return confirm('Postfach wirklich loeschen?')">Loeschen</button>
+                        </form>
                     </td>
                 </tr>
             @empty

@@ -35,7 +35,7 @@ Route::post('/logout', [UnifiedLoginController::class, 'logout'])->name('logout'
 // === Configuration ===
 // ============================================================
 
-Route::middleware(['web','auth:web'])->group(function () {
+Route::middleware(['web','auth:web','can:access-admin-panel'])->group(function () {
     Route::get('/config', [ConfigController::class, 'index'])->name('config.index');
     Route::post('/config', [ConfigController::class, 'update'])->name('config.update');
 });
@@ -44,7 +44,7 @@ Route::middleware(['web','auth:web'])->group(function () {
 // === Admin routes (web guard) ===
 // ============================================================
 
-Route::middleware(['web', 'useguard:web', 'auth:web'])->group(function () {
+Route::middleware(['web', 'useguard:web', 'auth:web', 'can:access-admin-panel'])->group(function () {
 
     Route::get('/', fn() => view('dashboard'))->name('dashboard');
 
@@ -122,8 +122,19 @@ Route::prefix('client')->name('client.')->middleware(['web', 'useguard:kas_clien
     Route::post('/statistics/sync', [App\Http\Controllers\Client\StatisticsController::class, 'sync'])->name('statistics.sync');
 
     Route::get('/dns', [App\Http\Controllers\Client\DnsController::class, 'index'])->name('dns.index');
+    Route::get('/dns/create', [App\Http\Controllers\Client\DnsController::class, 'create'])->name('dns.create');
+    Route::post('/dns', [App\Http\Controllers\Client\DnsController::class, 'store'])->name('dns.store');
+    Route::get('/dns/{dnsRecord}/edit', [App\Http\Controllers\Client\DnsController::class, 'edit'])->name('dns.edit');
+    Route::put('/dns/{dnsRecord}', [App\Http\Controllers\Client\DnsController::class, 'update'])->name('dns.update');
+    Route::delete('/dns/{dnsRecord}', [App\Http\Controllers\Client\DnsController::class, 'destroy'])->name('dns.destroy');
     Route::get('/dns/preview', [App\Http\Controllers\Client\DnsController::class, 'preview'])->name('dns.preview');
     Route::post('/dns/sync', [App\Http\Controllers\Client\DnsController::class, 'sync'])->name('dns.sync');
+
+    Route::get('/mailboxes/create', [App\Http\Controllers\Client\MailboxController::class, 'create'])->name('mailboxes.create');
+    Route::post('/mailboxes', [App\Http\Controllers\Client\MailboxController::class, 'store'])->name('mailboxes.store');
+    Route::get('/mailboxes/{mailbox}/edit', [App\Http\Controllers\Client\MailboxController::class, 'edit'])->name('mailboxes.edit');
+    Route::put('/mailboxes/{mailbox}', [App\Http\Controllers\Client\MailboxController::class, 'update'])->name('mailboxes.update');
+    Route::delete('/mailboxes/{mailbox}', [App\Http\Controllers\Client\MailboxController::class, 'destroy'])->name('mailboxes.destroy');
     Route::get('/recipes', [App\Http\Controllers\Client\RecipeController::class, 'index'])->name('recipes.index');
 });
 

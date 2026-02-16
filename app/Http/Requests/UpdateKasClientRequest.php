@@ -1,0 +1,26 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateKasClientRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return $this->user()?->isAdmin() ?? false;
+    }
+
+    public function rules(): array
+    {
+        return [
+            'account_comment' => 'required|string|max:255',
+            'account_contact_mail' => 'nullable|email|max:255',
+            'server_internal_domain' => 'nullable|string|max:255',
+            'server_hostname' => 'nullable|string|max:255',
+            'server_ip' => 'nullable|string|max:45',
+            'all_inkl_customer_number' => 'nullable|string|max:32',
+            'all_inkl_contract_number' => 'nullable|string|max:32',
+        ];
+    }
+}
