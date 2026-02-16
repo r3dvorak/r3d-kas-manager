@@ -9,9 +9,9 @@
     @endphp
     <title>{{ $mode ? $mode . ' | ' : '' }}RIIID KAS Manager</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/css/uikit.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/uikit@3.17.11/dist/js/uikit-icons.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.25.11/dist/css/uikit.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.25.11/dist/js/uikit.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/uikit@3.25.11/dist/js/uikit-icons.min.js"></script>
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 </head>
 <body>
@@ -79,27 +79,27 @@
             <div class="uk-offcanvas-bar">
                 <ul class="uk-nav uk-nav-default">
                     @if(Auth::guard('kas_client')->check())
-                        <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ route('client.domains.index') }}">Domain</a></li>
-                        <li><a href="{{ route('client.subdomains.index') }}">Subdomain</a></li>
-                        <li><a href="{{ route('client.mailboxes.index') }}">E-Mail-Postfach</a></li>
-                        <li><a href="{{ route('client.mailforwards.index') }}">E-Mail-Weiterleitung</a></li>
-                        <li><a href="{{ route('client.ftp.index') }}">FTP</a></li>
-                        <li><a href="{{ route('client.databases.index') }}">Datenbanken</a></li>
-                        <li><a href="{{ route('client.dns.index') }}">DNS-Einstellungen</a></li>
-                        <li><a href="{{ route('client.ssl.index') }}">SSL-Schutz</a></li>
-                        <li><a href="{{ route('client.statistics.index') }}">Statistik</a></li>
-                        <li><a href="{{ route('client.recipes.index') }}">Rezepte</a></li>
+                        <li><a href="{{ route('client.dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>Dashboard</a></li>
+                        <li><a href="{{ route('client.domains.index') }}"><span uk-icon="world" class="uk-margin-small-right"></span>Domain</a></li>
+                        <li><a href="{{ route('client.subdomains.index') }}"><span uk-icon="grid" class="uk-margin-small-right"></span>Subdomain</a></li>
+                        <li><a href="{{ route('client.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>E-Mail-Postfach</a></li>
+                        <li><a href="{{ route('client.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>E-Mail-Weiterleitung</a></li>
+                        <li><a href="{{ route('client.ftp.index') }}"><span uk-icon="folder" class="uk-margin-small-right"></span>FTP</a></li>
+                        <li><a href="{{ route('client.databases.index') }}"><span uk-icon="database" class="uk-margin-small-right"></span>Datenbanken</a></li>
+                        <li><a href="{{ route('client.dns.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>DNS-Einstellungen</a></li>
+                        <li><a href="{{ route('client.ssl.index') }}"><span uk-icon="lock" class="uk-margin-small-right"></span>SSL-Schutz</a></li>
+                        <li><a href="{{ route('client.statistics.index') }}"><span uk-icon="bar-chart" class="uk-margin-small-right"></span>Statistik</a></li>
+                        <li><a href="{{ route('client.recipes.index') }}"><span uk-icon="nut" class="uk-margin-small-right"></span>Rezepte</a></li>
                     @elseif(Auth::guard('web')->check())
-                        <li><a href="{{ route('dashboard') }}">Startseite</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
-                <li><a href="{{ route('admin.mailboxes.index') }}">Mailkonten</a></li>
-                <li><a href="{{ route('admin.mailforwards.index') }}">Weiterleitungen</a></li>
-                <li><a href="{{ route('users.index') }}">User</a></li>
-                <li><a href="{{ route('docs') }}">Doku</a></li>
-                <li><a href="{{ route('stats') }}">Stats</a></li>
+                        <li><a href="{{ route('dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>Startseite</a></li>
+                        <li><a href="{{ route('kas-clients.index') }}"><span uk-icon="book" class="uk-margin-small-right"></span>Accounts</a></li>
+                        <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>User Management</a></li>
+                <li><a href="{{ route('admin.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>Mailkonten</a></li>
+                <li><a href="{{ route('admin.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>Weiterleitungen</a></li>
+                <li><a href="{{ route('docs') }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>Doku</a></li>
+                <li><a href="{{ route('stats') }}"><span uk-icon="bar-chart" class="uk-margin-small-right"></span>Stats</a></li>
                 <li class="uk-nav-divider"></li>
-                <li><a href="{{ route('config.index') }}"><span uk-icon="cog"></span> Einstellungen</a></li>
+                <li><a href="{{ route('config.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>Einstellungen</a></li>
             @endif
 
             @if(session('impersonate') && Auth::guard('kas_client')->check())
@@ -131,27 +131,27 @@
             <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
                 <ul class="uk-nav uk-nav-default">
                     @if(Auth::guard('kas_client')->check())
-                        <li><a href="{{ route('client.dashboard') }}">Dashboard</a></li>
-                        <li><a href="{{ route('client.domains.index') }}">Domain</a></li>
-                        <li><a href="{{ route('client.subdomains.index') }}">Subdomain</a></li>
-                        <li><a href="{{ route('client.mailboxes.index') }}">E-Mail-Postfach</a></li>
-                        <li><a href="{{ route('client.mailforwards.index') }}">E-Mail-Weiterleitung</a></li>
-                        <li><a href="{{ route('client.ftp.index') }}">FTP</a></li>
-                        <li><a href="{{ route('client.databases.index') }}">Datenbanken</a></li>
-                        <li><a href="{{ route('client.dns.index') }}">DNS-Einstellungen</a></li>
-                        <li><a href="{{ route('client.ssl.index') }}">SSL-Schutz</a></li>
-                        <li><a href="{{ route('client.statistics.index') }}">Statistik</a></li>
-                        <li><a href="{{ route('client.recipes.index') }}">Rezepte</a></li>
+                        <li><a href="{{ route('client.dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>Dashboard</a></li>
+                        <li><a href="{{ route('client.domains.index') }}"><span uk-icon="world" class="uk-margin-small-right"></span>Domain</a></li>
+                        <li><a href="{{ route('client.subdomains.index') }}"><span uk-icon="grid" class="uk-margin-small-right"></span>Subdomain</a></li>
+                        <li><a href="{{ route('client.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>E-Mail-Postfach</a></li>
+                        <li><a href="{{ route('client.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>E-Mail-Weiterleitung</a></li>
+                        <li><a href="{{ route('client.ftp.index') }}"><span uk-icon="folder" class="uk-margin-small-right"></span>FTP</a></li>
+                        <li><a href="{{ route('client.databases.index') }}"><span uk-icon="database" class="uk-margin-small-right"></span>Datenbanken</a></li>
+                        <li><a href="{{ route('client.dns.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>DNS-Einstellungen</a></li>
+                        <li><a href="{{ route('client.ssl.index') }}"><span uk-icon="lock" class="uk-margin-small-right"></span>SSL-Schutz</a></li>
+                        <li><a href="{{ route('client.statistics.index') }}"><span uk-icon="bar-chart" class="uk-margin-small-right"></span>Statistik</a></li>
+                        <li><a href="{{ route('client.recipes.index') }}"><span uk-icon="nut" class="uk-margin-small-right"></span>Rezepte</a></li>
                     @elseif(Auth::guard('web')->check())
-                        <li><a href="{{ route('dashboard') }}">Startseite</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}">Accounts</a></li>
-                        <li><a href="{{ route('admin.mailboxes.index') }}">Mailkonten</a></li>
-                        <li><a href="{{ route('admin.mailforwards.index') }}">Weiterleitungen</a></li>
-                        <li><a href="{{ route('users.index') }}">User</a></li>
-                        <li><a href="{{ route('docs') }}">Doku</a></li>
-                        <li><a href="{{ route('stats') }}">Stats</a></li>
+                        <li><a href="{{ route('dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>Startseite</a></li>
+                        <li><a href="{{ route('kas-clients.index') }}"><span uk-icon="book" class="uk-margin-small-right"></span>Accounts</a></li>
+                        <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>User Management</a></li>
+                        <li><a href="{{ route('admin.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>Mailkonten</a></li>
+                        <li><a href="{{ route('admin.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>Weiterleitungen</a></li>
+                        <li><a href="{{ route('docs') }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>Doku</a></li>
+                        <li><a href="{{ route('stats') }}"><span uk-icon="bar-chart" class="uk-margin-small-right"></span>Stats</a></li>
                         <li class="uk-nav-divider"></li>
-                        <li><a href="{{ route('config.index') }}"><span uk-icon="cog"></span> Einstellungen</a></li>
+                        <li><a href="{{ route('config.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>Einstellungen</a></li>
                     @endif
                 </ul>
             </aside>

@@ -14,6 +14,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use App\Models\KasClient;
 
@@ -58,7 +59,7 @@ class UnifiedLoginController extends Controller
         }
 
         // --- 2️⃣ Try Client Login (by login name) ---
-        if (Auth::guard('kas_client')->attempt(['account_login' => $login, 'password' => $password], $remember)) {
+        if ($this->attemptKasClientLoginByAccount(strtolower($login), $password, $remember)) {
             return redirect()->route('client.dashboard');
         }
 
@@ -71,10 +72,7 @@ class UnifiedLoginController extends Controller
             })
             ->first();
 
-        if ($client && Auth::guard('kas_client')->attempt([
-            'account_login' => $client->account_login,
-            'password' => $password,
-        ], $remember)) {
+        if ($client && $this->attemptKasClientLoginByAccount((string) $client->account_login, $password, $remember)) {
             return redirect()->route('client.dashboard');
         }
 
@@ -82,6 +80,41 @@ class UnifiedLoginController extends Controller
         return back()
             ->withErrors(['login' => 'Ungültige Zugangsdaten.'])
             ->onlyInput('login');
+    }
+
+    /**
+     * Try kas_client login with two strategies:
+     * 1) default Laravel hash in `password`
+     * 2) fallback against decrypted `account_password` (KAS password), then refresh hash
+     */
+    private function attemptKasClientLoginByAccount(string $accountLogin, string $plainPassword, bool $remember): bool
+    {
+        if ($accountLogin === '') {
+            return false;
+        }
+
+        if (Auth::guard('kas_client')->attempt(['account_login' => $accountLogin, 'password' => $plainPassword], $remember)) {
+            return true;
+        }
+
+        $client = KasClient::where('account_login', $accountLogin)->first();
+        if (!$client) {
+            return false;
+        }
+
+        // Fallback: allow login with current KAS password stored for API access.
+        // This keeps domain/login authentication working even if Laravel hash is stale.
+        $apiPassword = (string) ($client->account_password ?? '');
+        if ($apiPassword !== '' && hash_equals($apiPassword, $plainPassword)) {
+            // Refresh local login hash to keep future logins on standard guard checks.
+            $client->password = Hash::make($plainPassword);
+            $client->save();
+
+            Auth::guard('kas_client')->login($client, $remember);
+            return true;
+        }
+
+        return false;
     }
 
     /**
