@@ -97,6 +97,9 @@
                         @php($mb = $m->usedSpaceMb())
                         @php($gb = $mb === null ? null : round($mb / 1024, 2))
                         {{ $gb === null ? '—' : number_format($gb, 2, ',', '.') . ' GB' }}
+                        @if($mb !== null)
+                            <div class="uk-text-muted uk-text-small">{{ number_format($mb, 0, ',', '.') }} MB</div>
+                        @endif
                     </td>
                     <td class="uk-text-nowrap uk-text-muted">
                         <span uk-icon="icon: info"></span>

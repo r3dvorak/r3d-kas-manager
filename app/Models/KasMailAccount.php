@@ -50,7 +50,8 @@ class KasMailAccount extends Model
     {
         $v = $this->data_json['used_mailaccount_space'] ?? null;
         if ($v === null || $v === '') return null;
-        return is_numeric($v) ? round(((float) $v), 2) : null;
+        // KAS returns mailbox usage in KB.
+        // Convert to MB for display/aggregation.
+        return is_numeric($v) ? round(((float) $v) / 1024, 2) : null;
     }
 }
-

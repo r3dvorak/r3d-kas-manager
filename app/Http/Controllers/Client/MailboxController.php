@@ -46,7 +46,7 @@ class MailboxController extends Controller
             ->all();
 
         // Totals across all matching mailboxes (not just the current page).
-        $totalUsedMb = (clone $base)
+        $totalUsedKb = (clone $base)
             ->reorder()
             ->where('status', 'active')
             ->get(['data_json'])
@@ -56,6 +56,7 @@ class MailboxController extends Controller
                 return (is_numeric($v) ? (float) $v : 0.0);
             });
 
+        $totalUsedMb = $totalUsedKb > 0 ? round($totalUsedKb / 1024, 2) : 0.0;
         $totalUsedGb = $totalUsedMb > 0 ? round($totalUsedMb / 1024, 2) : 0.0;
 
         $mailboxes = $base->paginate(25)->withQueryString();
