@@ -40,13 +40,24 @@
 @php($usedWebspaceSource = $usedWebspaceGbFromStats > 0 ? 'KAS get_space' : ($usedWebspaceGbFromMailboxes > 0 ? 'Summe Postfaecher (DB)' : '—'))
 @php($maxWebspaceGb = $maxWebspaceMb > 0 ? round($maxWebspaceMb / 1024, 2) : 0.0)
 @php($freeWebspaceGb = ($maxWebspaceGb > 0) ? max(0.0, round($maxWebspaceGb - $usedWebspaceGb, 2)) : 0.0)
-@php($latestSpaceReport = \App\Models\KasSpaceReport::where('kas_login', $kasLogin)->orderByDesc('measured_at')->first())
-@php($lastSpaceReportAt = $latestSpaceReport?->measured_at)
-@php($spaceInfo = is_array($latestSpaceReport?->data_json ?? null) ? (($latestSpaceReport->data_json['Response']['ReturnInfo'] ?? $latestSpaceReport->data_json['ReturnInfo'] ?? null) : null) : null)
-@php($spaceInfo0 = (is_array($spaceInfo) && isset($spaceInfo[0]) && is_array($spaceInfo[0])) ? $spaceInfo[0] : (is_array($spaceInfo) ? $spaceInfo : null))
-@php($usedMailGb = (is_array($spaceInfo0) && is_numeric($spaceInfo0['used_mailaccount_space'] ?? null)) ? round(((float)$spaceInfo0['used_mailaccount_space']) / 1024 / 1024, 2) : null)
-@php($usedDbGb = (is_array($spaceInfo0) && is_numeric($spaceInfo0['used_database_space'] ?? null)) ? round(((float)$spaceInfo0['used_database_space']) / 1024 / 1024, 2) : null)
-@php($usedHtdocsGb = (is_array($spaceInfo0) && is_numeric($spaceInfo0['used_htdocs_space'] ?? null)) ? round(((float)$spaceInfo0['used_htdocs_space']) / 1024 / 1024, 2) : null)
+@php
+    $latestSpaceReport = \App\Models\KasSpaceReport::where('kas_login', $kasLogin)->orderByDesc('measured_at')->first();
+    $lastSpaceReportAt = $latestSpaceReport?->measured_at;
+
+    $usedMailGb = null;
+    $usedDbGb = null;
+    $usedHtdocsGb = null;
+
+    $raw = is_array($latestSpaceReport?->data_json ?? null) ? $latestSpaceReport->data_json : null;
+    $ri = is_array($raw) ? ($raw['Response']['ReturnInfo'] ?? $raw['ReturnInfo'] ?? null) : null;
+    $info = (is_array($ri) && isset($ri[0]) && is_array($ri[0])) ? $ri[0] : (is_array($ri) ? $ri : null);
+
+    if (is_array($info)) {
+        if (is_numeric($info['used_mailaccount_space'] ?? null)) $usedMailGb = round(((float)$info['used_mailaccount_space']) / 1024 / 1024, 2);
+        if (is_numeric($info['used_htdocs_space'] ?? null)) $usedHtdocsGb = round(((float)$info['used_htdocs_space']) / 1024 / 1024, 2);
+        if (is_numeric($info['used_database_space'] ?? null)) $usedDbGb = round(((float)$info['used_database_space']) / 1024 / 1024, 2);
+    }
+@endphp
 
 <div class="uk-container">
     <h1 class="uk-heading-line"><span>Willkommen in der technischen Verwaltung</span></h1>
