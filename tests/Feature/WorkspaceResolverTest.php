@@ -59,4 +59,25 @@ class WorkspaceResolverTest extends TestCase
             'view' => $workspace,
         ]);
     }
+
+    public function test_non_login_route_without_workspace_does_not_create_new_workspace_cookie(): void
+    {
+        Route::middleware('web')->get('/_workspace_plain', function (Request $request) {
+            return response()->json([
+                'workspace' => $request->attributes->get('workspace'),
+            ]);
+        });
+
+        $response = $this->get('/_workspace_plain');
+        $response->assertOk();
+        $response->assertJson(['workspace' => null]);
+
+        $sessionCookieNames = collect($response->headers->getCookies())
+            ->map(fn ($c) => (string) $c->getName())
+            ->filter(fn ($name) => str_contains($name, '_workspace_session_'))
+            ->values()
+            ->all();
+
+        $this->assertSame([], $sessionCookieNames);
+    }
 }

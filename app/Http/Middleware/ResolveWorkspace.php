@@ -32,24 +32,39 @@ class ResolveWorkspace
         $provided = (string) $request->query(self::QUERY_KEY, '');
         $normalized = strtolower(trim($provided));
         $isValid = $this->isValidWorkspace($normalized);
-        $workspace = $isValid ? $normalized : $this->generateWorkspace();
-
-        // Important: set workspace session cookie before StartSession middleware runs.
-        config(['session.cookie' => $this->workspaceCookieName($workspace)]);
-
-        // Expose context early for controllers/views/services.
-        $request->attributes->set('workspace', $workspace);
-        app()->instance('workspace.key', $workspace);
-        View::share('workspaceKey', $workspace);
-        URL::defaults([self::QUERY_KEY => $workspace]);
-
-        // Canonicalize GET/HEAD URLs so workspace context remains visible.
         $isSafeMethod = in_array($request->method(), ['GET', 'HEAD'], true);
         $isLoginRoute = $request->routeIs('login');
         $isAuthenticated = Auth::guard('web')->check() || Auth::guard('kas_client')->check();
+
+        // Workspace generation is restricted to public login canonicalization only.
+        $workspace = null;
+        if ($isValid) {
+            $workspace = $normalized;
+        } else {
+            $fromCookieConfig = $this->workspaceFromConfiguredCookie();
+            if ($fromCookieConfig !== null) {
+                $workspace = $fromCookieConfig;
+            } elseif ($isSafeMethod && $isLoginRoute && !$isAuthenticated) {
+                $workspace = $this->generateWorkspace();
+            }
+        }
+
+        // Expose context early for controllers/views/services.
+        $request->attributes->set('workspace', $workspace);
+        if (is_string($workspace) && $workspace !== '') {
+            app()->instance('workspace.key', $workspace);
+            View::share('workspaceKey', $workspace);
+            URL::defaults([self::QUERY_KEY => $workspace]);
+        } else {
+            View::share('workspaceKey', null);
+        }
+
+        // Canonicalize GET/HEAD URLs so workspace context remains visible.
         $needsCanonicalRedirect = $isSafeMethod
             && $isLoginRoute
             && !$isAuthenticated
+            && is_string($workspace)
+            && $workspace !== ''
             && ($provided === '' || $normalized !== $provided || !$isValid);
 
         if ($needsCanonicalRedirect) {
@@ -78,9 +93,17 @@ class ResolveWorkspace
         return bin2hex(random_bytes(self::LENGTH / 2));
     }
 
-    private function workspaceCookieName(string $workspace): string
+    private function workspaceFromConfiguredCookie(): ?string
     {
+        $cookie = (string) config('session.cookie', '');
         $base = (string) env('SESSION_COOKIE_WORKSPACE', Str::slug((string) env('APP_NAME', 'laravel'), '_') . '_workspace_session');
-        return $base . '_' . $workspace;
+        $prefix = $base . '_';
+
+        if (!str_starts_with($cookie, $prefix)) {
+            return null;
+        }
+
+        $workspace = strtolower(substr($cookie, strlen($prefix)));
+        return self::isValidWorkspace($workspace) ? $workspace : null;
     }
 }

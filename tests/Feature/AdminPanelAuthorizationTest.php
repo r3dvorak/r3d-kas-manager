@@ -66,7 +66,7 @@ class AdminPanelAuthorizationTest extends TestCase
             'password' => 'secret123',
         ]);
 
-        $response->assertRedirectContains('?w=');
+        $response->assertStatus(302);
         $this->assertAuthenticated('web');
     }
 
