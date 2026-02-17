@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.29.3-alpha
+ * @version   0.29.4-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
@@ -169,10 +169,10 @@
                         <td class="uk-text-right">{{ $maxDomains > 0 ? max(0, $maxDomains - $domainsCount - $domainsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxDomains ?: '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.domains.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung</a>
+                            <a class="uk-icon-button" href="{{ route_w('client.domains.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
                             <form action="{{ route_w('client.domains.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-button uk-button-secondary uk-button-small" type="submit"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
                             </form>
                         </td>
                     </tr>
@@ -183,10 +183,10 @@
                         <td class="uk-text-right">{{ $maxSubdomains > 0 ? max(0, $maxSubdomains - $subdomainsCount - $subdomainsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxSubdomains ?: '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.subdomains.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung</a>
+                            <a class="uk-icon-button" href="{{ route_w('client.subdomains.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
                             <form action="{{ route_w('client.subdomains.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-button uk-button-secondary uk-button-small" type="submit"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
                             </form>
                         </td>
                     </tr>
@@ -197,10 +197,10 @@
                         <td class="uk-text-right">{{ $maxMailboxes > 0 ? max(0, $maxMailboxes - $mailboxesCount - $mailboxesReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxMailboxes ?: '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.mailboxes.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung</a>
+                            <a class="uk-icon-button" href="{{ route_w('client.mailboxes.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
                             <form action="{{ route_w('client.mailboxes.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-button uk-button-secondary uk-button-small" type="submit"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
                             </form>
                         </td>
                     </tr>
@@ -211,10 +211,10 @@
                         <td class="uk-text-right">{{ $maxForwards > 0 ? max(0, $maxForwards - $forwardsCount - $forwardsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxForwards ?: '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.mailforwards.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung</a>
+                            <a class="uk-icon-button" href="{{ route_w('client.mailforwards.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
                             <form action="{{ route_w('client.mailforwards.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-button uk-button-secondary uk-button-small" type="submit"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
                             </form>
                         </td>
                     </tr>
@@ -239,10 +239,10 @@
                         <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($freeWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
                         <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($maxWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.statistics.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung</a>
+                            <a class="uk-icon-button" href="{{ route_w('client.statistics.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
                             <form action="{{ route_w('client.statistics.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-button uk-button-secondary uk-button-small" type="submit"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
                             </form>
                         </td>
                     </tr>
@@ -255,11 +255,5 @@
         </div>
     </div>
 
-    <div class="uk-margin-top">
-        <form action="{{ route_w('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="uk-button uk-button-danger">Abmelden</button>
-        </form>
-    </div>
 </div>
 @endsection
