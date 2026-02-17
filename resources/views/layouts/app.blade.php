@@ -209,8 +209,20 @@
     </div>
 </main>
 
-<footer class="uk-background-muted uk-padding-small uk-text-center" style="padding-left:45px; padding-right:45px;">
-    <p>© 2025 R3D Internet Dienstleistungen · <a href="#">{{ __('ui.footer.imprint') }}</a> · <a href="#">{{ __('ui.footer.privacy') }}</a></p>
+<footer class="uk-background-muted uk-padding-small" style="padding-left:45px; padding-right:45px;">
+    @if($isLoginPage)
+        <div class="uk-flex uk-flex-between uk-flex-middle uk-text-small">
+            <span>© 2025 R3D Internet Dienstleistungen · <a href="#">{{ __('ui.footer.imprint') }}</a> · <a href="#">{{ __('ui.footer.privacy') }}</a></span>
+            <span>
+                <span uk-icon="world" class="uk-margin-small-right"></span>
+                <a href="{{ route('locale.switch', ['locale' => 'de', 'w' => $workspaceKey ?? null]) }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}">Deutsch</a>
+                ·
+                <a href="{{ route('locale.switch', ['locale' => 'en', 'w' => $workspaceKey ?? null]) }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}">English</a>
+            </span>
+        </div>
+    @else
+        <p class="uk-text-center">© 2025 R3D Internet Dienstleistungen · <a href="#">{{ __('ui.footer.imprint') }}</a> · <a href="#">{{ __('ui.footer.privacy') }}</a></p>
+    @endif
 </footer>
 
 <script>
