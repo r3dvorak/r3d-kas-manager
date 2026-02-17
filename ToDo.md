@@ -22,13 +22,28 @@
 - Impersonation startet in neuem Workspace (neuer Tab).
 - Externe Tools (Webmail/PMA) nur ueber kurzlebige Launch-Tokens (kein internes Session-Leak).
 
+## Phase-0 Entscheidungen (fix)
+- URL-Strategie: Query-Parameter `?w=<key>`
+- Workspace-Key: random opaque, `40` hex Zeichen (`160` bit)
+- Lebensdauer: Browser-Session + Server-Timeout via `SESSION_LIFETIME`
+- Timeout-Vorgabe: `SESSION_LIFETIME=300`
+- Session-Cookie: `expire_on_close=true` (kein persistentes Workspace-Cookie)
+- Ohne `w`: neuen Workspace erzeugen und auf URL mit `w` redirecten
+- Ungueltiger/abgelaufener `w`: neuen Workspace erzeugen + Hinweisbanner
+- Logout: beide Varianten
+- Standard: nur aktueller Workspace
+- Zusatzaktion: alle Workspaces abmelden
+- Max. parallele Workspaces: initial unbegrenzt
+- Workspace-UI-Hinweis: dezent, nur fuer Admin
+- Logging in Startphase: minimal (create/login/logout/impersonate)
+
 ## Umsetzungsphasen
 
 ### Phase 0 - Konzept fixieren
-- [ ] URL-Strategie final: `/?w=<key>` oder `/w/{key}/...`
-- [ ] Workspace-Key-Format/Laenge festlegen (random, opaque)
-- [ ] Security-Regeln finalisieren (TTL, invalidation, audit)
-- [ ] Fehlerstrategie definieren (ungueltiger/abgelaufener Workspace)
+- [x] URL-Strategie final: Query-Parameter `?w=<key>`
+- [x] Workspace-Key-Format/Laenge festgelegt: `40` hex Zeichen (`160` bit, random opaque)
+- [x] Security-Regeln finalisiert (TTL, invalidation, audit als Startprofil)
+- [x] Fehlerstrategie definiert (ungueltiger/abgelaufener Workspace => neu + Banner)
 
 ### Phase 1 - Fundament Workspace
 - [ ] WorkspaceResolver-Middleware anlegen
@@ -91,10 +106,10 @@
 - [ ] Spracheinstellung bleibt pro Workspace konsistent.
 
 ## Offene Entscheidungen
-- [ ] Query-Parameter vs. Path-basiert fuer Workspace
-- [ ] Workspace-Lebensdauer (Session-only vs. persistiert)
+- [x] Query-Parameter vs. Path-basiert fuer Workspace
+- [x] Workspace-Lebensdauer (Session-only vs. persistiert)
 - [ ] Anzahl paralleler Workspaces pro User begrenzen?
-- [ ] UI-Hinweis anzeigen, welcher Workspace aktiv ist?
+- [x] UI-Hinweis anzeigen, welcher Workspace aktiv ist?
 
 ## Notizen
 - Kein Framework-Port notwendig; Umsetzung ist in Laravel moeglich.
