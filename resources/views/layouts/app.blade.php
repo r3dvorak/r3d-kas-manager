@@ -1,13 +1,3 @@
-@php
-    $sessionLocale = session('locale');
-    $clientLocale = Auth::guard('kas_client')->check()
-        ? (string) (Auth::guard('kas_client')->user()?->preferred_locale ?? '')
-        : '';
-    $effectiveLocale = in_array($sessionLocale, ['de', 'en'], true)
-        ? $sessionLocale
-        : (in_array($clientLocale, ['de', 'en'], true) ? $clientLocale : app()->getLocale());
-    app()->setLocale($effectiveLocale);
-@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
