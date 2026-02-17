@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák | R3D Internet Dienstleistungen
- * @version   0.26.10-alpha
+ * @version   0.31.2-alpha
  * @date      2025-10-12
  * @license   MIT License
  *
@@ -86,7 +86,7 @@ class AddMailforward implements ActionHandler
 
         $targetsList = is_array($targets)
             ? $targets
-            : preg_split('/[\\s,;]+/', (string) $targets) ?: [];
+            : (preg_split('/[\\s,;]+/', (string) $targets) ?: []);
 
         $params = [
             'local_part' => $local,

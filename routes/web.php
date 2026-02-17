@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.29.5-alpha
+ * @version   0.31.2-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -22,6 +22,7 @@ use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\MailboxesController;
 use App\Http\Controllers\Admin\MailforwardsController;
+use App\Http\Controllers\Admin\RecipeController as AdminRecipeController;
 use Illuminate\Http\Request;
 
 // ============================================================
@@ -82,6 +83,11 @@ Route::middleware(['web', 'useguard:web', 'auth:web', 'can:access-admin-panel'])
     Route::delete('/mailforwards/{forward}', [MailforwardsController::class, 'destroy'])->name('admin.mailforwards.destroy');
     Route::get('/mailforwards/preview', [MailforwardsController::class, 'preview'])->name('admin.mailforwards.preview');
     Route::post('/mailforwards/sync', [MailforwardsController::class, 'sync'])->name('admin.mailforwards.sync');
+
+    Route::resource('/recipes', AdminRecipeController::class)->names('admin.recipes');
+    Route::post('/recipes/{recipe}/run-dry', [AdminRecipeController::class, 'runDry'])->name('admin.recipes.run-dry');
+    Route::post('/recipes/{recipe}/run-apply', [AdminRecipeController::class, 'runApply'])->name('admin.recipes.run-apply');
+    Route::get('/recipes/{recipe}/runs/{run}', [AdminRecipeController::class, 'showRun'])->name('admin.recipes.runs.show');
 
     Route::resource('users', UserController::class);
     Route::post('users/batch', [UserController::class, 'batch'])->name('users.batch');

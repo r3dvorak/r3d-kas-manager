@@ -121,6 +121,7 @@
                         <li><a href="{{ $routeW('kas-clients.index') }}" class="{{ $activeClass(['kas-clients.*']) }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
                         <li><a href="{{ $routeW('admin.mailboxes.index') }}" class="{{ $activeClass(['admin.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
                         <li><a href="{{ $routeW('admin.mailforwards.index') }}" class="{{ $activeClass(['admin.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
+                        <li><a href="{{ $routeW('admin.recipes.index') }}" class="{{ $activeClass(['admin.recipes.*']) }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>
                         <li><a href="{{ $routeW('docs') }}" class="{{ $activeClass(['docs']) }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
                         <li><a href="{{ $routeW('stats') }}" class="{{ $activeClass(['stats']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
                         <li><a href="{{ $routeW('users.index') }}" class="{{ $activeClass(['users.*']) }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
@@ -191,6 +192,7 @@
                         <li><a href="{{ $routeW('kas-clients.index') }}" class="{{ $activeClass(['kas-clients.*']) }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
                         <li><a href="{{ $routeW('admin.mailboxes.index') }}" class="{{ $activeClass(['admin.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
                         <li><a href="{{ $routeW('admin.mailforwards.index') }}" class="{{ $activeClass(['admin.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
+                        <li><a href="{{ $routeW('admin.recipes.index') }}" class="{{ $activeClass(['admin.recipes.*']) }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>
                         <li><a href="{{ $routeW('docs') }}" class="{{ $activeClass(['docs']) }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
                         <li><a href="{{ $routeW('stats') }}" class="{{ $activeClass(['stats']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
                         <li><a href="{{ $routeW('users.index') }}" class="{{ $activeClass(['users.*']) }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>

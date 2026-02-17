@@ -161,11 +161,11 @@
 - [ ] Drift-Check vor Apply ergänzen (aktueller KAS-Status vs geplanter Zustand).
 
 ### Phase A - Admin Recipe Core (MVP)
-- [ ] Admin-UI für Recipes: Liste, Detail, Version, Status (`draft`, `active`, `archived`).
-- [ ] Action-Builder mit Reihenfolge, Parametern und Validierung.
-- [ ] Manual Run mit Dry-Run, Preview-Diff, Apply.
+- [x] Admin-UI für Recipes: Liste, Detail, Version, Status (`draft`, `active`, `archived`).
+- [x] Action-Builder mit Reihenfolge, Parametern und Validierung.
+- [ ] Manual Run mit Dry-Run, Preview-Diff, Apply. (Dry-Run/Apply ist umgesetzt, Preview-Diff noch offen)
 - [ ] Run-Statusmodell final: `pending`, `running`, `success`, `partial`, `failed`, `cancelled`.
-- [ ] Run-Detailansicht: Step-Ergebnisse inkl. Fehler, Dauer, API-Responses (maskiert).
+- [x] Run-Detailansicht: Step-Ergebnisse inkl. Fehler, Dauer, API-Responses (maskiert).
 
 ### Phase B - Admin Onboarding Wizard
 - [ ] Wizard "Neues Konto / neue Umgebung bereitstellen" (mehrstufig).
