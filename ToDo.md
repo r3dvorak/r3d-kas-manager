@@ -46,10 +46,10 @@
 - [x] Fehlerstrategie definiert (ungueltiger/abgelaufener Workspace => neu + Banner)
 
 ### Phase 1 - Fundament Workspace
-- [ ] WorkspaceResolver-Middleware anlegen
-- [ ] Workspace-Kontext in Request/Container bereitstellen
-- [ ] Fallback bei fehlendem `w` implementieren
-- [ ] Unit-/Feature-Tests fuer Resolver
+- [x] WorkspaceResolver-Middleware anlegen
+- [x] Workspace-Kontext in Request/Container bereitstellen
+- [x] Fallback bei fehlendem `w` implementieren
+- [x] Unit-/Feature-Tests fuer Resolver
 
 ### Phase 2 - Session-Isolation pro Workspace
 - [ ] Dynamische Session-Cookie-Namen pro Guard + Workspace

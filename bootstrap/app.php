@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.7.8-alpha
+ * @version   0.28.0-alpha
  * @date      2025-09-28
  * @license   MIT License
  *
@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Illuminate\Cookie\Middleware\EncryptCookies::class,
             Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             Illuminate\Session\Middleware\StartSession::class,
+            App\Http\Middleware\ResolveWorkspace::class,
             Illuminate\View\Middleware\ShareErrorsFromSession::class,
             Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
             Illuminate\Routing\Middleware\SubstituteBindings::class,
