@@ -22,13 +22,13 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
-            <a class="uk-button uk-button-primary" href="{{ route('client.dns.create') }}">Neuer DNS-Eintrag</a>
+            <a class="uk-button uk-button-primary" href="{{ route_w('client.dns.create') }}">Neuer DNS-Eintrag</a>
         </div>
         <div>
-            <a class="uk-button uk-button-default" href="{{ route('client.dns.preview') }}">Pruefung (KAS vs DB)</a>
+            <a class="uk-button uk-button-default" href="{{ route_w('client.dns.preview') }}">Pruefung (KAS vs DB)</a>
         </div>
         <div>
-            <form action="{{ route('client.dns.sync') }}" method="POST" style="display:inline;">
+            <form action="{{ route_w('client.dns.sync') }}" method="POST" style="display:inline;">
                 @csrf
                 <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('DNS-Snapshot aus KAS holen und DB aktualisieren? (kann etwas dauern)')">Sync jetzt</button>
             </form>
@@ -36,7 +36,7 @@
     </div>
 </div>
 
-<form class="uk-grid-small uk-margin" uk-grid method="GET" action="{{ route('client.dns.index') }}">
+<form class="uk-grid-small uk-margin" uk-grid method="GET" action="{{ route_w('client.dns.index') }}">
     <div class="uk-width-1-2@m">
         <input class="uk-input" type="text" name="q" value="{{ $q }}" placeholder="Suche...">
     </div>
@@ -74,8 +74,8 @@
                     <td style="max-width: 620px; white-space: normal; word-break: break-all; overflow-wrap: anywhere;">{{ $r->record_data }}</td>
                     <td class="uk-text-nowrap uk-text-right">{{ (int) ($r->record_aux ?? 0) }}</td>
                     <td class="uk-text-nowrap table-action-icons">
-                        <a href="{{ route('client.dns.edit', $r) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
-                        <form action="{{ route('client.dns.destroy', $r) }}" method="POST" class="table-action-form">
+                        <a href="{{ route_w('client.dns.edit', $r) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
+                        <form action="{{ route_w('client.dns.destroy', $r) }}" method="POST" class="table-action-form">
                             @csrf
                             @method('DELETE')
                             <button class="uk-icon-button action-icon-btn action-icon-btn-danger" uk-icon="icon: trash" type="submit" title="Loeschen" onclick="return confirmDeleteTwice('DNS-Eintrag wirklich loeschen?', 'LOESCHEN')"></button>

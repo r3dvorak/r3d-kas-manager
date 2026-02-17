@@ -24,13 +24,13 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
-            <a class="uk-button uk-button-primary" href="{{ route('client.mailboxes.create') }}">Neues Postfach</a>
+            <a class="uk-button uk-button-primary" href="{{ route_w('client.mailboxes.create') }}">Neues Postfach</a>
         </div>
         <div>
-            <a class="uk-button uk-button-default" href="{{ route('client.mailboxes.preview') }}">Pruefung (KAS vs DB)</a>
+            <a class="uk-button uk-button-default" href="{{ route_w('client.mailboxes.preview') }}">Pruefung (KAS vs DB)</a>
         </div>
         <div>
-            <form action="{{ route('client.mailboxes.sync') }}" method="POST" style="display:inline;">
+            <form action="{{ route_w('client.mailboxes.sync') }}" method="POST" style="display:inline;">
                 @csrf
                 <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')">Sync jetzt</button>
             </form>
@@ -38,7 +38,7 @@
     </div>
 </div>
 
-<form class="uk-grid-small uk-margin" uk-grid method="GET" action="{{ route('client.mailboxes.index') }}">
+<form class="uk-grid-small uk-margin" uk-grid method="GET" action="{{ route_w('client.mailboxes.index') }}">
     <div class="uk-width-1-2@m">
         <input class="uk-input" type="text" name="q" value="{{ $q }}" placeholder="Suche...">
     </div>
@@ -105,8 +105,8 @@
                         @endif
                     </td>
                     <td class="uk-text-nowrap uk-text-muted table-action-icons">
-                        <a href="{{ route('client.mailboxes.edit', $m) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
-                        <form action="{{ route('client.mailboxes.toggle-state', $m) }}" method="POST" class="table-action-form">
+                        <a href="{{ route_w('client.mailboxes.edit', $m) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
+                        <form action="{{ route_w('client.mailboxes.toggle-state', $m) }}" method="POST" class="table-action-form">
                             @csrf
                             <button
                                 class="uk-icon-button action-icon-btn mailbox-state-icon-{{ $m->mailboxAccessState() }}"
@@ -115,7 +115,7 @@
                                 title="Status: {{ $m->mailboxAccessLabel() }} (klicken zum Wechseln)">
                             </button>
                         </form>
-                        <form action="{{ route('client.mailboxes.destroy', $m) }}" method="POST" class="table-action-form">
+                        <form action="{{ route_w('client.mailboxes.destroy', $m) }}" method="POST" class="table-action-form">
                             @csrf
                             @method('DELETE')
                             <button class="uk-icon-button action-icon-btn action-icon-btn-danger" uk-icon="icon: trash" type="submit" title="Loeschen" onclick="return confirmDeleteTwice('Postfach wirklich loeschen?', 'LOESCHEN')"></button>

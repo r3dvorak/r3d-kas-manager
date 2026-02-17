@@ -13,7 +13,7 @@
     </div>
 @endif
 
-<form action="{{ route('client.mailboxes.store') }}" method="POST" class="uk-form-stacked uk-card uk-card-default uk-card-body">
+<form action="{{ route_w('client.mailboxes.store') }}" method="POST" class="uk-form-stacked uk-card uk-card-default uk-card-body">
     @csrf
 
     <div class="uk-grid-small" uk-grid>
@@ -68,7 +68,7 @@
 
     <div class="uk-margin-top">
         <button type="submit" class="uk-button uk-button-primary">Speichern</button>
-        <a href="{{ route('client.mailboxes.index') }}" class="uk-button uk-button-default">Abbrechen</a>
+        <a href="{{ route_w('client.mailboxes.index') }}" class="uk-button uk-button-default">Abbrechen</a>
     </div>
 </form>
 @endsection

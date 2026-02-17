@@ -127,8 +127,8 @@
             @endif
             <li class="uk-nav-divider"></li>
             <li class="uk-nav-header">{{ __('ui.common.language') }}</li>
-            <li><a href="{{ route('locale.switch', 'de') }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>Deutsch</a></li>
-            <li><a href="{{ route('locale.switch', 'en') }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>English</a></li>
+            <li><a href="{{ route_w('locale.switch', ['locale' => 'de']) }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>Deutsch</a></li>
+            <li><a href="{{ route_w('locale.switch', ['locale' => 'en']) }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>English</a></li>
             @if(Auth::guard('web')->check())
                 <li><a href="{{ $routeW('config.index') }}" class="{{ $activeClass(['config.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
             @endif
@@ -197,8 +197,8 @@
                     @endif
                     <li class="uk-nav-divider"></li>
                     <li class="uk-nav-header">{{ __('ui.common.language') }}</li>
-                    <li><a href="{{ route('locale.switch', 'de') }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>Deutsch</a></li>
-                    <li><a href="{{ route('locale.switch', 'en') }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>English</a></li>
+                    <li><a href="{{ route_w('locale.switch', ['locale' => 'de']) }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>Deutsch</a></li>
+                    <li><a href="{{ route_w('locale.switch', ['locale' => 'en']) }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>English</a></li>
                     @if(Auth::guard('web')->check())
                         <li><a href="{{ $routeW('config.index') }}" class="{{ $activeClass(['config.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
                     @endif

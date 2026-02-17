@@ -13,7 +13,7 @@
     </div>
 @endif
 
-<form action="{{ route('client.dns.update', $dnsRecord) }}" method="POST" class="uk-form-stacked uk-card uk-card-default uk-card-body">
+<form action="{{ route_w('client.dns.update', $dnsRecord) }}" method="POST" class="uk-form-stacked uk-card uk-card-default uk-card-body">
     @csrf
     @method('PUT')
 
@@ -54,7 +54,7 @@
 
     <div class="uk-margin-top">
         <button type="submit" class="uk-button uk-button-primary">Aktualisieren</button>
-        <a href="{{ route('client.dns.index') }}" class="uk-button uk-button-default">Zurueck</a>
+        <a href="{{ route_w('client.dns.index') }}" class="uk-button uk-button-default">Zurueck</a>
     </div>
 </form>
 @endsection

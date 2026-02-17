@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.27.0-alpha
+ * @version   0.28.11-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
@@ -99,11 +99,11 @@
         </div>
 
         <div class="uk-grid-small uk-child-width-auto@s uk-margin-small-top" uk-grid>
-            <div><a class="uk-button uk-button-default" href="{{ route('client.dns.index') }}">DNS-Einstellungen</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('client.mailboxes.index') }}">E-Mail-Postfach</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('client.mailforwards.index') }}">E-Mail-Weiterleitung</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('client.domains.index') }}">Domain</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route('client.recipes.index') }}">Rezepte</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.dns.index') }}">DNS-Einstellungen</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.mailboxes.index') }}">E-Mail-Postfach</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.index') }}">E-Mail-Weiterleitung</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.domains.index') }}">Domain</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.recipes.index') }}">Rezepte</a></div>
         </div>
 
         <div class="uk-grid-small uk-child-width-1-3@m uk-margin-top" uk-grid>
@@ -199,7 +199,10 @@
     </div>
 
     <div class="uk-margin-top">
-        <a href="{{ route('logout') }}" class="uk-button uk-button-danger">Abmelden</a>
+        <form action="{{ route_w('logout') }}" method="POST">
+            @csrf
+            <button type="submit" class="uk-button uk-button-danger">Abmelden</button>
+        </form>
     </div>
 </div>
 @endsection

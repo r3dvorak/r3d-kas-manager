@@ -4,8 +4,8 @@
 <h1 class="uk-heading-line"><span>Pruefung Weiterleitungen (KAS vs DB)</span></h1>
 
 <div class="uk-margin">
-    <a class="uk-button uk-button-default" href="{{ route('client.mailforwards.index') }}">Zurueck</a>
-    <form action="{{ route('client.mailforwards.sync') }}" method="POST" style="display:inline;">
+    <a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.index') }}">Zurueck</a>
+    <form action="{{ route_w('client.mailforwards.sync') }}" method="POST" style="display:inline;">
         @csrf
         <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')">Sync jetzt</button>
     </form>

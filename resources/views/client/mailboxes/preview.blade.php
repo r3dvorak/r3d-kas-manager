@@ -4,8 +4,8 @@
 <h1 class="uk-heading-line"><span>Pruefung Mailkonten (KAS vs DB)</span></h1>
 
 <div class="uk-margin">
-    <a class="uk-button uk-button-default" href="{{ route('client.mailboxes.index') }}">Zurueck</a>
-    <form action="{{ route('client.mailboxes.sync') }}" method="POST" style="display:inline;">
+    <a class="uk-button uk-button-default" href="{{ route_w('client.mailboxes.index') }}">Zurueck</a>
+    <form action="{{ route_w('client.mailboxes.sync') }}" method="POST" style="display:inline;">
         @csrf
         <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')">Sync jetzt</button>
     </form>

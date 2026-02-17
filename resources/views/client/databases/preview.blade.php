@@ -35,7 +35,7 @@
 </div>
 
 <div class="uk-margin-top">
-    <a class="uk-button uk-button-default" href="{{ route('client.databases.index') }}">Zurueck</a>
+    <a class="uk-button uk-button-default" href="{{ route_w('client.databases.index') }}">Zurueck</a>
 </div>
 @endsection
 

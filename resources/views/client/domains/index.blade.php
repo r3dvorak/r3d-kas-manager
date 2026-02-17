@@ -15,10 +15,10 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
-            <a class="uk-button uk-button-default" href="{{ route('client.domains.preview') }}">Pruefung (KAS vs DB)</a>
+            <a class="uk-button uk-button-default" href="{{ route_w('client.domains.preview') }}">Pruefung (KAS vs DB)</a>
         </div>
         <div>
-            <form action="{{ route('client.domains.sync') }}" method="POST" style="display:inline;">
+            <form action="{{ route_w('client.domains.sync') }}" method="POST" style="display:inline;">
                 @csrf
                 <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot aktualisieren?')">Sync jetzt</button>
             </form>
@@ -26,7 +26,7 @@
     </div>
 </div>
 
-<form class="uk-grid-small uk-margin" uk-grid method="GET" action="{{ route('client.domains.index') }}">
+<form class="uk-grid-small uk-margin" uk-grid method="GET" action="{{ route_w('client.domains.index') }}">
     <div class="uk-width-1-2@m">
         <input class="uk-input" type="text" name="q" value="{{ $q }}" placeholder="Suche (domain, pfad)...">
     </div>
