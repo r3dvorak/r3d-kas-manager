@@ -12,6 +12,22 @@
 @section('content')
 <div class="uk-flex uk-flex-center">
     <div class="uk-card uk-card-default uk-card-body uk-width-1-1@m" style="max-width:600px;">
+        @php
+            $menuItems = \App\Models\KasClient::clientNavKeys();
+            $menuLabels = [
+                'dashboard' => 'Startseite',
+                'domain' => 'Domain',
+                'subdomain' => 'Subdomain',
+                'mailboxes' => 'Mailkonten',
+                'mailforwards' => 'Weiterleitungen',
+                'ftp' => 'FTP',
+                'databases' => 'Datenbanken',
+                'dns' => 'DNS',
+                'ssl' => 'SSL-Schutz',
+                'statistics' => 'Statistik',
+                'recipes' => 'Rezepte',
+            ];
+        @endphp
 
         <h2 class="uk-heading-line"><span>Neuen KAS Client anlegen</span></h2>
 
@@ -88,6 +104,29 @@
                 <div class="uk-form-controls">
                     <input class="uk-input" id="server_ip" name="server_ip" type="text"
                         placeholder="z. B. 85.13.140.203">
+                </div>
+            </div>
+
+            <hr>
+
+            <h4 class="uk-margin-remove-top">Client-Menue</h4>
+            <div class="uk-margin">
+                <input type="hidden" name="client_menu_items_present" value="1">
+                <div class="uk-grid-small uk-child-width-1-2@s" uk-grid>
+                    @foreach($menuItems as $key)
+                        <label><input class="uk-checkbox" type="checkbox" name="client_menu_items[]" value="{{ $key }}" checked> {{ $menuLabels[$key] ?? $key }}</label>
+                    @endforeach
+                </div>
+                <p class="uk-text-small uk-text-muted uk-margin-small-top">Hier bestimmen Sie, welche Navigation der Klient sieht.</p>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label" for="preferred_locale">Voreingestellte Sprache</label>
+                <div class="uk-form-controls">
+                    <select class="uk-select" id="preferred_locale" name="preferred_locale">
+                        <option value="de" selected>Deutsch</option>
+                        <option value="en">English</option>
+                    </select>
                 </div>
             </div>
 

@@ -25,6 +25,36 @@
 
         <hr class="uk-margin-small">
 
+        <h4 class="uk-margin-remove-top">Client-Oberflaeche</h4>
+        <div class="uk-text-small">
+            <div><strong>Voreingestellte Sprache:</strong> {{ strtoupper((string) ($kasClient->preferred_locale ?: 'de')) }}</div>
+            <div><strong>Sichtbare Menues:</strong>
+                @php
+                    $labels = [
+                        'dashboard' => 'Startseite',
+                        'domain' => 'Domain',
+                        'subdomain' => 'Subdomain',
+                        'mailboxes' => 'Mailkonten',
+                        'mailforwards' => 'Weiterleitungen',
+                        'ftp' => 'FTP',
+                        'databases' => 'Datenbanken',
+                        'dns' => 'DNS',
+                        'ssl' => 'SSL-Schutz',
+                        'statistics' => 'Statistik',
+                        'recipes' => 'Rezepte',
+                    ];
+                    $active = collect(\App\Models\KasClient::clientNavKeys())
+                        ->filter(fn ($k) => $kasClient->hasClientMenuItem($k))
+                        ->map(fn ($k) => $labels[$k] ?? $k)
+                        ->values()
+                        ->all();
+                @endphp
+                {{ $active ? implode(', ', $active) : 'Keine' }}
+            </div>
+        </div>
+
+        <hr class="uk-margin-small">
+
         {{-- Domains --}}
         <h4 class="uk-margin-remove-top">Domains</h4>
 

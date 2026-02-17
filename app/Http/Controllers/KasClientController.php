@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.14.0-alpha
+ * @version   0.27.8-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -46,6 +46,14 @@ class KasClientController extends Controller
     public function store(StoreKasClientRequest $request)
     {
         $validated = $request->validated();
+        $sourceMenuItems = $validated['client_menu_items'] ?? KasClient::clientNavKeys();
+        if (!array_key_exists('client_menu_items', $validated) && $request->input('client_menu_items_present') === '1') {
+            $sourceMenuItems = [];
+        }
+        $menuItems = array_values(array_intersect(
+            KasClient::clientNavKeys(),
+            array_map('strval', (array) $sourceMenuItems)
+        ));
 
         try {
             KasClient::create([
@@ -58,6 +66,8 @@ class KasClientController extends Controller
                 'server_ip' => $validated['server_ip'] ?? null,
                 'all_inkl_customer_number' => $validated['all_inkl_customer_number'] ?? null,
                 'all_inkl_contract_number' => $validated['all_inkl_contract_number'] ?? null,
+                'preferred_locale' => $validated['preferred_locale'] ?? 'de',
+                'client_menu_items' => $menuItems,
             ]);
 
             return redirect()
@@ -86,7 +96,27 @@ class KasClientController extends Controller
     /** Update the specified resource in storage. */
     public function update(UpdateKasClientRequest $request, KasClient $kasClient)
     {
-        $kasClient->update($request->validated());
+        $validated = $request->validated();
+        $menuItems = array_values(array_intersect(
+            KasClient::clientNavKeys(),
+            array_map('strval', (array) ($validated['client_menu_items'] ?? []))
+        ));
+
+        if (!array_key_exists('client_menu_items', $validated) && $request->input('client_menu_items_present') === '1') {
+            $menuItems = [];
+        }
+
+        $kasClient->update([
+            'account_comment' => $validated['account_comment'],
+            'account_contact_mail' => $validated['account_contact_mail'] ?? null,
+            'server_internal_domain' => $validated['server_internal_domain'] ?? null,
+            'server_hostname' => $validated['server_hostname'] ?? null,
+            'server_ip' => $validated['server_ip'] ?? null,
+            'all_inkl_customer_number' => $validated['all_inkl_customer_number'] ?? null,
+            'all_inkl_contract_number' => $validated['all_inkl_contract_number'] ?? null,
+            'preferred_locale' => $validated['preferred_locale'] ?? 'de',
+            'client_menu_items' => $menuItems,
+        ]);
 
         return redirect()->route('kas-clients.index')
             ->with('success', 'Clientdaten erfolgreich aktualisiert.');

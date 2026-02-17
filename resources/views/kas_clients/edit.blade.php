@@ -1,6 +1,22 @@
 @extends('layouts.app')
 
 @section('content')
+    @php
+        $menuItems = \App\Models\KasClient::clientNavKeys();
+        $menuLabels = [
+            'dashboard' => 'Startseite',
+            'domain' => 'Domain',
+            'subdomain' => 'Subdomain',
+            'mailboxes' => 'Mailkonten',
+            'mailforwards' => 'Weiterleitungen',
+            'ftp' => 'FTP',
+            'databases' => 'Datenbanken',
+            'dns' => 'DNS',
+            'ssl' => 'SSL-Schutz',
+            'statistics' => 'Statistik',
+            'recipes' => 'Rezepte',
+        ];
+    @endphp
     <h1 class="uk-heading-line"><span>KAS Client bearbeiten</span></h1>
 
     <form class="uk-form-stacked" action="{{ route('kas-clients.update', $kasClient) }}" method="POST">
@@ -51,6 +67,28 @@
             <label class="uk-form-label">Server-IP</label>
             <div class="uk-form-controls">
                 <input class="uk-input" type="text" name="server_ip" value="{{ $kasClient->server_ip }}" placeholder="z. B. 85.13.140.203">
+            </div>
+        </div>
+
+        <hr>
+        <h4 class="uk-margin-remove-top">Client-Menue</h4>
+        <div class="uk-margin">
+            <input type="hidden" name="client_menu_items_present" value="1">
+            <div class="uk-grid-small uk-child-width-1-2@s" uk-grid>
+                @foreach($menuItems as $key)
+                    <label><input class="uk-checkbox" type="checkbox" name="client_menu_items[]" value="{{ $key }}" {{ $kasClient->hasClientMenuItem($key) ? 'checked' : '' }}> {{ $menuLabels[$key] ?? $key }}</label>
+                @endforeach
+            </div>
+            <p class="uk-text-small uk-text-muted uk-margin-small-top">Hier bestimmen Sie, welche Navigation der Klient sieht.</p>
+        </div>
+
+        <div class="uk-margin">
+            <label class="uk-form-label">Voreingestellte Sprache</label>
+            <div class="uk-form-controls">
+                <select class="uk-select" name="preferred_locale">
+                    <option value="de" {{ ($kasClient->preferred_locale ?? 'de') === 'de' ? 'selected' : '' }}>Deutsch</option>
+                    <option value="en" {{ ($kasClient->preferred_locale ?? 'de') === 'en' ? 'selected' : '' }}>English</option>
+                </select>
             </div>
         </div>
 

@@ -21,6 +21,10 @@ class UpdateKasClientRequest extends FormRequest
             'server_ip' => 'nullable|string|max:45',
             'all_inkl_customer_number' => 'nullable|string|max:32',
             'all_inkl_contract_number' => 'nullable|string|max:32',
+            'preferred_locale' => 'nullable|in:de,en',
+            'client_menu_items_present' => 'nullable|in:1',
+            'client_menu_items' => 'nullable|array',
+            'client_menu_items.*' => 'string|in:dashboard,domain,subdomain,mailboxes,mailforwards,ftp,databases,dns,ssl,statistics,recipes',
         ];
     }
 }

@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.15.1-alpha
+ * @version   0.27.8-alpha
  * @date      2025-10-06
  * @license   MIT License
  *
@@ -39,6 +39,8 @@ class KasClient extends Authenticatable
         'server_ip',
         'all_inkl_customer_number',
         'all_inkl_contract_number',
+        'client_menu_items',
+        'preferred_locale',
         'max_account',
         'max_domain',
         'max_subdomain',
@@ -71,6 +73,10 @@ class KasClient extends Authenticatable
         'show_direct_links_ftpuser',
         'show_direct_links_databases',
         'in_progress',
+    ];
+
+    protected $casts = [
+        'client_menu_items' => 'array',
     ];
 
     /**
@@ -221,5 +227,47 @@ class KasClient extends Authenticatable
     public function usedSpaceGb(): float
     {
         return round(($this->used_account_space ?? 0) / 1024 / 1024, 2);
+    }
+
+    /**
+     * Supported client menu keys in display order.
+     */
+    public static function clientNavKeys(): array
+    {
+        return [
+            'dashboard',
+            'domain',
+            'subdomain',
+            'mailboxes',
+            'mailforwards',
+            'ftp',
+            'databases',
+            'dns',
+            'ssl',
+            'statistics',
+            'recipes',
+        ];
+    }
+
+    /**
+     * Returns true when a client menu key is enabled for this client.
+     */
+    public function hasClientMenuItem(string $key): bool
+    {
+        $key = strtolower(trim($key));
+        if (!in_array($key, self::clientNavKeys(), true)) {
+            return false;
+        }
+
+        if ($this->client_menu_items === null) {
+            return true;
+        }
+
+        $configured = array_values(array_intersect(
+            self::clientNavKeys(),
+            array_map('strval', (array) ($this->client_menu_items ?? []))
+        ));
+
+        return in_array($key, $configured, true);
     }
 }
