@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.0-alpha
+ * @version   0.28.12-alpha
  * @date      2026-02-17
  * @license   MIT License
  *
@@ -45,7 +45,7 @@ class ResolveWorkspace
             if ($fromCookieConfig !== null) {
                 $workspace = $fromCookieConfig;
             } elseif ($isSafeMethod && $isLoginRoute && !$isAuthenticated) {
-                $workspace = $this->generateWorkspace();
+                $workspace = self::generateWorkspaceKey();
             }
         }
 
@@ -88,7 +88,7 @@ class ResolveWorkspace
         return (bool) preg_match('/^[a-f0-9]{40}$/', strtolower($workspace));
     }
 
-    private function generateWorkspace(): string
+    public static function generateWorkspaceKey(): string
     {
         return bin2hex(random_bytes(self::LENGTH / 2));
     }

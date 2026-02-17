@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.27.8-alpha
+ * @version   0.28.12-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -13,6 +13,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Middleware\ResolveWorkspace;
 use App\Http\Requests\StoreKasClientRequest;
 use App\Http\Requests\UpdateKasClientRequest;
 use App\Models\KasClient;
@@ -162,10 +163,12 @@ class KasClientController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        session(['admin_id' => Auth::id()]);
-
         $token = ImpersonationToken::generateForClient($kasClient->id, auth()->id());
-        $url = route('kas-clients.impersonate.consume', $token->getRawToken());
+        $workspace = ResolveWorkspace::generateWorkspaceKey();
+        $url = route('kas-clients.impersonate.consume', [
+            'token' => $token->getRawToken(),
+            ResolveWorkspace::QUERY_KEY => $workspace,
+        ]);
 
         return redirect()->away($url);
     }
@@ -182,8 +185,12 @@ class KasClientController extends Controller
         $kasClient = $impersonation->kasClient;
         $impersonation->update(['used' => true]);
 
+        Auth::guard('web')->logout();
         Auth::guard('kas_client')->login($kasClient);
-        session(['impersonate' => true]);
+        session([
+            'impersonate' => true,
+            'impersonate_admin_id' => $impersonation->created_by,
+        ]);
 
         $label = (string) ($kasClient->account_comment ?: $kasClient->account_login);
         return redirect()->route('client.dashboard')
@@ -195,11 +202,11 @@ class KasClientController extends Controller
     {
         Auth::guard('kas_client')->logout();
 
-        if (session()->has('admin_id')) {
-            Auth::loginUsingId(session('admin_id'));
+        if (session()->has('impersonate_admin_id')) {
+            Auth::guard('web')->loginUsingId((int) session('impersonate_admin_id'));
         }
 
-        session()->forget(['impersonate', 'admin_id']);
+        session()->forget(['impersonate', 'impersonate_admin_id']);
 
         return redirect()->route('dashboard')
             ->with('success', 'Zurück zum Admin gewechselt.');

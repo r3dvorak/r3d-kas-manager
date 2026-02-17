@@ -2,7 +2,7 @@
     R3D KAS Manager
     @package   r3d-kas-manager
     @autor     Richard Dvořák
-    @version   0.17.8-alpha
+    @version   0.28.12-alpha
     @date      2025-10-07
     @license   MIT License
 --}}
@@ -100,7 +100,7 @@
                     <td class="uk-text-center uk-text-nowrap uk-flex uk-flex-center uk-flex-middle uk-height-1-1 kas-client-actions">
                         <a href="{{ route('kas-clients.show', $client->id) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: eye" title="Anzeigen"></a>
                         <a href="{{ route('kas-clients.edit', $client->id) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
-                        <a href="{{ route('kas-clients.impersonate.generate', $client->id) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: sign-in" title="Impersonate"></a>
+                        <a href="{{ route_w('kas-clients.impersonate.generate', [$client->id]) }}" target="_blank" rel="noopener noreferrer" class="uk-icon-button action-icon-btn" uk-icon="icon: sign-in" title="Impersonate"></a>
                         <form action="{{ route('kas-clients.destroy', $client->id) }}" method="POST" class="kas-client-delete-form">
                             @csrf
                             @method('DELETE')

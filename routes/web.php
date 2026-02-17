@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.27.7-alpha
+ * @version   0.28.12-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -167,4 +167,5 @@ Route::get('impersonate/{token}', [KasClientController::class, 'consumeImpersona
     ->name('kas-clients.impersonate.consume');
 
 Route::post('kas-clients/impersonate/leave', [KasClientController::class, 'leaveImpersonation'])
+    ->middleware(['web', 'useguard:kas_client', 'auth:kas_client'])
     ->name('kas-clients.impersonate.leave');

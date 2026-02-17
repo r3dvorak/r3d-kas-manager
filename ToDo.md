@@ -67,10 +67,10 @@
 - [x] Regressionstest auf verlorenen Kontext
 
 ### Phase 4 - Login/Impersonation UX
-- [ ] Login erzeugt bei Bedarf neuen Workspace
-- [ ] Admin-Login und Client-Login parallel im selben Browserprofil pruefen
-- [ ] Impersonate erzeugt neuen Workspace + neuer Tab
-- [ ] Ruecksprung aus Impersonation korrekt pro Workspace
+- [x] Login erzeugt bei Bedarf neuen Workspace
+- [x] Admin-Login und Client-Login parallel im selben Browserprofil pruefen
+- [x] Impersonate erzeugt neuen Workspace + neuer Tab
+- [x] Ruecksprung aus Impersonation korrekt pro Workspace
 
 ### Phase 5 - Externe Launches (Webmail/PMA etc.)
 - [ ] LaunchToken-Service (one-time, short TTL)
