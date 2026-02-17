@@ -17,6 +17,7 @@
         $isClient = Auth::guard('kas_client')->check();
         $clientUser = $isClient ? Auth::guard('kas_client')->user() : null;
         $mode     = $isAdmin ? __('ui.role.admin') : ($isClient ? __('ui.role.client') : '');
+        $isLoginPage = request()->routeIs('login');
         $activeClass = static fn (array $patterns): string => request()->routeIs(...$patterns) ? 'nav-link-active' : '';
         $clientMenuEnabled = static fn (string $key): bool => $clientUser?->hasClientMenuItem($key) ?? false;
         $locale = app()->getLocale();
@@ -47,15 +48,16 @@
                 </a>
 
                 {{-- Role label (ADMIN / KAS Client) --}}
-                @if($isAdmin)
+                @if(!$isLoginPage && $isAdmin)
                     <span class="uk-label uk-label-danger uk-margin-small-left">ADMIN</span>
-                @elseif($isClient)
+                @elseif(!$isLoginPage && $isClient)
                     <span class="uk-label uk-label-success uk-margin-small-left">KAS Client</span>
                 @endif
             </div>
 
             <div class="uk-navbar-right">
                 {{-- Desktop search --}}
+                @if(!$isLoginPage)
                 <div class="uk-visible@m">
                     <form class="uk-search uk-search-default uk-margin-right uk-margin-large-right" style="font-size: 0.85rem;">
                         <span uk-search-icon></span>
@@ -78,17 +80,21 @@
                         <button type="submit" class="uk-button uk-button-text">{{ __('ui.common.logout') }}</button>
                     </form>
                 </div>
+                @endif
 
                 {{-- Burger toggle for mobile --}}
+                @if(!$isLoginPage)
                 <a class="uk-navbar-toggle uk-hidden@m" href="#offcanvas-nav" uk-toggle>
                     <span uk-navbar-toggle-icon></span>
                 </a>
+                @endif
             </div>
         </nav>
     </div>
 </header>
 
 {{-- Offcanvas for mobile --}}
+@if(!$isLoginPage)
 <div id="offcanvas-nav" uk-offcanvas="overlay: true">
             <div class="uk-offcanvas-bar">
                 <ul class="uk-nav uk-nav-default">
@@ -143,9 +149,15 @@
         </ul>
     </div>
 </div>
+@endif
 
 <main class="uk-section uk-section-default">
     <div class="uk-container uk-container-expand" style="padding-left:45px; padding-right:45px;">
+        @if($isLoginPage)
+        <section id="content">
+            @yield('content')
+        </section>
+        @else
         <div class="uk-grid-large" uk-grid>
             <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
                 <ul class="uk-nav uk-nav-default">
@@ -193,6 +205,7 @@
                 @endif
             </aside>
         </div>
+        @endif
     </div>
 </main>
 
