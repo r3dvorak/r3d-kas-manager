@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.31.2
+ * @version   0.31.3-alpha
  * @date      2026-02-17
  * @license   MIT License
  */
@@ -42,7 +42,8 @@ class RecipeController extends Controller
 
     public function create(): View
     {
-        return view('admin.recipes.create');
+        $builder = $this->builderConfig();
+        return view('admin.recipes.create', compact('builder'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -67,8 +68,8 @@ class RecipeController extends Controller
     public function edit(Recipe $recipe): View
     {
         $recipe->load('actions');
-
-        return view('admin.recipes.edit', compact('recipe'));
+        $builder = $this->builderConfig();
+        return view('admin.recipes.edit', compact('recipe', 'builder'));
     }
 
     public function update(Request $request, Recipe $recipe): RedirectResponse
@@ -125,16 +126,29 @@ class RecipeController extends Controller
             'status' => ['required', 'in:draft,active,archived'],
             'is_template' => ['nullable', 'boolean'],
             'variables_json' => ['nullable', 'json'],
+            'default_vars' => ['nullable', 'array'],
             'actions' => ['nullable', 'array'],
             'actions.*.type' => ['nullable', 'string', 'max:255'],
             'actions.*.label' => ['nullable', 'string', 'max:255'],
             'actions.*.order' => ['nullable', 'integer', 'min:0'],
             'actions.*.parameters_json' => ['nullable', 'json'],
+            'actions.*.params' => ['nullable', 'array'],
         ]);
 
-        $variables = null;
+        $variables = [];
+        foreach ((array) ($validated['default_vars'] ?? []) as $k => $v) {
+            if (is_array($v)) {
+                continue;
+            }
+            $v = trim((string) $v);
+            if ($v === '') {
+                continue;
+            }
+            $variables[$k] = $v;
+        }
         if (!empty($validated['variables_json'])) {
-            $variables = json_decode((string) $validated['variables_json'], true);
+            $jsonVars = (array) json_decode((string) $validated['variables_json'], true);
+            $variables = array_merge($variables, $jsonVars);
         }
 
         $recipeData = [
@@ -143,7 +157,7 @@ class RecipeController extends Controller
             'category' => $validated['category'] ?? null,
             'status' => $validated['status'],
             'is_template' => (bool) ($validated['is_template'] ?? false),
-            'variables' => $variables,
+            'variables' => count($variables) ? $variables : null,
         ];
 
         $actions = [];
@@ -153,16 +167,45 @@ class RecipeController extends Controller
                 continue;
             }
 
-            $params = null;
+            $params = [];
+            foreach ((array) ($row['params'] ?? []) as $pk => $pv) {
+                if (is_array($pv)) {
+                    continue;
+                }
+                $pv = trim((string) $pv);
+                if ($pv === '') {
+                    continue;
+                }
+                $params[$pk] = $pv;
+            }
+
             if (!empty($row['parameters_json'])) {
-                $params = json_decode((string) $row['parameters_json'], true);
+                $jsonParams = (array) json_decode((string) $row['parameters_json'], true);
+                $params = array_merge($params, $jsonParams);
+            }
+
+            // Builder convenience mapping for DNS action.
+            if ($type === 'update_dns_records') {
+                $records = [];
+                if (!empty($params['dns_a_record'])) {
+                    $records[] = ['record_type' => 'A', 'record_name' => '', 'record_data' => (string) $params['dns_a_record']];
+                }
+                if (!empty($params['dns_spf_record'])) {
+                    $records[] = ['record_type' => 'TXT', 'record_name' => '', 'record_data' => (string) $params['dns_spf_record']];
+                }
+                if (!empty($params['dns_dmarc_record'])) {
+                    $records[] = ['record_type' => 'TXT', 'record_name' => '_dmarc', 'record_data' => (string) $params['dns_dmarc_record']];
+                }
+                if (count($records)) {
+                    $params['records'] = $records;
+                }
             }
 
             $actions[] = [
                 'type' => $type,
                 'label' => ($row['label'] ?? null) ?: null,
                 'order' => (int) ($row['order'] ?? 0),
-                'parameters' => $params,
+                'parameters' => count($params) ? $params : null,
             ];
         }
 
@@ -204,5 +247,56 @@ class RecipeController extends Controller
             ]);
         }
     }
-}
 
+    private function builderConfig(): array
+    {
+        return [
+            'default_vars' => [
+                'kas_login' => ['label' => 'KAS Login', 'placeholder' => 'w01xxxx'],
+                'domain_name' => ['label' => 'Domain', 'placeholder' => 'example.tld'],
+                'domain_tld' => ['label' => 'Domain TLD (optional)', 'placeholder' => 'de'],
+                'domain_path' => ['label' => 'Domain Path', 'placeholder' => '/example.tld/'],
+                'php_version' => ['label' => 'PHP Version', 'placeholder' => '8.3'],
+                'mail_account' => ['label' => 'Mailbox Prefix', 'placeholder' => 'info'],
+                'mail_password' => ['label' => 'Mailbox Passwort', 'placeholder' => 'wird beim Run gesetzt'],
+                'mail_quota_mb' => ['label' => 'Mailbox Quota MB', 'placeholder' => '2048'],
+                'mail_forward_address' => ['label' => 'Weiterleitung von', 'placeholder' => 'kontakt@example.tld'],
+                'mail_forward_targets' => ['label' => 'Weiterleitung an', 'placeholder' => 'ziel1@example.tld, ziel2@example.tld'],
+            ],
+            'actions' => [
+                'add_domain' => [
+                    'label' => 'Domain anlegen',
+                    'fields' => [
+                        'domain_name' => ['label' => 'Domain', 'placeholder' => 'example.tld'],
+                        'domain_path' => ['label' => 'Domain Path', 'placeholder' => '/example.tld/'],
+                        'php_version' => ['label' => 'PHP Version', 'placeholder' => '8.3'],
+                    ],
+                ],
+                'add_mailaccount' => [
+                    'label' => 'Mailbox anlegen',
+                    'fields' => [
+                        'mail_account' => ['label' => 'Mailbox Prefix', 'placeholder' => 'info'],
+                        'mail_domain' => ['label' => 'Mail Domain', 'placeholder' => 'example.tld'],
+                        'mail_password' => ['label' => 'Passwort', 'placeholder' => 'sicheres Passwort'],
+                        'mail_quota_mb' => ['label' => 'Quota MB', 'placeholder' => '2048'],
+                    ],
+                ],
+                'add_mailforward' => [
+                    'label' => 'Weiterleitung anlegen',
+                    'fields' => [
+                        'mail_forward_address' => ['label' => 'Von Adresse', 'placeholder' => 'kontakt@example.tld'],
+                        'mail_forward_targets' => ['label' => 'Ziele (kommagetrennt)', 'placeholder' => 'a@example.tld, b@example.tld'],
+                    ],
+                ],
+                'update_dns_records' => [
+                    'label' => 'DNS Basiswerte setzen',
+                    'fields' => [
+                        'dns_a_record' => ['label' => 'A Record IP', 'placeholder' => '178.63.15.195'],
+                        'dns_spf_record' => ['label' => 'SPF TXT', 'placeholder' => 'v=spf1 mx a ip4:178.63.15.195 -all'],
+                        'dns_dmarc_record' => ['label' => 'DMARC TXT', 'placeholder' => 'v=DMARC1; p=quarantine; sp=quarantine; adkim=s; aspf=s'],
+                    ],
+                ],
+            ],
+        ];
+    }
+}
