@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.30.0-alpha
+ * @version   0.30.1-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
@@ -72,7 +72,9 @@
 
     $usedWebspaceGbFromMailboxes = $mailboxesUsedMb > 0 ? round($mailboxesUsedMb / 1024, 2) : 0.0;
     $usedWebspaceGb = $usedWebspaceGbFromStats > 0 ? $usedWebspaceGbFromStats : $usedWebspaceGbFromMailboxes;
-    $usedWebspaceSource = $usedWebspaceGbFromStats > 0 ? 'KAS get_space' : ($usedWebspaceGbFromMailboxes > 0 ? 'Summe Postfaecher (DB)' : '—');
+    $usedWebspaceSource = $usedWebspaceGbFromStats > 0
+        ? __('ui.client.resources.source_kas')
+        : ($usedWebspaceGbFromMailboxes > 0 ? __('ui.client.resources.source_db_sum') : __('ui.client.none'));
     $freeWebspaceGb = ($maxWebspaceGb > 0) ? max(0.0, round($maxWebspaceGb - $usedWebspaceGb, 2)) : 0.0;
     $usedReservedWebspaceGb = 0.0;
 
@@ -93,6 +95,12 @@
         if (is_numeric($info['used_database_space'] ?? null)) $usedDbGb = round(((float)$info['used_database_space']) / 1024 / 1024, 2);
     }
     $usedReservedWebspaceGb = round((float)($usedMailGb ?? 0) + (float)($usedHtdocsGb ?? 0) + (float)($usedDbGb ?? 0), 2);
+
+    $locale = app()->getLocale();
+    $decimalSep = $locale === 'en' ? '.' : ',';
+    $thousandSep = $locale === 'en' ? ',' : '.';
+    $fmtInt = static fn ($n): string => number_format((int) $n, 0, $decimalSep, $thousandSep);
+    $fmtGb = static fn ($n): string => number_format((float) $n, 2, $decimalSep, $thousandSep) . ' GB';
 @endphp
 
 <div class="uk-container">
@@ -105,7 +113,7 @@
         <p class="uk-margin-remove">
             <strong>KAS:</strong> {{ $kasLogin ?? '—' }}
             <span class="uk-text-muted">|</span>
-            <strong>Account:</strong> {{ $displayName ?: '—' }}
+            <strong>{{ __('ui.common.account') }}:</strong> {{ $displayName ?: '—' }}
         </p>
     </div>
 
@@ -121,8 +129,8 @@
             <div><a class="uk-button uk-button-default" href="{{ route_w('client.dns.index') }}">{{ __('ui.client.dns_settings') }}</a></div>
             <div><a class="uk-button uk-button-default" href="{{ route_w('client.mailboxes.index') }}">{{ __('ui.client.mailbox') }}</a></div>
             <div><a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.index') }}">{{ __('ui.client.mailforward') }}</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route_w('client.domains.index') }}">Domain</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route_w('client.recipes.index') }}">Rezepte</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.domains.index') }}">{{ __('ui.nav.domain') }}</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.recipes.index') }}">{{ __('ui.nav.recipes') }}</a></div>
             <div><a class="uk-button uk-button-secondary" href="{{ route_w('client.launch.create', ['tool' => 'webmail']) }}" target="_blank" rel="noopener noreferrer">Webmail</a></div>
             <div><a class="uk-button uk-button-secondary" href="{{ route_w('client.launch.create', ['tool' => 'pma']) }}" target="_blank" rel="noopener noreferrer">phpMyAdmin</a></div>
         </div>
@@ -163,86 +171,86 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Domain</td>
-                        <td class="uk-text-right">{{ $domainsCount }}</td>
-                        <td class="uk-text-right">{{ $domainsReserved }}</td>
+                        <td>{{ __('ui.client.resources.domains') }}</td>
+                        <td class="uk-text-right">{{ $fmtInt($domainsCount) }}</td>
+                        <td class="uk-text-right">{{ $fmtInt($domainsReserved) }}</td>
                         <td class="uk-text-right">{{ $maxDomains > 0 ? max(0, $maxDomains - $domainsCount - $domainsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxDomains ?: '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-icon-button" href="{{ route_w('client.domains.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
+                            <a class="uk-icon-button" href="{{ route_w('client.domains.preview') }}" uk-icon="icon: refresh" title="{{ __('ui.common.check_changes') }}"></a>
                             <form action="{{ route_w('client.domains.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="{{ __('ui.common.sync_now') }}"></button>
                             </form>
                         </td>
                     </tr>
                     <tr>
-                        <td>Subdomains</td>
-                        <td class="uk-text-right">{{ $subdomainsCount }}</td>
-                        <td class="uk-text-right">{{ $subdomainsReserved }}</td>
+                        <td>{{ __('ui.client.resources.subdomains') }}</td>
+                        <td class="uk-text-right">{{ $fmtInt($subdomainsCount) }}</td>
+                        <td class="uk-text-right">{{ $fmtInt($subdomainsReserved) }}</td>
                         <td class="uk-text-right">{{ $maxSubdomains > 0 ? max(0, $maxSubdomains - $subdomainsCount - $subdomainsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxSubdomains ?: '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-icon-button" href="{{ route_w('client.subdomains.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
+                            <a class="uk-icon-button" href="{{ route_w('client.subdomains.preview') }}" uk-icon="icon: refresh" title="{{ __('ui.common.check_changes') }}"></a>
                             <form action="{{ route_w('client.subdomains.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="{{ __('ui.common.sync_now') }}"></button>
                             </form>
                         </td>
                     </tr>
                     <tr>
-                        <td>E-Mail-Postfaecher</td>
-                        <td class="uk-text-right">{{ $mailboxesCount }}</td>
-                        <td class="uk-text-right">{{ $mailboxesReserved }}</td>
+                        <td>{{ __('ui.client.resources.mailboxes') }}</td>
+                        <td class="uk-text-right">{{ $fmtInt($mailboxesCount) }}</td>
+                        <td class="uk-text-right">{{ $fmtInt($mailboxesReserved) }}</td>
                         <td class="uk-text-right">{{ $maxMailboxes > 0 ? max(0, $maxMailboxes - $mailboxesCount - $mailboxesReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxMailboxes ?: '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-icon-button" href="{{ route_w('client.mailboxes.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
+                            <a class="uk-icon-button" href="{{ route_w('client.mailboxes.preview') }}" uk-icon="icon: refresh" title="{{ __('ui.common.check_changes') }}"></a>
                             <form action="{{ route_w('client.mailboxes.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="{{ __('ui.common.sync_now') }}"></button>
                             </form>
                         </td>
                     </tr>
                     <tr>
-                        <td>E-Mail-Weiterleitungen</td>
-                        <td class="uk-text-right">{{ $forwardsCount }}</td>
-                        <td class="uk-text-right">{{ $forwardsReserved }}</td>
+                        <td>{{ __('ui.client.resources.forwards') }}</td>
+                        <td class="uk-text-right">{{ $fmtInt($forwardsCount) }}</td>
+                        <td class="uk-text-right">{{ $fmtInt($forwardsReserved) }}</td>
                         <td class="uk-text-right">{{ $maxForwards > 0 ? max(0, $maxForwards - $forwardsCount - $forwardsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxForwards ?: '—' }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-icon-button" href="{{ route_w('client.mailforwards.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
+                            <a class="uk-icon-button" href="{{ route_w('client.mailforwards.preview') }}" uk-icon="icon: refresh" title="{{ __('ui.common.check_changes') }}"></a>
                             <form action="{{ route_w('client.mailforwards.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="{{ __('ui.common.sync_now') }}"></button>
                             </form>
                         </td>
                     </tr>
                     <tr>
-                        <td>Speicherplatz</td>
+                        <td>{{ __('ui.client.resources.storage') }}</td>
                         <td class="uk-text-right">
-                            {{ number_format($usedWebspaceGb, 2, ',', '.') }} GB
-                            @if($usedWebspaceSource !== '—')
-                                <div class="uk-text-muted uk-text-small">Quelle: {{ $usedWebspaceSource }}</div>
+                            {{ $fmtGb($usedWebspaceGb) }}
+                            @if($usedWebspaceSource !== __('ui.client.none'))
+                                <div class="uk-text-muted uk-text-small">{{ __('ui.common.source') }}: {{ $usedWebspaceSource }}</div>
                             @endif
                         </td>
                         <td class="uk-text-right">
-                            {{ number_format($usedReservedWebspaceGb, 2, ',', '.') }} GB
+                            {{ $fmtGb($usedReservedWebspaceGb) }}
                             @if($usedMailGb !== null || $usedHtdocsGb !== null || $usedDbGb !== null)
                                 <div class="uk-text-muted uk-text-small">
-                                    @if($usedMailGb !== null) E-Mail: {{ number_format($usedMailGb, 2, ',', '.') }} GB @endif
-                                    @if($usedHtdocsGb !== null) | htdocs: {{ number_format($usedHtdocsGb, 2, ',', '.') }} GB @endif
-                                    @if($usedDbGb !== null) | DB: {{ number_format($usedDbGb, 2, ',', '.') }} GB @endif
+                                    @if($usedMailGb !== null) {{ __('ui.client.resources.mail') }}: {{ $fmtGb($usedMailGb) }} @endif
+                                    @if($usedHtdocsGb !== null) | {{ __('ui.client.resources.htdocs') }}: {{ $fmtGb($usedHtdocsGb) }} @endif
+                                    @if($usedDbGb !== null) | {{ __('ui.client.resources.database') }}: {{ $fmtGb($usedDbGb) }} @endif
                                 </div>
                             @endif
                         </td>
-                        <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($freeWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
-                        <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($maxWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
+                        <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? $fmtGb($freeWebspaceGb) : __('ui.client.none') }}</td>
+                        <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? $fmtGb($maxWebspaceGb) : __('ui.client.none') }}</td>
                         <td class="uk-text-right uk-text-nowrap">
-                            <a class="uk-icon-button" href="{{ route_w('client.statistics.preview') }}" uk-icon="icon: refresh" title="Änderungen Prüfung (KAS vs DB)"></a>
+                            <a class="uk-icon-button" href="{{ route_w('client.statistics.preview') }}" uk-icon="icon: refresh" title="{{ __('ui.common.check_changes') }}"></a>
                             <form action="{{ route_w('client.statistics.sync') }}" method="POST" class="uk-display-inline">
                                 @csrf
-                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="Sync jetzt"></button>
+                                <button class="uk-icon-button" type="submit" uk-icon="icon: future" title="{{ __('ui.common.sync_now') }}"></button>
                             </form>
                         </td>
                     </tr>

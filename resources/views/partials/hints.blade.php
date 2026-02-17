@@ -39,7 +39,7 @@
 <div class="uk-text-small">
     @if($showPublicIp)
         <div class="uk-margin-small-bottom">
-            <strong>Aktuelle oeffentliche IP</strong><br>
+            <strong>{{ __('ui.hints.public_ip') }}</strong><br>
             <span class="uk-text-muted">{{ app(\App\Services\PublicIpService::class)->getPublicIp() }}</span>
         </div>
         <hr class="uk-margin-small">
@@ -47,9 +47,9 @@
 
     @if($isAdmin && $showAccount)
         <div class="uk-margin-small-bottom">
-            <strong>Kontodaten</strong>
-            <div class="uk-text-muted">Kundennummer: {{ $customer !== '' ? $customer : '—' }}</div>
-            <div class="uk-text-muted">Vertragsnummer: {{ $contract !== '' ? $contract : '—' }}</div>
+            <strong>{{ __('ui.hints.account_data') }}</strong>
+            <div class="uk-text-muted">{{ __('ui.hints.customer_number') }}: {{ $customer !== '' ? $customer : '—' }}</div>
+            <div class="uk-text-muted">{{ __('ui.hints.contract_number') }}: {{ $contract !== '' ? $contract : '—' }}</div>
         </div>
     @endif
 
@@ -57,14 +57,14 @@
         <ul class="uk-list uk-list-divider uk-margin-remove">
             <li>
                 <a href="https://all-inkl.com/members" target="_blank" rel="noopener noreferrer">Members</a><br>
-                <span class="uk-text-muted">Login: {{ $membersLogin !== '' ? $membersLogin : '—' }}</span>
+                <span class="uk-text-muted">{{ __('ui.hints.login') }}: {{ $membersLogin !== '' ? $membersLogin : '—' }}</span>
             </li>
             <li>
-                <a href="https://all-inkl.com/monitor" target="_blank" rel="noopener noreferrer">Monitor</a><br>
-                <span class="uk-text-muted">Login: {{ $monitorLogin !== '' ? $monitorLogin : '—' }}</span>
+                <a href="https://all-inkl.com/monitor" target="_blank" rel="noopener noreferrer">{{ __('ui.hints.monitor') }}</a><br>
+                <span class="uk-text-muted">{{ __('ui.hints.login') }}: {{ $monitorLogin !== '' ? $monitorLogin : '—' }}</span>
             </li>
             <li>
-                <a href="https://kasapi.kasserver.com/dokumentation/" target="_blank" rel="noopener noreferrer">KAS API Doku</a>
+                <a href="https://kasapi.kasserver.com/dokumentation/" target="_blank" rel="noopener noreferrer">{{ __('ui.hints.kas_api_docs') }}</a>
             </li>
         </ul>
     @endif
@@ -75,7 +75,7 @@
 
     @if($showEnv && $isAuthenticated)
         <div class="uk-margin-small-bottom">
-            <strong>Environment / Versionen</strong>
+            <strong>{{ __('ui.hints.env_versions') }}</strong>
             <div class="uk-text-muted">APP_ENV: {{ config('app.env') }}</div>
             <div class="uk-text-muted">APP_URL: {{ config('app.url') }}</div>
             <div class="uk-text-muted">Laravel: {{ app()->version() }}</div>
@@ -86,7 +86,7 @@
 
     @if($isAdmin && $showReports)
         <div class="uk-margin-small-bottom">
-            <strong>Letzte Reports</strong>
+            <strong>{{ __('ui.hints.latest_reports') }}</strong>
             <div class="uk-text-muted">accounts-audit-report.csv: {{ $fmtTs($auditTs) }}</div>
             <div class="uk-text-muted">get_accounts.sanitized.json: {{ $fmtTs($sanTs) }}</div>
         </div>
@@ -95,17 +95,17 @@
 
     @if($isAdmin && $showKasStatus)
         <div class="uk-margin-small-bottom">
-            <strong>KAS API Status</strong>
+            <strong>{{ __('ui.hints.kas_status') }}</strong>
             @if($kasLastErrorAt !== '')
-                <div class="uk-text-danger">Letzter Fehler: {{ $kasLastErrorAt }}</div>
+                <div class="uk-text-danger">{{ __('ui.hints.last_error') }}: {{ $kasLastErrorAt }}</div>
                 @if($kasLastErrorAction !== '')
-                    <div class="uk-text-muted">Action: {{ $kasLastErrorAction }}</div>
+                    <div class="uk-text-muted">{{ __('ui.hints.action') }}: {{ $kasLastErrorAction }}</div>
                 @endif
                 @if($kasLastErrorMessage !== '')
                     <div class="uk-text-muted">{{ $kasLastErrorMessage }}</div>
                 @endif
             @elseif($kasLastSuccessAt !== '')
-                <div class="uk-text-success">Letzter Erfolg: {{ $kasLastSuccessAt }}</div>
+                <div class="uk-text-success">{{ __('ui.hints.last_success') }}: {{ $kasLastSuccessAt }}</div>
             @else
                 <div class="uk-text-muted">—</div>
             @endif
@@ -117,8 +117,8 @@
             <hr class="uk-margin-small">
         @endif
         <div class="uk-margin-small-bottom">
-            <strong>Kontext Hilfe</strong>
-            <div class="uk-text-muted">Geben Sie Ihren Admin-Login oder Ihre Domain ein – die Anmeldung erkennt automatisch den Typ.</div>
+            <strong>{{ __('ui.hints.context_help_title') }}</strong>
+            <div class="uk-text-muted">{{ __('ui.hints.context_help_text') }}</div>
         </div>
     @endif
 </div>
