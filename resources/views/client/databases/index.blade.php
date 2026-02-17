@@ -19,6 +19,9 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
+            <a class="uk-button uk-button-secondary" href="{{ route_w('client.launch.create', ['tool' => 'webmail']) }}" target="_blank" rel="noopener noreferrer">Webmail</a>
+        </div>
+        <div>
             <a class="uk-button uk-button-secondary" href="{{ route_w('client.launch.create', ['tool' => 'pma']) }}" target="_blank" rel="noopener noreferrer">phpMyAdmin</a>
         </div>
         <div>
