@@ -118,12 +118,12 @@
 ## Nächste ToDos (UI / Inhalt)
 
 ### Client Dashboard
-- [ ] Aktuelle Server-IP wird angezeigt (nicht leer).
-- [ ] Servername wird angezeigt (nicht leer).
+- [x] Aktuelle Server-IP wird angezeigt (nicht leer).
+- [x] Servername wird angezeigt (nicht leer).
 
 ### Ressourcen-Bereiche
-- [ ] Feld `Reserviert` korrekt berechnen (nicht immer `0`).
-- [ ] Buttons `Änderungen Prüfung (KAS vs DB)` und `Sync jetzt` in Ressourcen-Ansichten ergänzen.
+- [x] Feld `Reserviert` korrekt berechnen (nicht immer `0`).
+- [x] Buttons `Änderungen Prüfung (KAS vs DB)` und `Sync jetzt` in Ressourcen-Ansichten ergänzen.
 
 ### CRUD-Aktionen in Client-Listen
 - [ ] `NEU`-Button ergänzen bei Domains.

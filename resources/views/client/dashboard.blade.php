@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.28.13-alpha
+ * @version   0.29.1-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
@@ -22,6 +22,15 @@
     $displayName = (string) ($client?->account_comment ?? $client?->name ?? $kasLogin);
     $serverHostname = (string) ($client?->server_hostname ?? '');
     $serverIp = (string) ($client?->server_ip ?? '');
+    if ($serverHostname === '' && $kasLogin !== '') {
+        $serverHostname = $kasLogin . '.kasserver.com';
+    }
+    if ($serverIp === '' && $serverHostname !== '') {
+        $resolved = gethostbyname($serverHostname);
+        if ($resolved !== $serverHostname) {
+            $serverIp = $resolved;
+        }
+    }
     $rootPath = $kasLogin !== '' ? "/www/htdocs/{$kasLogin}/" : '—';
     $clientId = (int) ($client?->id ?? 0);
 
@@ -33,6 +42,10 @@
     $maxSubdomains = (int) ($client?->max_subdomain ?? 0);
     $maxMailboxes = (int) ($client?->max_mail_account ?? 0);
     $maxForwards = (int) ($client?->max_mail_forward ?? 0);
+    $domainsReserved = 0;
+    $subdomainsReserved = 0;
+    $mailboxesReserved = 0;
+    $forwardsReserved = 0;
     $maxWebspaceMb = (float) ($client?->max_webspace ?? 0);
     $usedWebspaceGbFromStats = ($client && method_exists($client, 'usedSpaceGb')) ? (float) $client->usedSpaceGb() : 0.0;
     $mailboxesUsedMb = 0.0;
@@ -45,11 +58,15 @@
     if ($clientId > 0) {
         $domainsCount = \App\Models\KasDomain::where('kas_client_id', $clientId)->whereNull('deleted_at')->count();
         $subdomainsCount = \App\Models\KasSubdomain::where('kas_client_id', $clientId)->whereNull('deleted_at')->count();
+        $domainsReserved = \App\Models\KasDomain::where('kas_client_id', $clientId)->whereNotNull('deleted_at')->count();
+        $subdomainsReserved = \App\Models\KasSubdomain::where('kas_client_id', $clientId)->whereNotNull('deleted_at')->count();
     }
 
     if ($kasLogin !== '') {
         $mailboxesCount = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->count();
         $forwardsCount = \App\Models\KasMailForward::where('kas_login', $kasLogin)->where('status', 'active')->count();
+        $mailboxesReserved = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', '!=', 'active')->count();
+        $forwardsReserved = \App\Models\KasMailForward::where('kas_login', $kasLogin)->where('status', '!=', 'active')->count();
         $mailboxesUsedMb = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->get()->sum(fn($m) => (float)($m->usedSpaceMb() ?? 0));
     }
 
@@ -57,6 +74,7 @@
     $usedWebspaceGb = $usedWebspaceGbFromStats > 0 ? $usedWebspaceGbFromStats : $usedWebspaceGbFromMailboxes;
     $usedWebspaceSource = $usedWebspaceGbFromStats > 0 ? 'KAS get_space' : ($usedWebspaceGbFromMailboxes > 0 ? 'Summe Postfaecher (DB)' : '—');
     $freeWebspaceGb = ($maxWebspaceGb > 0) ? max(0.0, round($maxWebspaceGb - $usedWebspaceGb, 2)) : 0.0;
+    $usedReservedWebspaceGb = 0.0;
 
     $latestSpaceReport = \App\Models\KasSpaceReport::where('kas_login', $kasLogin)->orderByDesc('measured_at')->first();
     $lastSpaceReportAt = $latestSpaceReport?->measured_at;
@@ -74,6 +92,7 @@
         if (is_numeric($info['used_htdocs_space'] ?? null)) $usedHtdocsGb = round(((float)$info['used_htdocs_space']) / 1024 / 1024, 2);
         if (is_numeric($info['used_database_space'] ?? null)) $usedDbGb = round(((float)$info['used_database_space']) / 1024 / 1024, 2);
     }
+    $usedReservedWebspaceGb = round((float)($usedMailGb ?? 0) + (float)($usedHtdocsGb ?? 0) + (float)($usedDbGb ?? 0), 2);
 @endphp
 
 <div class="uk-container">
@@ -139,36 +158,65 @@
                         <th class="uk-text-nowrap uk-text-right">reserviert</th>
                         <th class="uk-text-nowrap uk-text-right">verbleibend</th>
                         <th class="uk-text-nowrap uk-text-right">moeglich</th>
+                        <th class="uk-text-nowrap uk-text-right">Aktionen</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>Domain</td>
                         <td class="uk-text-right">{{ $domainsCount }}</td>
-                        <td class="uk-text-right">0</td>
-                        <td class="uk-text-right">{{ $maxDomains > 0 ? max(0, $maxDomains - $domainsCount) : '—' }}</td>
+                        <td class="uk-text-right">{{ $domainsReserved }}</td>
+                        <td class="uk-text-right">{{ $maxDomains > 0 ? max(0, $maxDomains - $domainsCount - $domainsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxDomains ?: '—' }}</td>
+                        <td class="uk-text-right uk-text-nowrap">
+                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.domains.preview') }}">Änderungen Prüfung</a>
+                            <form action="{{ route_w('client.domains.sync') }}" method="POST" class="uk-display-inline">
+                                @csrf
+                                <button class="uk-button uk-button-secondary uk-button-small" type="submit">Sync jetzt</button>
+                            </form>
+                        </td>
                     </tr>
                     <tr>
                         <td>Subdomains</td>
                         <td class="uk-text-right">{{ $subdomainsCount }}</td>
-                        <td class="uk-text-right">0</td>
-                        <td class="uk-text-right">{{ $maxSubdomains > 0 ? max(0, $maxSubdomains - $subdomainsCount) : '—' }}</td>
+                        <td class="uk-text-right">{{ $subdomainsReserved }}</td>
+                        <td class="uk-text-right">{{ $maxSubdomains > 0 ? max(0, $maxSubdomains - $subdomainsCount - $subdomainsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxSubdomains ?: '—' }}</td>
+                        <td class="uk-text-right uk-text-nowrap">
+                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.subdomains.preview') }}">Änderungen Prüfung</a>
+                            <form action="{{ route_w('client.subdomains.sync') }}" method="POST" class="uk-display-inline">
+                                @csrf
+                                <button class="uk-button uk-button-secondary uk-button-small" type="submit">Sync jetzt</button>
+                            </form>
+                        </td>
                     </tr>
                     <tr>
                         <td>E-Mail-Postfaecher</td>
                         <td class="uk-text-right">{{ $mailboxesCount }}</td>
-                        <td class="uk-text-right">0</td>
-                        <td class="uk-text-right">{{ $maxMailboxes > 0 ? max(0, $maxMailboxes - $mailboxesCount) : '—' }}</td>
+                        <td class="uk-text-right">{{ $mailboxesReserved }}</td>
+                        <td class="uk-text-right">{{ $maxMailboxes > 0 ? max(0, $maxMailboxes - $mailboxesCount - $mailboxesReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxMailboxes ?: '—' }}</td>
+                        <td class="uk-text-right uk-text-nowrap">
+                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.mailboxes.preview') }}">Änderungen Prüfung</a>
+                            <form action="{{ route_w('client.mailboxes.sync') }}" method="POST" class="uk-display-inline">
+                                @csrf
+                                <button class="uk-button uk-button-secondary uk-button-small" type="submit">Sync jetzt</button>
+                            </form>
+                        </td>
                     </tr>
                     <tr>
                         <td>E-Mail-Weiterleitungen</td>
                         <td class="uk-text-right">{{ $forwardsCount }}</td>
-                        <td class="uk-text-right">0</td>
-                        <td class="uk-text-right">{{ $maxForwards > 0 ? max(0, $maxForwards - $forwardsCount) : '—' }}</td>
+                        <td class="uk-text-right">{{ $forwardsReserved }}</td>
+                        <td class="uk-text-right">{{ $maxForwards > 0 ? max(0, $maxForwards - $forwardsCount - $forwardsReserved) : '—' }}</td>
                         <td class="uk-text-right">{{ $maxForwards ?: '—' }}</td>
+                        <td class="uk-text-right uk-text-nowrap">
+                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.mailforwards.preview') }}">Änderungen Prüfung</a>
+                            <form action="{{ route_w('client.mailforwards.sync') }}" method="POST" class="uk-display-inline">
+                                @csrf
+                                <button class="uk-button uk-button-secondary uk-button-small" type="submit">Sync jetzt</button>
+                            </form>
+                        </td>
                     </tr>
                     <tr>
                         <td>Speicherplatz</td>
@@ -179,7 +227,7 @@
                             @endif
                         </td>
                         <td class="uk-text-right">
-                            0,00 GB
+                            {{ number_format($usedReservedWebspaceGb, 2, ',', '.') }} GB
                             @if($usedMailGb !== null || $usedHtdocsGb !== null || $usedDbGb !== null)
                                 <div class="uk-text-muted uk-text-small">
                                     @if($usedMailGb !== null) E-Mail: {{ number_format($usedMailGb, 2, ',', '.') }} GB @endif
@@ -190,6 +238,13 @@
                         </td>
                         <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($freeWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
                         <td class="uk-text-right">{{ $maxWebspaceGb > 0 ? number_format($maxWebspaceGb, 2, ',', '.') . ' GB' : '—' }}</td>
+                        <td class="uk-text-right uk-text-nowrap">
+                            <a class="uk-button uk-button-default uk-button-small" href="{{ route_w('client.statistics.preview') }}">Änderungen Prüfung</a>
+                            <form action="{{ route_w('client.statistics.sync') }}" method="POST" class="uk-display-inline">
+                                @csrf
+                                <button class="uk-button uk-button-secondary uk-button-small" type="submit">Sync jetzt</button>
+                            </form>
+                        </td>
                     </tr>
                 </tbody>
             </table>
