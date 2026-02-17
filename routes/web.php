@@ -55,10 +55,20 @@ Route::middleware(['web', 'useguard:web', 'auth:web', 'can:access-admin-panel'])
 
     // Mail (admin)
     Route::get('/mailboxes', [MailboxesController::class, 'index'])->name('admin.mailboxes.index');
+    Route::get('/mailboxes/create', [MailboxesController::class, 'create'])->name('admin.mailboxes.create');
+    Route::post('/mailboxes', [MailboxesController::class, 'store'])->name('admin.mailboxes.store');
+    Route::get('/mailboxes/{mailbox}/edit', [MailboxesController::class, 'edit'])->name('admin.mailboxes.edit');
+    Route::put('/mailboxes/{mailbox}', [MailboxesController::class, 'update'])->name('admin.mailboxes.update');
+    Route::delete('/mailboxes/{mailbox}', [MailboxesController::class, 'destroy'])->name('admin.mailboxes.destroy');
     Route::get('/mailboxes/preview', [MailboxesController::class, 'preview'])->name('admin.mailboxes.preview');
     Route::post('/mailboxes/sync', [MailboxesController::class, 'sync'])->name('admin.mailboxes.sync');
 
     Route::get('/mailforwards', [MailforwardsController::class, 'index'])->name('admin.mailforwards.index');
+    Route::get('/mailforwards/create', [MailforwardsController::class, 'create'])->name('admin.mailforwards.create');
+    Route::post('/mailforwards', [MailforwardsController::class, 'store'])->name('admin.mailforwards.store');
+    Route::get('/mailforwards/{forward}/edit', [MailforwardsController::class, 'edit'])->name('admin.mailforwards.edit');
+    Route::put('/mailforwards/{forward}', [MailforwardsController::class, 'update'])->name('admin.mailforwards.update');
+    Route::delete('/mailforwards/{forward}', [MailforwardsController::class, 'destroy'])->name('admin.mailforwards.destroy');
     Route::get('/mailforwards/preview', [MailforwardsController::class, 'preview'])->name('admin.mailforwards.preview');
     Route::post('/mailforwards/sync', [MailforwardsController::class, 'sync'])->name('admin.mailforwards.sync');
 

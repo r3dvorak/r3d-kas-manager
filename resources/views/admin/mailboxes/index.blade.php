@@ -28,6 +28,9 @@
         <button class="uk-button uk-button-primary" type="submit">Filter</button>
     </div>
     <div class="uk-width-auto@m">
+        <a class="uk-button uk-button-default" href="{{ route('admin.mailboxes.create') }}">Neu</a>
+    </div>
+    <div class="uk-width-auto@m">
         @if($kasLogin)
             <a class="uk-button uk-button-default" href="{{ route('admin.mailboxes.preview', ['kas_login'=>$kasLogin]) }}">Pruefung (KAS vs DB)</a>
             <form action="{{ route('admin.mailboxes.sync') }}" method="POST" style="display:inline;">
@@ -49,6 +52,7 @@
                 <th>Spamfilter</th>
                 <th>Quota</th>
                 <th class="uk-text-nowrap">KAS Login</th>
+                <th class="uk-text-nowrap">Aktion</th>
             </tr>
         </thead>
         <tbody>
@@ -60,9 +64,17 @@
                     <td class="uk-text-nowrap">{{ $m->spamfilterLabel() }}</td>
                     <td class="uk-text-nowrap">{{ $m->quotaRule() ?: '—' }}</td>
                     <td class="uk-text-nowrap">{{ $m->kas_login }}</td>
+                    <td class="uk-text-nowrap">
+                        <a class="uk-button uk-button-text" href="{{ route('admin.mailboxes.edit', $m) }}">Bearbeiten</a>
+                        <form action="{{ route('admin.mailboxes.destroy', $m) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button class="uk-button uk-button-text uk-text-danger" type="submit" onclick="return confirm('Mailbox wirklich loeschen?')">Loeschen</button>
+                        </form>
+                    </td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="uk-text-muted">Keine Mailkonten in der DB. Waehle einen Client und klicke Sync.</td></tr>
+                <tr><td colspan="7" class="uk-text-muted">Keine Mailkonten in der DB. Waehle einen Client und klicke Sync oder lege manuell an.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -72,4 +84,3 @@
     {{ $mailboxes->links() }}
 </div>
 @endsection
-

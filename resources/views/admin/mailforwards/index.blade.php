@@ -28,6 +28,9 @@
         <button class="uk-button uk-button-primary" type="submit">Filter</button>
     </div>
     <div class="uk-width-auto@m">
+        <a class="uk-button uk-button-default" href="{{ route('admin.mailforwards.create') }}">Neu</a>
+    </div>
+    <div class="uk-width-auto@m">
         @if($kasLogin)
             <a class="uk-button uk-button-default" href="{{ route('admin.mailforwards.preview', ['kas_login'=>$kasLogin]) }}">Pruefung (KAS vs DB)</a>
             <form action="{{ route('admin.mailforwards.sync') }}" method="POST" style="display:inline;">
@@ -47,6 +50,7 @@
                 <th>Ziele</th>
                 <th>Spamfilter</th>
                 <th class="uk-text-nowrap">KAS Login</th>
+                <th class="uk-text-nowrap">Aktion</th>
             </tr>
         </thead>
         <tbody>
@@ -62,9 +66,17 @@
                         @endif
                     </td>
                     <td class="uk-text-nowrap">{{ $f->kas_login }}</td>
+                    <td class="uk-text-nowrap">
+                        <a class="uk-button uk-button-text" href="{{ route('admin.mailforwards.edit', $f) }}">Bearbeiten</a>
+                        <form action="{{ route('admin.mailforwards.destroy', $f) }}" method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button class="uk-button uk-button-text uk-text-danger" type="submit" onclick="return confirm('Weiterleitung wirklich loeschen?')">Loeschen</button>
+                        </form>
+                    </td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="uk-text-muted">Keine Weiterleitungen in der DB. Waehle einen Client und klicke Sync.</td></tr>
+                <tr><td colspan="5" class="uk-text-muted">Keine Weiterleitungen in der DB. Waehle einen Client und klicke Sync oder lege manuell an.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -74,4 +86,3 @@
     {{ $forwards->links() }}
 </div>
 @endsection
-
