@@ -120,6 +120,7 @@
 ### Client Dashboard
 - [x] Aktuelle Server-IP wird angezeigt (nicht leer).
 - [x] Servername wird angezeigt (nicht leer).
+- [ ] Button `Abmelden` unter dem Inhalt entfernen (Logout bleibt in der Navbar).
 
 ### Ressourcen-Bereiche
 - [x] Feld `Reserviert` korrekt berechnen (nicht immer `0`).
