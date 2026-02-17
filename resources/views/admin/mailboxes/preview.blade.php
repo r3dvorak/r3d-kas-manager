@@ -23,7 +23,7 @@
         <form action="{{ route('admin.mailboxes.sync') }}" method="POST" style="display:inline;">
             @csrf
             <input type="hidden" name="kas_login" value="{{ $kasLogin }}">
-            <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')">Sync jetzt</button>
+            <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
         </form>
     </div>
 </form>

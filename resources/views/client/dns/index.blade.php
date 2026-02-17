@@ -25,12 +25,12 @@
             <a class="uk-button uk-button-primary" href="{{ route_w('client.dns.create') }}">Neuer DNS-Eintrag</a>
         </div>
         <div>
-            <a class="uk-button uk-button-default" href="{{ route_w('client.dns.preview') }}">Pruefung (KAS vs DB)</a>
+            <a class="uk-button uk-button-default" href="{{ route_w('client.dns.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung (KAS vs DB)</a>
         </div>
         <div>
             <form action="{{ route_w('client.dns.sync') }}" method="POST" style="display:inline;">
                 @csrf
-                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('DNS-Snapshot aus KAS holen und DB aktualisieren? (kann etwas dauern)')">Sync jetzt</button>
+                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('DNS-Snapshot aus KAS holen und DB aktualisieren? (kann etwas dauern)')"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
             </form>
         </div>
     </div>

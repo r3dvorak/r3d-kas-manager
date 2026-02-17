@@ -7,7 +7,7 @@
     <a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.index') }}">Zurueck</a>
     <form action="{{ route_w('client.mailforwards.sync') }}" method="POST" style="display:inline;">
         @csrf
-        <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')">Sync jetzt</button>
+        <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
     </form>
 </div>
 

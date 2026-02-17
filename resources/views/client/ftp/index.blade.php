@@ -19,12 +19,12 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
-            <a class="uk-button uk-button-default" href="{{ route_w('client.ftp.preview') }}">Pruefung (KAS vs DB)</a>
+            <a class="uk-button uk-button-default" href="{{ route_w('client.ftp.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung (KAS vs DB)</a>
         </div>
         <div>
             <form action="{{ route_w('client.ftp.sync') }}" method="POST" style="display:inline;">
                 @csrf
-                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot aktualisieren?')">Sync jetzt</button>
+                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot aktualisieren?')"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
             </form>
         </div>
     </div>

@@ -32,11 +32,11 @@
     </div>
     <div class="uk-width-auto@m">
         @if($kasLogin)
-            <a class="uk-button uk-button-default" href="{{ route('admin.mailboxes.preview', ['kas_login'=>$kasLogin]) }}">Pruefung (KAS vs DB)</a>
+            <a class="uk-button uk-button-default" href="{{ route('admin.mailboxes.preview', ['kas_login'=>$kasLogin]) }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung (KAS vs DB)</a>
             <form action="{{ route('admin.mailboxes.sync') }}" method="POST" style="display:inline;">
                 @csrf
                 <input type="hidden" name="kas_login" value="{{ $kasLogin }}">
-                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')">Sync jetzt</button>
+                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
             </form>
         @endif
     </div>
