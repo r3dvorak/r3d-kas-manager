@@ -1,3 +1,9 @@
+@php
+    $sessionLocale = session('locale');
+    if (in_array($sessionLocale, ['de', 'en'], true)) {
+        app()->setLocale($sessionLocale);
+    }
+@endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -6,6 +12,8 @@
         $isAdmin  = Auth::guard('web')->check();
         $isClient = Auth::guard('kas_client')->check();
         $mode     = $isAdmin ? __('ui.role.admin') : ($isClient ? __('ui.role.client') : '');
+        $activeClass = static fn (array $patterns): string => request()->routeIs(...$patterns) ? 'nav-link-active' : '';
+        $locale = app()->getLocale();
     @endphp
     <title>{{ $mode ? $mode . ' | ' : '' }}RIIID KAS Manager</title>
 
@@ -79,27 +87,32 @@
             <div class="uk-offcanvas-bar">
                 <ul class="uk-nav uk-nav-default">
                     @if(Auth::guard('kas_client')->check())
-                        <li><a href="{{ route('client.dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.dashboard') }}</a></li>
-                        <li><a href="{{ route('client.domains.index') }}"><span uk-icon="world" class="uk-margin-small-right"></span>{{ __('ui.nav.domain') }}</a></li>
-                        <li><a href="{{ route('client.subdomains.index') }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.subdomain') }}</a></li>
-                        <li><a href="{{ route('client.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
-                        <li><a href="{{ route('client.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
-                        <li><a href="{{ route('client.ftp.index') }}"><span uk-icon="folder" class="uk-margin-small-right"></span>{{ __('ui.nav.ftp') }}</a></li>
-                        <li><a href="{{ route('client.databases.index') }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>
-                        <li><a href="{{ route('client.dns.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>
-                        <li><a href="{{ route('client.ssl.index') }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>
-                        <li><a href="{{ route('client.statistics.index') }}"><img src="{{ asset('images/icons/gitter.svg') }}" alt="" class="nav-logo-icon uk-margin-small-right">{{ __('ui.nav.statistics') }}</a></li>
-                        <li><a href="{{ route('client.recipes.index') }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>
+                        <li><a href="{{ route('client.dashboard') }}" class="{{ $activeClass(['client.dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.dashboard') }}</a></li>
+                        <li><a href="{{ route('client.domains.index') }}" class="{{ $activeClass(['client.domains.*']) }}"><span uk-icon="world" class="uk-margin-small-right"></span>{{ __('ui.nav.domain') }}</a></li>
+                        <li><a href="{{ route('client.subdomains.index') }}" class="{{ $activeClass(['client.subdomains.*']) }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.subdomain') }}</a></li>
+                        <li><a href="{{ route('client.mailboxes.index') }}" class="{{ $activeClass(['client.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
+                        <li><a href="{{ route('client.mailforwards.index') }}" class="{{ $activeClass(['client.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
+                        <li><a href="{{ route('client.ftp.index') }}" class="{{ $activeClass(['client.ftp.*']) }}"><span uk-icon="folder" class="uk-margin-small-right"></span>{{ __('ui.nav.ftp') }}</a></li>
+                        <li><a href="{{ route('client.databases.index') }}" class="{{ $activeClass(['client.databases.*']) }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>
+                        <li><a href="{{ route('client.dns.index') }}" class="{{ $activeClass(['client.dns.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>
+                        <li><a href="{{ route('client.ssl.index') }}" class="{{ $activeClass(['client.ssl.*']) }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>
+                        <li><a href="{{ route('client.statistics.index') }}" class="{{ $activeClass(['client.statistics.*']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.statistics') }}</a></li>
+                        <li><a href="{{ route('client.recipes.index') }}" class="{{ $activeClass(['client.recipes.*']) }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>
                     @elseif(Auth::guard('web')->check())
-                        <li><a href="{{ route('dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
-                <li><a href="{{ route('admin.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
-                <li><a href="{{ route('admin.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
-                <li><a href="{{ route('docs') }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
-                <li><a href="{{ route('stats') }}"><img src="{{ asset('images/icons/gitter.svg') }}" alt="" class="nav-logo-icon uk-margin-small-right">{{ __('ui.nav.stats') }}</a></li>
-                <li class="uk-nav-divider"></li>
-                <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
-                <li><a href="{{ route('config.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
+                        <li><a href="{{ route('dashboard') }}" class="{{ $activeClass(['dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
+                        <li><a href="{{ route('kas-clients.index') }}" class="{{ $activeClass(['kas-clients.*']) }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
+                        <li><a href="{{ route('admin.mailboxes.index') }}" class="{{ $activeClass(['admin.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
+                        <li><a href="{{ route('admin.mailforwards.index') }}" class="{{ $activeClass(['admin.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
+                        <li><a href="{{ route('docs') }}" class="{{ $activeClass(['docs']) }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
+                        <li><a href="{{ route('stats') }}" class="{{ $activeClass(['stats']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
+                        <li><a href="{{ route('users.index') }}" class="{{ $activeClass(['users.*']) }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
+            @endif
+            <li class="uk-nav-divider"></li>
+            <li class="uk-nav-header">{{ __('ui.common.language') }}</li>
+            <li><a href="{{ route('locale.switch', 'de') }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>Deutsch</a></li>
+            <li><a href="{{ route('locale.switch', 'en') }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>English</a></li>
+            @if(Auth::guard('web')->check())
+                <li><a href="{{ route('config.index') }}" class="{{ $activeClass(['config.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
             @endif
 
             @if(session('impersonate') && Auth::guard('kas_client')->check())
@@ -131,27 +144,32 @@
             <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
                 <ul class="uk-nav uk-nav-default">
                     @if(Auth::guard('kas_client')->check())
-                        <li><a href="{{ route('client.dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.dashboard') }}</a></li>
-                        <li><a href="{{ route('client.domains.index') }}"><span uk-icon="world" class="uk-margin-small-right"></span>{{ __('ui.nav.domain') }}</a></li>
-                        <li><a href="{{ route('client.subdomains.index') }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.subdomain') }}</a></li>
-                        <li><a href="{{ route('client.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
-                        <li><a href="{{ route('client.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
-                        <li><a href="{{ route('client.ftp.index') }}"><span uk-icon="folder" class="uk-margin-small-right"></span>{{ __('ui.nav.ftp') }}</a></li>
-                        <li><a href="{{ route('client.databases.index') }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>
-                        <li><a href="{{ route('client.dns.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>
-                        <li><a href="{{ route('client.ssl.index') }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>
-                        <li><a href="{{ route('client.statistics.index') }}"><img src="{{ asset('images/icons/gitter.svg') }}" alt="" class="nav-logo-icon uk-margin-small-right">{{ __('ui.nav.statistics') }}</a></li>
-                        <li><a href="{{ route('client.recipes.index') }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>
+                        <li><a href="{{ route('client.dashboard') }}" class="{{ $activeClass(['client.dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.dashboard') }}</a></li>
+                        <li><a href="{{ route('client.domains.index') }}" class="{{ $activeClass(['client.domains.*']) }}"><span uk-icon="world" class="uk-margin-small-right"></span>{{ __('ui.nav.domain') }}</a></li>
+                        <li><a href="{{ route('client.subdomains.index') }}" class="{{ $activeClass(['client.subdomains.*']) }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.subdomain') }}</a></li>
+                        <li><a href="{{ route('client.mailboxes.index') }}" class="{{ $activeClass(['client.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
+                        <li><a href="{{ route('client.mailforwards.index') }}" class="{{ $activeClass(['client.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
+                        <li><a href="{{ route('client.ftp.index') }}" class="{{ $activeClass(['client.ftp.*']) }}"><span uk-icon="folder" class="uk-margin-small-right"></span>{{ __('ui.nav.ftp') }}</a></li>
+                        <li><a href="{{ route('client.databases.index') }}" class="{{ $activeClass(['client.databases.*']) }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>
+                        <li><a href="{{ route('client.dns.index') }}" class="{{ $activeClass(['client.dns.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>
+                        <li><a href="{{ route('client.ssl.index') }}" class="{{ $activeClass(['client.ssl.*']) }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>
+                        <li><a href="{{ route('client.statistics.index') }}" class="{{ $activeClass(['client.statistics.*']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.statistics') }}</a></li>
+                        <li><a href="{{ route('client.recipes.index') }}" class="{{ $activeClass(['client.recipes.*']) }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>
                     @elseif(Auth::guard('web')->check())
-                        <li><a href="{{ route('dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
-                        <li><a href="{{ route('admin.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
-                        <li><a href="{{ route('admin.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
-                        <li><a href="{{ route('docs') }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
-                        <li><a href="{{ route('stats') }}"><img src="{{ asset('images/icons/gitter.svg') }}" alt="" class="nav-logo-icon uk-margin-small-right">{{ __('ui.nav.stats') }}</a></li>
-                        <li class="uk-nav-divider"></li>
-                        <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
-                        <li><a href="{{ route('config.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
+                        <li><a href="{{ route('dashboard') }}" class="{{ $activeClass(['dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
+                        <li><a href="{{ route('kas-clients.index') }}" class="{{ $activeClass(['kas-clients.*']) }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
+                        <li><a href="{{ route('admin.mailboxes.index') }}" class="{{ $activeClass(['admin.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
+                        <li><a href="{{ route('admin.mailforwards.index') }}" class="{{ $activeClass(['admin.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
+                        <li><a href="{{ route('docs') }}" class="{{ $activeClass(['docs']) }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
+                        <li><a href="{{ route('stats') }}" class="{{ $activeClass(['stats']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
+                        <li><a href="{{ route('users.index') }}" class="{{ $activeClass(['users.*']) }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
+                    @endif
+                    <li class="uk-nav-divider"></li>
+                    <li class="uk-nav-header">{{ __('ui.common.language') }}</li>
+                    <li><a href="{{ route('locale.switch', 'de') }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>Deutsch</a></li>
+                    <li><a href="{{ route('locale.switch', 'en') }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>English</a></li>
+                    @if(Auth::guard('web')->check())
+                        <li><a href="{{ route('config.index') }}" class="{{ $activeClass(['config.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
                     @endif
                 </ul>
             </aside>

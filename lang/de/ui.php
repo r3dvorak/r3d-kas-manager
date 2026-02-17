@@ -8,6 +8,7 @@ return [
 
     'common' => [
         'search' => 'Suche',
+        'language' => 'Sprache',
         'back_to_admin' => 'Zurueck zu Admin',
         'logout' => 'Abmelden',
     ],

@@ -128,10 +128,18 @@ aside {
 
 aside ul.uk-nav li a {
     color: var(--r3d-dark);
+    border-radius: 6px;
 }
 
 aside ul.uk-nav li a:hover {
     color: var(--r3d-green);
+}
+
+aside ul.uk-nav li a.nav-link-active,
+.uk-offcanvas-bar ul.uk-nav li a.nav-link-active {
+    color: var(--r3d-green) !important;
+    background: rgba(0, 152, 74, 0.08);
+    font-weight: 600;
 }
 aside {
     position: -webkit-sticky;

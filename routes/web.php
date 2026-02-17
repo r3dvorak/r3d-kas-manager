@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.13.0-alpha
+ * @version   0.27.7-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -30,6 +30,16 @@ use App\Http\Controllers\Admin\MailforwardsController;
 Route::get('/login', [UnifiedLoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [UnifiedLoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [UnifiedLoginController::class, 'logout'])->name('logout');
+Route::get('/locale/{locale}', function (string $locale) {
+    if (!in_array($locale, ['de', 'en'], true)) {
+        abort(404);
+    }
+
+    session(['locale' => $locale]);
+    app()->setLocale($locale);
+
+    return redirect()->back();
+})->name('locale.switch');
 
 // ============================================================
 // === Configuration ===

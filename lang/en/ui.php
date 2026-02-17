@@ -8,6 +8,7 @@ return [
 
     'common' => [
         'search' => 'Search',
+        'language' => 'Language',
         'back_to_admin' => 'Back to Admin',
         'logout' => 'Logout',
     ],
