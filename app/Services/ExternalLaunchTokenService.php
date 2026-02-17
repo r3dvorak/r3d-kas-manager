@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.19-alpha
+ * @version   0.28.22-alpha
  * @date      2026-02-17
  * @license   MIT License
  */
@@ -38,7 +38,7 @@ class ExternalLaunchTokenService
         $targetUrl = $this->buildTargetUrl($client, $tool, $context);
         $rawToken = Str::random(64);
         $workspace = (string) ($request->attributes->get('workspace') ?? $request->query('w', ''));
-        $ttl = (int) env('EXTERNAL_LAUNCH_TOKEN_TTL', 60);
+        $ttl = (int) config('r3d.external_launch_token_ttl', (int) env('EXTERNAL_LAUNCH_TOKEN_TTL', 60));
         $expiresAt = CarbonImmutable::now()->addSeconds(max(15, $ttl));
 
         $record = ExternalLaunchToken::create([

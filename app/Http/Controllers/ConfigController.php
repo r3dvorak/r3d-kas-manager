@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.13.0-alpha
+ * @version   0.28.22-alpha
  * @date      2025-10-05
  * @license   MIT License
  */
@@ -42,6 +42,7 @@ class ConfigController extends Controller
             'hints_show_kas_status',
             'hints_show_quick_links',
             'hints_show_context_help',
+            'workspace_isolation_enabled',
         ];
 
         foreach ($booleanKeys as $key) {

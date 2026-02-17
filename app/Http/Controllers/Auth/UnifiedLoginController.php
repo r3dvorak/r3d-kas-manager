@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.28.19-alpha
+ * @version   0.28.22-alpha
  * @date      2025-10-05
  * @license   MIT License
  */
@@ -135,7 +135,10 @@ class UnifiedLoginController extends Controller
      */
     public function logout(Request $request)
     {
-        $logoutAllWorkspaces = $request->input('scope') === 'all';
+        $defaultScope = strtolower((string) config('r3d.logout_scope_default', 'current'));
+        $requestedScope = strtolower((string) $request->input('scope', ''));
+        $scope = $requestedScope !== '' ? $requestedScope : $defaultScope;
+        $logoutAllWorkspaces = $scope === 'all';
 
         if (Auth::guard('web')->check()) {
             Auth::guard('web')->logout();

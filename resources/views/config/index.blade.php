@@ -2,7 +2,7 @@
     R3D KAS Manager
     @package   r3d-kas-manager
     @author    Richard Dvořák
-    @version   0.13.0-alpha
+    @version   0.28.22-alpha
     @date      2025-09-26
     @license   MIT License
 --}}
@@ -53,6 +53,82 @@
                 <label class="uk-form-label">Seitentitel / Name</label>
                 <input class="uk-input" type="text" name="site_name"
                        value="{{ $settings['site_name'] ?? 'R3D KAS Manager' }}">
+            </div>
+        </fieldset>
+
+        {{-- Workspaces / Sessions --}}
+        <fieldset class="uk-fieldset uk-margin-large-top">
+            <legend class="uk-legend">Workspaces / Sessions</legend>
+
+            @php
+                $wsEnabled = (string) ($settings['workspace_isolation_enabled'] ?? '1') === '1';
+            @endphp
+
+            <div class="uk-margin">
+                <label>
+                    <input class="uk-checkbox" type="checkbox" name="workspace_isolation_enabled" {{ $wsEnabled ? 'checked' : '' }}>
+                    Workspace-Isolation aktiv (Tab-getrennte Sessions)
+                </label>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Max. parallele Workspaces pro User</label>
+                <input class="uk-input" type="number" name="workspace_max_active"
+                       value="{{ $settings['workspace_max_active'] ?? 10 }}" min="1" max="100">
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Limit-Strategie bei vollem Workspace-Kontingent</label>
+                <select class="uk-select" name="workspace_limit_strategy">
+                    <option value="reuse_existing" {{ ($settings['workspace_limit_strategy'] ?? 'reuse_existing') === 'reuse_existing' ? 'selected' : '' }}>Neuen Tab auf bestehenden Workspace umleiten</option>
+                    <option value="allow_new" {{ ($settings['workspace_limit_strategy'] ?? 'reuse_existing') === 'allow_new' ? 'selected' : '' }}>Neuen Workspace trotzdem erlauben</option>
+                </select>
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Workspace Idle Timeout (Minuten)</label>
+                <input class="uk-input" type="number" name="workspace_idle_timeout_minutes"
+                       value="{{ $settings['workspace_idle_timeout_minutes'] ?? 300 }}" min="5" max="1440">
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Workspace Absolute Lifetime (Stunden)</label>
+                <input class="uk-input" type="number" name="workspace_absolute_lifetime_hours"
+                       value="{{ $settings['workspace_absolute_lifetime_hours'] ?? 24 }}" min="1" max="720">
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Impersonation-Workspace-Puffer</label>
+                <input class="uk-input" type="number" name="impersonation_workspace_buffer"
+                       value="{{ $settings['impersonation_workspace_buffer'] ?? 2 }}" min="0" max="20">
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Logout-Standardmodus</label>
+                <select class="uk-select" name="logout_scope_default">
+                    <option value="current" {{ ($settings['logout_scope_default'] ?? 'current') === 'current' ? 'selected' : '' }}>Nur aktueller Workspace</option>
+                    <option value="all" {{ ($settings['logout_scope_default'] ?? 'current') === 'all' ? 'selected' : '' }}>Alle Workspaces im Browser</option>
+                </select>
+            </div>
+        </fieldset>
+
+        {{-- Externe Launches --}}
+        <fieldset class="uk-fieldset uk-margin-large-top">
+            <legend class="uk-legend">Externe Launches (Webmail / phpMyAdmin)</legend>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Launch-Token TTL (Sekunden)</label>
+                <input class="uk-input" type="number" name="external_launch_token_ttl"
+                       value="{{ $settings['external_launch_token_ttl'] ?? 60 }}" min="15" max="900">
+            </div>
+
+            <div class="uk-margin">
+                <label class="uk-form-label">Audit-Log-Level</label>
+                <select class="uk-select" name="audit_log_level">
+                    <option value="minimal" {{ ($settings['audit_log_level'] ?? 'standard') === 'minimal' ? 'selected' : '' }}>Minimal</option>
+                    <option value="standard" {{ ($settings['audit_log_level'] ?? 'standard') === 'standard' ? 'selected' : '' }}>Standard</option>
+                    <option value="verbose" {{ ($settings['audit_log_level'] ?? 'standard') === 'verbose' ? 'selected' : '' }}>Verbose</option>
+                </select>
             </div>
         </fieldset>
 

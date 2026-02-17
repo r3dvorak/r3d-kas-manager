@@ -31,6 +31,15 @@ class UpdateConfigRequest extends FormRequest
             'hints_show_quick_links' => 'nullable',
             'hints_show_context_help' => 'nullable',
             'mail_standardfilter_default' => 'nullable|string|max:512',
+            'workspace_isolation_enabled' => 'nullable',
+            'workspace_max_active' => 'nullable|integer|min:1|max:100',
+            'workspace_limit_strategy' => 'nullable|in:reuse_existing,allow_new',
+            'workspace_idle_timeout_minutes' => 'nullable|integer|min:5|max:1440',
+            'workspace_absolute_lifetime_hours' => 'nullable|integer|min:1|max:720',
+            'impersonation_workspace_buffer' => 'nullable|integer|min:0|max:20',
+            'external_launch_token_ttl' => 'nullable|integer|min:15|max:900',
+            'logout_scope_default' => 'nullable|in:current,all',
+            'audit_log_level' => 'nullable|in:minimal,standard,verbose',
         ];
     }
 }

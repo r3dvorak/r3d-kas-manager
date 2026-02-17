@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.20-alpha
+ * @version   0.28.22-alpha
  * @date      2026-02-17
  * @license   MIT License
  *
@@ -18,6 +18,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -41,11 +42,19 @@ class ResolveWorkspace
         $isSafeMethod = in_array($request->method(), ['GET', 'HEAD'], true);
         $isLoginRoute = $request->routeIs('login');
         $isAuthenticated = Auth::guard('web')->check() || Auth::guard('kas_client')->check();
+        $knownWorkspaces = $this->knownWorkspacesFromCookies($request);
+        $maxActive = max(1, (int) config('r3d.workspace_max_active', 10));
+        $limitReached = count($knownWorkspaces) >= $maxActive;
+        $limitStrategy = strtolower((string) config('r3d.workspace_limit_strategy', 'reuse_existing'));
 
         // Workspace generation is restricted to public login canonicalization only.
         $workspace = null;
         if ($isValid) {
             $workspace = $normalized;
+
+            if ($isSafeMethod && $isLoginRoute && !$isAuthenticated && $limitReached && !in_array($workspace, $knownWorkspaces, true) && $limitStrategy === 'reuse_existing') {
+                $workspace = Arr::first($knownWorkspaces);
+            }
         } else {
             $fromReferer = $this->workspaceFromReferer($request);
             if ($fromReferer !== null && $isAuthenticated) {
@@ -56,7 +65,11 @@ class ResolveWorkspace
             if ($workspace === null && $fromCookieConfig !== null) {
                 $workspace = $fromCookieConfig;
             } elseif ($workspace === null && $isSafeMethod && $isLoginRoute && !$isAuthenticated) {
-                $workspace = self::generateWorkspaceKey();
+                if ($limitReached && $limitStrategy === 'reuse_existing') {
+                    $workspace = Arr::first($knownWorkspaces);
+                } else {
+                    $workspace = self::generateWorkspaceKey();
+                }
             }
         }
 
@@ -76,7 +89,7 @@ class ResolveWorkspace
             && is_string($workspace)
             && $workspace !== ''
             && $isLoginRoute
-            && ($provided === '' || $normalized !== $provided || !$isValid);
+            && ($provided === '' || $normalized !== $provided || !$isValid || $normalized !== $workspace);
 
         $needsLegacyRedirect = $isSafeMethod
             && $isAuthenticated
@@ -140,5 +153,25 @@ class ResolveWorkspace
         parse_str((string) ($parts['query'] ?? ''), $query);
         $workspace = strtolower((string) ($query[self::QUERY_KEY] ?? ''));
         return self::isValidWorkspace($workspace) ? $workspace : null;
+    }
+
+    /**
+     * @return array<int,string>
+     */
+    private function knownWorkspacesFromCookies(Request $request): array
+    {
+        $base = (string) env(
+            'SESSION_COOKIE_WORKSPACE',
+            Str::slug((string) env('APP_NAME', 'laravel'), '_') . '_workspace_session'
+        );
+        $prefix = $base . '_';
+
+        return collect(array_keys($request->cookies->all()))
+            ->filter(fn (string $name) => str_starts_with($name, $prefix))
+            ->map(fn (string $name) => strtolower(substr($name, strlen($prefix))))
+            ->filter(fn (string $workspace) => self::isValidWorkspace($workspace))
+            ->unique()
+            ->values()
+            ->all();
     }
 }

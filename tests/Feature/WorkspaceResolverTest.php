@@ -115,4 +115,20 @@ class WorkspaceResolverTest extends TestCase
 
         $response->assertRedirect('/_legacy_workspace_probe?w=' . $workspace);
     }
+
+    public function test_login_workspace_reuses_existing_when_limit_reached(): void
+    {
+        config([
+            'r3d.workspace_max_active' => 1,
+            'r3d.workspace_limit_strategy' => 'reuse_existing',
+        ]);
+
+        $existing = str_repeat('d', 40);
+        $candidate = str_repeat('e', 40);
+
+        $response = $this->withCookie('laravel_workspace_session_' . $existing, 'dummy')
+            ->get('/login?w=' . $candidate);
+
+        $response->assertRedirect('/login?w=' . $existing);
+    }
 }

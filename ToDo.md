@@ -108,7 +108,7 @@
 ## Offene Entscheidungen
 - [x] Query-Parameter vs. Path-basiert fuer Workspace
 - [x] Workspace-Lebensdauer (Session-only vs. persistiert)
-- [ ] Anzahl paralleler Workspaces pro User begrenzen?
+- [x] Anzahl paralleler Workspaces pro User begrenzen?
 - [x] UI-Hinweis anzeigen, welcher Workspace aktiv ist?
 
 ## Notizen

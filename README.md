@@ -43,6 +43,17 @@ php artisan recipe:run 1 --domain=r3d.de --account=w01e77bc --dry
 - `WORKSPACE_ISOLATION_ENABLED=true` enables workspace-based session isolation (`?w=<40hex>`).
 - `WORKSPACE_ISOLATION_ENABLED=false` switches back to legacy guard session cookies.
 
+### Runtime Settings (Admin UI: `/config`)
+- `workspace_isolation_enabled`: Enable/disable workspace isolation without deployment.
+- `workspace_max_active`: Maximum parallel workspaces per user/browser context.
+- `workspace_limit_strategy`: `reuse_existing` (default) or `allow_new`.
+- `workspace_idle_timeout_minutes`: Idle timeout target for workspace sessions.
+- `workspace_absolute_lifetime_hours`: Hard lifetime target for workspace sessions.
+- `impersonation_workspace_buffer`: Extra workspace headroom intended for admin impersonation flows.
+- `external_launch_token_ttl`: Launch-token TTL in seconds.
+- `logout_scope_default`: Default logout scope (`current` or `all`).
+- `audit_log_level`: Workspace/launch auditing verbosity preset.
+
 ### Legacy Links without `w`
 - With workspace isolation enabled, old internal links/forms without `w` are recovered via same-host `Referer` context when possible.
 - Login URLs are still canonicalized to include `w` for guest flows.
