@@ -114,3 +114,26 @@
 ## Notizen
 - Kein Framework-Port notwendig; Umsetzung ist in Laravel moeglich.
 - Symfony haette dieselben Cookie-Grundlagen, daher kein Vorteil fuer diesen Punkt.
+
+## Nächste ToDos (UI / Inhalt)
+
+### Client Dashboard
+- [ ] Aktuelle Server-IP wird angezeigt (nicht leer).
+- [ ] Servername wird angezeigt (nicht leer).
+
+### Ressourcen-Bereiche
+- [ ] Feld `Reserviert` korrekt berechnen (nicht immer `0`).
+- [ ] Buttons `Änderungen Prüfung (KAS vs DB)` und `Sync jetzt` in Ressourcen-Ansichten ergänzen.
+
+### CRUD-Aktionen in Client-Listen
+- [ ] `NEU`-Button ergänzen bei Domains.
+- [ ] `NEU`-Button ergänzen bei Subdomains.
+- [ ] `NEU`-Button ergänzen bei Mailforwards.
+- [ ] `NEU`-Button ergänzen bei FTP.
+- [ ] `NEU`-Button ergänzen bei Datenbanken.
+
+### Internationalisierung / Sprache
+- [ ] Alle UI-Texte in Sprach-Keys auslagern (keine hartkodierten Texte mehr).
+- [ ] Vollständige DE- und EN-Übersetzungen pflegen.
+- [ ] Gemischte Sprache in Views bereinigen (DE/EN konsistent pro Locale).
+- [ ] Deutsche Texte mit korrekten Umlauten/Sonderzeichen schreiben (z. B. `Änderungen Prüfung`).
