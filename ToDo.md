@@ -138,3 +138,42 @@
 - [ ] Vollständige DE- und EN-Übersetzungen pflegen.
 - [ ] Gemischte Sprache in Views bereinigen (DE/EN konsistent pro Locale).
 - [ ] Deutsche Texte mit korrekten Umlauten/Sonderzeichen schreiben (z. B. `Änderungen Prüfung`).
+
+## Nächste ToDos (Rezepte / Automationen)
+
+### Recipe-Grundmodell
+- [ ] Tabellen für `recipes`, `recipe_steps`, `recipe_runs`, `recipe_run_items` anlegen.
+- [ ] Recipe-Statusmodell definieren (`draft`, `active`, `archived`).
+- [ ] Run-Statusmodell definieren (`pending`, `running`, `success`, `partial`, `failed`, `cancelled`).
+- [ ] Basis-UI für Recipe-Liste + Detailansicht erstellen.
+
+### Batch-Aufträge (MVP)
+- [ ] Selektionslogik für Zielobjekte (Domains, Subdomains, Mailboxen, Mailforwards, DNS) bauen.
+- [ ] Dry-Run/Preview mit Diff vor Ausführung umsetzen.
+- [ ] Idempotente Handler pro Aktionstyp einführen (`dns.upsert`, `mailforward.create`, `mailbox.update` ...).
+- [ ] Ausführung mit Einzel-Fehlerbehandlung pro Item (kein Totalabbruch) umsetzen.
+
+### CSV-Import
+- [ ] Upload + Parsing mit Header-Validierung bauen.
+- [ ] Vorlagen je Typ definieren (DNS, Mailforward, Mailbox, Domain).
+- [ ] Import-Preview mit Fehlerliste und Zeilenbezug umsetzen.
+- [ ] Import als Recipe-Run speichern und ausführen.
+
+### Recipe Export / Import
+- [ ] Exportformat `recipe-package.json` definieren (`schema_version`, `meta`, `steps`, `mappings`).
+- [ ] Rezept als JSON exportieren (inkl. Filter, Aktionen, Standardwerte).
+- [ ] Rezept aus JSON importieren (Validierung + Kompatibilitätsprüfung per `schema_version`).
+- [ ] Konfliktstrategie beim Import implementieren (`create_new`, `replace`, `skip_existing`).
+- [ ] Optional ZIP-Paket für mehrere Rezepte (`recipes.zip`) unterstützen.
+
+### Sicherheit / Governance
+- [ ] Rechte für Recipe-CRUD und Recipe-Run pro Rolle trennen (Admin/Client).
+- [ ] Audit-Log pro Run und pro Item speichern (wer, wann, was, Ergebnis).
+- [ ] Rate-Limits für große Imports und parallele Runs setzen.
+- [ ] Schutz gegen gefährliche Massenaktionen (Bestätigungsdialog + 2. Bestätigung).
+
+### UX / Betrieb
+- [ ] Fortschrittsanzeige pro Run (gesamt + pro Schritt) in der UI.
+- [ ] Wiederholbare fehlgeschlagene Items (`retry failed only`) ermöglichen.
+- [ ] Downloadbare Run-Reports (`csv/json`) bereitstellen.
+- [ ] Rezepte als Templates klonbar machen.
