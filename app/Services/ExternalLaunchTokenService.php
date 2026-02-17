@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.13-alpha
+ * @version   0.28.16-alpha
  * @date      2026-02-17
  * @license   MIT License
  */
@@ -27,14 +27,14 @@ class ExternalLaunchTokenService
     /**
      * @return array{token:string,record:ExternalLaunchToken}
      */
-    public function createForClient(KasClient $client, string $tool, Request $request): array
+    public function createForClient(KasClient $client, string $tool, Request $request, array $context = []): array
     {
         $tool = strtolower(trim($tool));
         if (!in_array($tool, [self::TOOL_WEBMAIL, self::TOOL_PMA], true)) {
             abort(404);
         }
 
-        $targetUrl = $this->buildTargetUrl($client, $tool);
+        $targetUrl = $this->buildTargetUrl($client, $tool, $context);
         $rawToken = Str::random(64);
         $workspace = (string) ($request->attributes->get('workspace') ?? $request->query('w', ''));
         $ttl = (int) env('EXTERNAL_LAUNCH_TOKEN_TTL', 60);
@@ -49,7 +49,7 @@ class ExternalLaunchTokenService
             'expires_at' => $expiresAt,
         ]);
 
-        $this->audit($record, 'created', $request);
+        $this->audit($record, 'created', $request, $context);
 
         return [
             'token' => $rawToken,
@@ -86,7 +86,7 @@ class ExternalLaunchTokenService
         return $record;
     }
 
-    private function buildTargetUrl(KasClient $client, string $tool): string
+    private function buildTargetUrl(KasClient $client, string $tool, array $context = []): string
     {
         $login = strtolower((string) $client->account_login);
 
@@ -99,6 +99,11 @@ class ExternalLaunchTokenService
 
         if (!str_starts_with($url, 'https://')) {
             abort(500, 'Invalid PMA launch URL template');
+        }
+
+        if (($context['database_login'] ?? '') !== '') {
+            $separator = str_contains($url, '?') ? '&' : '?';
+            $url .= $separator . 'db=' . rawurlencode((string) $context['database_login']);
         }
 
         return $url;

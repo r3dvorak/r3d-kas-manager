@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\ExternalLaunchToken;
 use App\Models\KasClient;
+use App\Models\KasDatabase;
+use App\Models\KasMailAccount;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -84,5 +86,44 @@ class ExternalLaunchTokenFlowTest extends TestCase
 
         $consume = $this->get('/launch/' . $token);
         $consume->assertForbidden();
+    }
+
+    public function test_launch_context_must_belong_to_authenticated_client(): void
+    {
+        $clientA = KasClient::create([
+            'account_login' => 'wlaunch03',
+            'password' => Hash::make('secret123'),
+            'account_comment' => 'Launch Client 3',
+        ]);
+
+        $clientB = KasClient::create([
+            'account_login' => 'wlaunch04',
+            'password' => Hash::make('secret123'),
+            'account_comment' => 'Launch Client 4',
+        ]);
+
+        $mailboxOfB = KasMailAccount::create([
+            'kas_login' => 'wlaunch04',
+            'mail_login' => 'office',
+            'domain' => 'example.test',
+            'email' => 'office@example.test',
+            'status' => 'active',
+            'client_id' => $clientB->id,
+        ]);
+
+        $dbOfB = KasDatabase::create([
+            'kas_login' => 'wlaunch04',
+            'client_id' => $clientB->id,
+            'database_login' => 'wlaunch04_db1',
+            'database_comment' => 'DB B',
+            'database_allowed_hosts' => '%',
+            'status' => 'active',
+        ]);
+
+        $mailboxLaunch = $this->actingAs($clientA, 'kas_client')->get('/client/launch/webmail?mailbox=' . $mailboxOfB->id . '&w=' . str_repeat('a', 40));
+        $mailboxLaunch->assertNotFound();
+
+        $dbLaunch = $this->actingAs($clientA, 'kas_client')->get('/client/launch/pma?database=' . $dbOfB->id . '&w=' . str_repeat('b', 40));
+        $dbLaunch->assertNotFound();
     }
 }

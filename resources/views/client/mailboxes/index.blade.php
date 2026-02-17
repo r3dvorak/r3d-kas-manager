@@ -105,6 +105,7 @@
                         @endif
                     </td>
                     <td class="uk-text-nowrap uk-text-muted table-action-icons">
+                        <a href="{{ route_w('client.launch.create', ['tool' => 'webmail', 'mailbox' => $m->id]) }}" target="_blank" rel="noopener noreferrer" class="uk-icon-button action-icon-btn" uk-icon="icon: sign-in" title="Webmail"></a>
                         <a href="{{ route_w('client.mailboxes.edit', $m) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
                         <form action="{{ route_w('client.mailboxes.toggle-state', $m) }}" method="POST" class="table-action-form">
                             @csrf

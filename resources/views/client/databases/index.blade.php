@@ -19,12 +19,6 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
-            <a class="uk-button uk-button-secondary" href="{{ route_w('client.launch.create', ['tool' => 'webmail']) }}" target="_blank" rel="noopener noreferrer">Webmail</a>
-        </div>
-        <div>
-            <a class="uk-button uk-button-secondary" href="{{ route_w('client.launch.create', ['tool' => 'pma']) }}" target="_blank" rel="noopener noreferrer">phpMyAdmin</a>
-        </div>
-        <div>
             <a class="uk-button uk-button-default" href="{{ route_w('client.databases.preview') }}">Pruefung (KAS vs DB)</a>
         </div>
         <div>
@@ -52,6 +46,7 @@
                 <th>Datenbank</th>
                 <th>Kommentar</th>
                 <th>Hosts</th>
+                <th class="uk-text-nowrap">Aktion</th>
             </tr>
         </thead>
         <tbody>
@@ -60,9 +55,12 @@
                     <td class="uk-text-nowrap"><strong>{{ $db->database_login ?: '—' }}</strong></td>
                     <td style="max-width: 360px; white-space: normal;">{{ $db->database_comment ?: '—' }}</td>
                     <td style="max-width: 520px; white-space: normal;">{{ $db->database_allowed_hosts ?: '—' }}</td>
+                    <td class="uk-text-nowrap uk-text-muted table-action-icons">
+                        <a href="{{ route_w('client.launch.create', ['tool' => 'pma', 'database' => $db->id]) }}" target="_blank" rel="noopener noreferrer" class="uk-icon-button action-icon-btn" uk-icon="icon: sign-in" title="phpMyAdmin"></a>
+                    </td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="uk-text-muted">Noch keine Datenbanken in der DB. Bitte Sync ausfuehren.</td></tr>
+                <tr><td colspan="4" class="uk-text-muted">Noch keine Datenbanken in der DB. Bitte Sync ausfuehren.</td></tr>
             @endforelse
         </tbody>
     </table>
