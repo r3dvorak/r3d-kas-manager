@@ -74,7 +74,7 @@
     $ftpReserved = (int)$children->sum('max_ftpuser');
     $ftpPossible = (int)($master?->max_ftpuser ?? 0);
 
-    $spaceCreatedMb = (float)$allClients->sum('used_account_space');
+    $spaceCreatedKb = (float)$allClients->sum('used_account_space');
     $spaceReservedMb = (float)$children->sum('max_webspace');
     $spacePossibleMb = (float)($master?->max_webspace ?? 0);
 @endphp
@@ -137,7 +137,7 @@
                 </tr>
                 <tr>
                     <td>Speicherplatz</td>
-                    <td class="uk-text-right">{{ number_format(round($spaceCreatedMb / 1024, 2), 2, ',', '.') }} GB</td>
+                    <td class="uk-text-right">{{ number_format(round($spaceCreatedKb / 1024 / 1024, 2), 2, ',', '.') }} GB</td>
                     <td class="uk-text-right">{{ number_format(round($spaceReservedMb / 1024, 2), 2, ',', '.') }} GB</td>
                     <td class="uk-text-right">{{ $remainingToLabel($spacePossibleMb, $spaceReservedMb, true) }}</td>
                     <td class="uk-text-right">{{ $maxToLabel($spacePossibleMb, true) }}</td>

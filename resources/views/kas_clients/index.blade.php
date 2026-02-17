@@ -97,14 +97,14 @@
                     </td>
 
                     {{-- Aktionen --}}
-                    <td class="uk-text-center uk-text-nowrap uk-flex uk-flex-center uk-flex-middle uk-height-1-1">
-                        <a href="{{ route('kas-clients.show', $client->id) }}" uk-icon="icon: eye" title="Anzeigen"></a>
-                        <a href="{{ route('kas-clients.edit', $client->id) }}" uk-icon="icon: pencil" title="Bearbeiten" class="uk-margin-small-left"></a>
-                        <a href="{{ route('kas-clients.impersonate.generate', $client->id) }}" uk-icon="icon: sign-in" title="Impersonate" class="uk-margin-small-left"></a>
-                        <form action="{{ route('kas-clients.destroy', $client->id) }}" method="POST" style="display:inline;">
+                    <td class="uk-text-center uk-text-nowrap uk-flex uk-flex-center uk-flex-middle uk-height-1-1 kas-client-actions">
+                        <a href="{{ route('kas-clients.show', $client->id) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: eye" title="Anzeigen"></a>
+                        <a href="{{ route('kas-clients.edit', $client->id) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
+                        <a href="{{ route('kas-clients.impersonate.generate', $client->id) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: sign-in" title="Impersonate"></a>
+                        <form action="{{ route('kas-clients.destroy', $client->id) }}" method="POST" class="kas-client-delete-form">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="uk-button uk-button-link uk-text-danger uk-margin-small-left" uk-icon="icon: trash" title="Löschen" onclick="return confirm('Wirklich löschen?')"></button>
+                            <button type="submit" class="uk-icon-button action-icon-btn action-icon-btn-danger" uk-icon="icon: trash" title="Löschen" onclick="return confirm('Wirklich löschen?')"></button>
                         </form>
                     </td>
                 </tr>

@@ -16,12 +16,14 @@
 @extends('layouts.app')
 
 @section('content')
-@php($client = Auth::guard('kas_client')->user())
-@php($kasLogin = strtolower((string) ($client?->account_login ?? '')))
-@php($displayName = (string) ($client?->account_comment ?? $client?->name ?? $kasLogin))
-@php($serverHostname = (string) ($client?->server_hostname ?? ''))
-@php($serverIp = (string) ($client?->server_ip ?? ''))
-@php($rootPath = $kasLogin !== '' ? "/www/htdocs/{$kasLogin}/" : '—')
+@php
+    $client = Auth::guard('kas_client')->user();
+    $kasLogin = strtolower((string) ($client?->account_login ?? ''));
+    $displayName = (string) ($client?->account_comment ?? $client?->name ?? $kasLogin);
+    $serverHostname = (string) ($client?->server_hostname ?? '');
+    $serverIp = (string) ($client?->server_ip ?? '');
+    $rootPath = $kasLogin !== '' ? "/www/htdocs/{$kasLogin}/" : '—';
+@endphp
 
 @php($domainsCount = \App\Models\KasDomain::where('kas_client_id', $client?->id)->whereNull('deleted_at')->count())
 @php($subdomainsCount = \App\Models\KasSubdomain::where('kas_client_id', $client?->id)->whereNull('deleted_at')->count())
@@ -33,7 +35,7 @@
 @php($maxMailboxes = (int) ($client?->max_mail_account ?? 0))
 @php($maxForwards = (int) ($client?->max_mail_forward ?? 0))
 @php($maxWebspaceMb = (float) ($client?->max_webspace ?? 0))
-@php($usedWebspaceGbFromStats = method_exists($client, 'usedSpaceGb') ? (float) $client->usedSpaceGb() : 0.0)
+@php($usedWebspaceGbFromStats = ($client && method_exists($client, 'usedSpaceGb')) ? (float) $client->usedSpaceGb() : 0.0)
 @php($mailboxesUsedMb = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->get()->sum(fn($m) => (float)($m->usedSpaceMb() ?? 0)))
 @php($usedWebspaceGbFromMailboxes = $mailboxesUsedMb > 0 ? round($mailboxesUsedMb / 1024, 2) : 0.0)
 @php($usedWebspaceGb = $usedWebspaceGbFromStats > 0 ? $usedWebspaceGbFromStats : $usedWebspaceGbFromMailboxes)
@@ -67,7 +69,7 @@
 
     <div class="uk-alert-primary" uk-alert>
         <p class="uk-margin-remove">
-            <strong>KAS:</strong> {{ $kasLogin ?: '—' }}
+            <strong>KAS:</strong> {{ $kasLogin ?? '—' }}
             <span class="uk-text-muted">|</span>
             <strong>Account:</strong> {{ $displayName ?: '—' }}
         </p>

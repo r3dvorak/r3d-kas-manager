@@ -88,7 +88,7 @@
                         <li><a href="{{ route('client.databases.index') }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>
                         <li><a href="{{ route('client.dns.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>
                         <li><a href="{{ route('client.ssl.index') }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>
-                        <li><a href="{{ route('client.statistics.index') }}"><span uk-icon="bar-chart" class="uk-margin-small-right"></span>{{ __('ui.nav.statistics') }}</a></li>
+                        <li><a href="{{ route('client.statistics.index') }}"><img src="{{ asset('images/icons/gitter.svg') }}" alt="" class="nav-logo-icon uk-margin-small-right">{{ __('ui.nav.statistics') }}</a></li>
                         <li><a href="{{ route('client.recipes.index') }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>
                     @elseif(Auth::guard('web')->check())
                         <li><a href="{{ route('dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
@@ -96,7 +96,7 @@
                 <li><a href="{{ route('admin.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
                 <li><a href="{{ route('admin.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
                 <li><a href="{{ route('docs') }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
-                <li><a href="{{ route('stats') }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
+                <li><a href="{{ route('stats') }}"><img src="{{ asset('images/icons/gitter.svg') }}" alt="" class="nav-logo-icon uk-margin-small-right">{{ __('ui.nav.stats') }}</a></li>
                 <li class="uk-nav-divider"></li>
                 <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
                 <li><a href="{{ route('config.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
@@ -140,7 +140,7 @@
                         <li><a href="{{ route('client.databases.index') }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>
                         <li><a href="{{ route('client.dns.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>
                         <li><a href="{{ route('client.ssl.index') }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>
-                        <li><a href="{{ route('client.statistics.index') }}"><span uk-icon="bar-chart" class="uk-margin-small-right"></span>{{ __('ui.nav.statistics') }}</a></li>
+                        <li><a href="{{ route('client.statistics.index') }}"><img src="{{ asset('images/icons/gitter.svg') }}" alt="" class="nav-logo-icon uk-margin-small-right">{{ __('ui.nav.statistics') }}</a></li>
                         <li><a href="{{ route('client.recipes.index') }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>
                     @elseif(Auth::guard('web')->check())
                         <li><a href="{{ route('dashboard') }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
@@ -148,7 +148,7 @@
                         <li><a href="{{ route('admin.mailboxes.index') }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
                         <li><a href="{{ route('admin.mailforwards.index') }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
                         <li><a href="{{ route('docs') }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
-                        <li><a href="{{ route('stats') }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
+                        <li><a href="{{ route('stats') }}"><img src="{{ asset('images/icons/gitter.svg') }}" alt="" class="nav-logo-icon uk-margin-small-right">{{ __('ui.nav.stats') }}</a></li>
                         <li class="uk-nav-divider"></li>
                         <li><a href="{{ route('users.index') }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
                         <li><a href="{{ route('config.index') }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>

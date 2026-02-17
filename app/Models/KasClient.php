@@ -220,6 +220,6 @@ class KasClient extends Authenticatable
      */
     public function usedSpaceGb(): float
     {
-        return round(($this->used_account_space ?? 0) / 1024, 2);
+        return round(($this->used_account_space ?? 0) / 1024 / 1024, 2);
     }
 }

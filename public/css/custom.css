@@ -294,3 +294,36 @@ nav[role="navigation"] svg,
     display: inline-block;
     vertical-align: middle;
 }
+
+/* Kas clients action icons */
+.kas-client-actions {
+    gap: 10px;
+}
+
+.kas-client-actions .action-icon-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.kas-client-actions .action-icon-btn svg {
+    width: 22px !important;
+    height: 22px !important;
+}
+
+.kas-client-actions .action-icon-btn-danger {
+    color: #d63c3c !important;
+}
+
+.kas-client-delete-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+.nav-logo-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-block;
+    vertical-align: text-bottom;
+}
