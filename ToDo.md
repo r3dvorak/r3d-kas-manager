@@ -60,11 +60,11 @@
 - [x] Feature-Tests fuer parallele Sessions
 
 ### Phase 3 - Routing und Link-Propagation
-- [ ] Workspace in Hauptnavigation verankern
-- [ ] Helper fuer workspace-sichere Links bauen (`route_w(...)`)
-- [ ] Offcanvas/Sidebar/Actions auf Helper umstellen
-- [ ] Redirects behalten/setzen den Workspace
-- [ ] Regressionstest auf verlorenen Kontext
+- [x] Workspace in Hauptnavigation verankern
+- [x] Helper fuer workspace-sichere Links bauen (`route_w(...)`)
+- [x] Offcanvas/Sidebar/Actions auf Helper umstellen
+- [x] Redirects behalten/setzen den Workspace
+- [x] Regressionstest auf verlorenen Kontext
 
 ### Phase 4 - Login/Impersonation UX
 - [ ] Login erzeugt bei Bedarf neuen Workspace

@@ -38,7 +38,7 @@ class WorkspaceLogoutScopeTest extends TestCase
                 'scope' => 'all',
             ]);
 
-        $response->assertRedirect('/login');
+        $response->assertRedirect('/login?w=' . $wa);
 
         $setCookieNames = collect($response->headers->getCookies())
             ->map(fn ($cookie) => (string) $cookie->getName())
@@ -72,7 +72,7 @@ class WorkspaceLogoutScopeTest extends TestCase
             ])
             ->post('/logout?w=' . $wa);
 
-        $response->assertRedirect('/login');
+        $response->assertRedirect('/login?w=' . $wa);
 
         $setCookieNames = collect($response->headers->getCookies())
             ->map(fn ($cookie) => (string) $cookie->getName())

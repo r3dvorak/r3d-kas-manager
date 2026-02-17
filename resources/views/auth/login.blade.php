@@ -3,7 +3,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.12.1-alpha
+ * @version   0.28.10-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -17,7 +17,7 @@
     <div class="uk-card uk-card-default uk-card-body uk-width-1-1@m uk-width-1-2@l" style="max-width:450px; min-width:350px; margin:auto;">
         <h3 class="uk-card-title uk-text-center">R3D KAS Manager Login</h3>
 
-        <form method="POST" action="{{ route('login.submit', ['w' => $workspaceKey ?? request()->query('w')]) }}">
+        <form method="POST" action="{{ route_w('login.submit') }}">
             @csrf
 
             {{-- Login name or domain --}}

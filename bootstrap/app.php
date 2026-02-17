@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.28.0-alpha
+ * @version   0.28.10-alpha
  * @date      2025-09-28
  * @license   MIT License
  *
@@ -14,6 +14,8 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+
+require_once __DIR__ . '/../app/Support/helpers.php';
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -37,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             Illuminate\View\Middleware\ShareErrorsFromSession::class,
             Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
             Illuminate\Routing\Middleware\SubstituteBindings::class,
+            App\Http\Middleware\AppendWorkspaceToRedirects::class,
         ]);
 
         // === API group ===

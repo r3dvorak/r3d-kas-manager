@@ -21,10 +21,7 @@
         $activeClass = static fn (array $patterns): string => request()->routeIs(...$patterns) ? 'nav-link-active' : '';
         $clientMenuEnabled = static fn (string $key): bool => $clientUser?->hasClientMenuItem($key) ?? false;
         $locale = app()->getLocale();
-        $workspaceQuery = is_string($workspaceKey ?? null) ? $workspaceKey : (string) request()->query('w', '');
-        $routeW = static function (string $name, array $params = []) use ($workspaceQuery): string {
-            return route($name, $workspaceQuery !== '' ? array_merge($params, ['w' => $workspaceQuery]) : $params);
-        };
+        $routeW = static fn (string $name, array $params = []): string => route_w($name, $params);
     @endphp
     <title>{{ $mode ? $mode . ' | ' : '' }}RIIID KAS Manager</title>
 
@@ -231,9 +228,9 @@
             <span>© 2025 R3D Internet Dienstleistungen · <a href="#">{{ __('ui.footer.imprint') }}</a> · <a href="#">{{ __('ui.footer.privacy') }}</a></span>
             <span>
                 <span uk-icon="world" class="uk-margin-small-right"></span>
-                <a href="{{ route('locale.switch', ['locale' => 'de', 'w' => $workspaceKey ?? null]) }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}">Deutsch</a>
+                <a href="{{ route_w('locale.switch', ['locale' => 'de']) }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}">Deutsch</a>
                 ·
-                <a href="{{ route('locale.switch', ['locale' => 'en', 'w' => $workspaceKey ?? null]) }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}">English</a>
+                <a href="{{ route_w('locale.switch', ['locale' => 'en']) }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}">English</a>
             </span>
         </div>
     @else
