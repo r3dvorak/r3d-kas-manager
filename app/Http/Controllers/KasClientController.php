@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.28.12-alpha
+ * @version   0.28.19-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -22,6 +22,7 @@ use App\Models\ImpersonationToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class KasClientController extends Controller
 {
@@ -165,6 +166,11 @@ class KasClientController extends Controller
 
         $token = ImpersonationToken::generateForClient($kasClient->id, auth()->id());
         $workspace = ResolveWorkspace::generateWorkspaceKey();
+        Log::info('impersonation_token_created', [
+            'admin_id' => Auth::id(),
+            'client_id' => $kasClient->id,
+            'workspace' => $workspace,
+        ]);
         $url = route('kas-clients.impersonate.consume', [
             'token' => $token->getRawToken(),
             ResolveWorkspace::QUERY_KEY => $workspace,
@@ -179,6 +185,7 @@ class KasClientController extends Controller
         $impersonation = ImpersonationToken::findByRawToken($token);
 
         if (! $impersonation || $impersonation->expires_at->isPast()) {
+            Log::warning('impersonation_consume_denied', ['reason' => 'invalid_or_expired']);
             abort(403, 'Ungültiger oder abgelaufener Token.');
         }
 
@@ -190,6 +197,11 @@ class KasClientController extends Controller
         session([
             'impersonate' => true,
             'impersonate_admin_id' => $impersonation->created_by,
+        ]);
+        Log::info('impersonation_consume_success', [
+            'admin_id' => $impersonation->created_by,
+            'client_id' => $kasClient->id,
+            'workspace' => request()->attributes->get('workspace'),
         ]);
 
         $label = (string) ($kasClient->account_comment ?: $kasClient->account_login);
@@ -207,6 +219,10 @@ class KasClientController extends Controller
         }
 
         session()->forget(['impersonate', 'impersonate_admin_id']);
+        Log::info('impersonation_leave', [
+            'workspace' => request()->attributes->get('workspace'),
+            'ip' => request()->ip(),
+        ]);
 
         return redirect()->route('dashboard')
             ->with('success', 'Zurück zum Admin gewechselt.');

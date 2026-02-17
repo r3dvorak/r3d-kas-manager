@@ -79,10 +79,10 @@
 - [x] Audit-Log fuer externe Launches
 
 ### Phase 6 - Härtung
-- [ ] Rate-Limits und Abuse-Schutz
-- [ ] Security-Review (CSRF, fixation, replay)
-- [ ] Bereinigung alter Workspaces per Job
-- [ ] Observability (Logs/Debug-Infos)
+- [x] Rate-Limits und Abuse-Schutz
+- [x] Security-Review (CSRF, fixation, replay)
+- [x] Bereinigung alter Workspaces per Job
+- [x] Observability (Logs/Debug-Infos)
 
 ### Phase 7 - Migration & Backward Compatibility
 - [ ] Legacy-Links ohne `w` behandeln

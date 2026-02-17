@@ -126,4 +126,25 @@ class ExternalLaunchTokenFlowTest extends TestCase
         $dbLaunch = $this->actingAs($clientA, 'kas_client')->get('/client/launch/pma?database=' . $dbOfB->id . '&w=' . str_repeat('b', 40));
         $dbLaunch->assertNotFound();
     }
+
+    public function test_consume_requires_matching_workspace_when_token_is_workspace_bound(): void
+    {
+        $client = KasClient::create([
+            'account_login' => 'wlaunch05',
+            'password' => Hash::make('secret123'),
+            'account_comment' => 'Launch Client 5',
+        ]);
+
+        $workspace = str_repeat('c', 40);
+
+        $create = $this->actingAs($client, 'kas_client')->get('/client/launch/webmail?w=' . $workspace);
+        $create->assertRedirect();
+        $location = (string) $create->headers->get('Location');
+        preg_match('#/launch/([A-Za-z0-9]{64})#', $location, $m);
+        $token = (string) ($m[1] ?? '');
+        $this->assertNotSame('', $token);
+
+        $wrongWorkspaceConsume = $this->get('/launch/' . $token . '?w=' . str_repeat('d', 40));
+        $wrongWorkspaceConsume->assertForbidden();
+    }
 }

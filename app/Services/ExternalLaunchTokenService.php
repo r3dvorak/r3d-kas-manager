@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.16-alpha
+ * @version   0.28.19-alpha
  * @date      2026-02-17
  * @license   MIT License
  */
@@ -17,6 +17,7 @@ use App\Models\ExternalLaunchToken;
 use App\Models\KasClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ExternalLaunchTokenService
@@ -50,6 +51,12 @@ class ExternalLaunchTokenService
         ]);
 
         $this->audit($record, 'created', $request, $context);
+        Log::info('external_launch_token_created', [
+            'token_id' => $record->id,
+            'tool' => $tool,
+            'client_id' => $record->kas_client_id,
+            'workspace' => $record->workspace_key,
+        ]);
 
         return [
             'token' => $rawToken,
@@ -65,11 +72,27 @@ class ExternalLaunchTokenService
 
         if (!$record) {
             $this->audit(null, 'invalid_token', $request, ['hash_prefix' => substr(hash('sha256', $rawToken), 0, 12)]);
+            Log::warning('external_launch_token_invalid', ['ip' => $request->ip()]);
+            return null;
+        }
+
+        $requestedWorkspace = strtolower((string) $request->query(ResolveWorkspace::QUERY_KEY, ''));
+        if ($record->workspace_key && (!ResolveWorkspace::isValidWorkspace($requestedWorkspace) || $requestedWorkspace !== strtolower((string) $record->workspace_key))) {
+            $this->audit($record, 'denied', $request, ['reason' => 'workspace_mismatch']);
+            Log::warning('external_launch_token_workspace_mismatch', [
+                'token_id' => $record->id,
+                'expected_workspace' => $record->workspace_key,
+                'received_workspace' => $requestedWorkspace,
+            ]);
             return null;
         }
 
         if ($record->used_at !== null || $record->expires_at->isPast()) {
             $this->audit($record, 'denied', $request, [
+                'reason' => $record->used_at !== null ? 'already_used' : 'expired',
+            ]);
+            Log::warning('external_launch_token_denied', [
+                'token_id' => $record->id,
                 'reason' => $record->used_at !== null ? 'already_used' : 'expired',
             ]);
             return null;
@@ -82,6 +105,11 @@ class ExternalLaunchTokenService
         ])->save();
 
         $this->audit($record, 'consumed', $request);
+        Log::info('external_launch_token_consumed', [
+            'token_id' => $record->id,
+            'tool' => $record->tool,
+            'client_id' => $record->kas_client_id,
+        ]);
 
         return $record;
     }

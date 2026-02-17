@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.6.9-alpha
+ * @version   0.28.19-alpha
  * @date      2025-09-26
  * 
  * @copyright (C) 2025 Richard Dvořák
@@ -15,7 +15,10 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+Schedule::command('workspace:cleanup')->dailyAt('03:10');

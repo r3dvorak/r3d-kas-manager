@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.28.8-alpha
+ * @version   0.28.19-alpha
  * @date      2025-10-05
  * @license   MIT License
  */
@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use App\Models\KasClient;
@@ -57,11 +58,13 @@ class UnifiedLoginController extends Controller
             Auth::guard('web')->attempt(['login' => $login, 'password' => $password], $remember) ||
             Auth::guard('web')->attempt(['email' => $login, 'password' => $password], $remember)
         ) {
+            Log::info('login_success', ['guard' => 'web', 'login' => $login, 'workspace' => $workspace, 'ip' => $request->ip()]);
             return redirect()->route('dashboard', $workspace ? ['w' => $workspace] : []);
         }
 
         // --- 2️⃣ Try Client Login (by login name) ---
         if ($this->attemptKasClientLoginByAccount(strtolower($login), $password, $remember)) {
+            Log::info('login_success', ['guard' => 'kas_client', 'login' => strtolower($login), 'workspace' => $workspace, 'ip' => $request->ip()]);
             return redirect()->route('client.dashboard', $workspace ? ['w' => $workspace] : []);
         }
 
@@ -75,10 +78,12 @@ class UnifiedLoginController extends Controller
             ->first();
 
         if ($client && $this->attemptKasClientLoginByAccount((string) $client->account_login, $password, $remember)) {
+            Log::info('login_success', ['guard' => 'kas_client', 'login' => (string) $client->account_login, 'workspace' => $workspace, 'ip' => $request->ip()]);
             return redirect()->route('client.dashboard', $workspace ? ['w' => $workspace] : []);
         }
 
         // --- 4️⃣ If all failed ---
+        Log::warning('login_failed', ['login' => $login, 'workspace' => $workspace, 'ip' => $request->ip()]);
         return back()
             ->withErrors(['login' => 'Ungültige Zugangsdaten.'])
             ->onlyInput('login');
@@ -146,6 +151,11 @@ class UnifiedLoginController extends Controller
         if ($logoutAllWorkspaces) {
             $this->forgetAllWorkspaceSessionCookies($request);
         }
+        Log::info('logout', [
+            'workspace' => $request->attributes->get('workspace'),
+            'scope' => $logoutAllWorkspaces ? 'all' : 'current',
+            'ip' => $request->ip(),
+        ]);
 
         return redirect()->route('login');
     }

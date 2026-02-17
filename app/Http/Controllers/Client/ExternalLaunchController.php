@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.16-alpha
+ * @version   0.28.19-alpha
  * @date      2026-02-17
  * @license   MIT License
  */

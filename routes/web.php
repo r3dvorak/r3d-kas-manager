@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.28.13-alpha
+ * @version   0.28.19-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -28,7 +28,7 @@ use App\Http\Controllers\Admin\MailforwardsController;
 // ============================================================
 
 Route::get('/login', [UnifiedLoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [UnifiedLoginController::class, 'login'])->name('login.submit');
+Route::post('/login', [UnifiedLoginController::class, 'login'])->middleware('throttle:login')->name('login.submit');
 Route::post('/logout', [UnifiedLoginController::class, 'logout'])->name('logout');
 Route::get('/locale/{locale}', function (string $locale) {
     if (!in_array($locale, ['de', 'en'], true)) {
@@ -95,7 +95,7 @@ Route::middleware(['web', 'useguard:web', 'auth:web', 'can:access-admin-panel'])
     //Route::post('/settings', [SettingsController::class, 'update'])->name('admin.settings.update');
 
     Route::get('kas-clients/{kasClient}/impersonate', [KasClientController::class, 'createImpersonationToken'])
-        ->middleware('can:impersonate')
+        ->middleware(['can:impersonate', 'throttle:impersonate-generate'])
         ->name('kas-clients.impersonate.generate');
 
 });
@@ -157,7 +157,9 @@ Route::prefix('client')->name('client.')->middleware(['web', 'useguard:kas_clien
     Route::post('/mailboxes/{mailbox}/toggle-state', [App\Http\Controllers\Client\MailboxController::class, 'toggleState'])->name('mailboxes.toggle-state');
     Route::delete('/mailboxes/{mailbox}', [App\Http\Controllers\Client\MailboxController::class, 'destroy'])->name('mailboxes.destroy');
     Route::get('/recipes', [App\Http\Controllers\Client\RecipeController::class, 'index'])->name('recipes.index');
-    Route::get('/launch/{tool}', [App\Http\Controllers\Client\ExternalLaunchController::class, 'create'])->name('launch.create');
+    Route::get('/launch/{tool}', [App\Http\Controllers\Client\ExternalLaunchController::class, 'create'])
+        ->middleware('throttle:launch-create')
+        ->name('launch.create');
 });
 
 // ============================================================
@@ -165,6 +167,7 @@ Route::prefix('client')->name('client.')->middleware(['web', 'useguard:kas_clien
 // ============================================================
 
 Route::get('impersonate/{token}', [KasClientController::class, 'consumeImpersonationToken'])
+    ->middleware('throttle:impersonate-consume')
     ->name('kas-clients.impersonate.consume');
 
 Route::post('kas-clients/impersonate/leave', [KasClientController::class, 'leaveImpersonation'])
@@ -172,5 +175,5 @@ Route::post('kas-clients/impersonate/leave', [KasClientController::class, 'leave
     ->name('kas-clients.impersonate.leave');
 
 Route::get('launch/{token}', [App\Http\Controllers\Client\ExternalLaunchController::class, 'consume'])
-    ->middleware('web')
+    ->middleware(['web', 'throttle:launch-consume'])
     ->name('external-launch.consume');
