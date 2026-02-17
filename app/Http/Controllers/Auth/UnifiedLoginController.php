@@ -12,6 +12,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\ResolveWorkspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -25,8 +26,10 @@ class UnifiedLoginController extends Controller
      */
     public function showLoginForm()
     {
+        $workspace = $this->workspaceQuery($request = request());
+
         if (Auth::guard('web')->check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard', $workspace ? ['w' => $workspace] : []);
         }
 
         return view('auth.login');
@@ -45,18 +48,19 @@ class UnifiedLoginController extends Controller
         $login    = trim($request->input('login'));
         $password = $request->input('password');
         $remember = $request->boolean('remember');
+        $workspace = $this->workspaceQuery($request);
 
         // --- 1️⃣ Try Admin Login (by login or email) ---
         if (
             Auth::guard('web')->attempt(['login' => $login, 'password' => $password], $remember) ||
             Auth::guard('web')->attempt(['email' => $login, 'password' => $password], $remember)
         ) {
-            return redirect()->route('dashboard');
+            return redirect()->route('dashboard', $workspace ? ['w' => $workspace] : []);
         }
 
         // --- 2️⃣ Try Client Login (by login name) ---
         if ($this->attemptKasClientLoginByAccount(strtolower($login), $password, $remember)) {
-            return redirect()->route('client.dashboard');
+            return redirect()->route('client.dashboard', $workspace ? ['w' => $workspace] : []);
         }
 
         // --- 3️⃣ Try Client Login by related Domain or Subdomain ---
@@ -69,13 +73,19 @@ class UnifiedLoginController extends Controller
             ->first();
 
         if ($client && $this->attemptKasClientLoginByAccount((string) $client->account_login, $password, $remember)) {
-            return redirect()->route('client.dashboard');
+            return redirect()->route('client.dashboard', $workspace ? ['w' => $workspace] : []);
         }
 
         // --- 4️⃣ If all failed ---
         return back()
             ->withErrors(['login' => 'Ungültige Zugangsdaten.'])
             ->onlyInput('login');
+    }
+
+    private function workspaceQuery(Request $request): ?string
+    {
+        $workspace = (string) ($request->query('w') ?? $request->attributes->get('workspace') ?? '');
+        return ResolveWorkspace::isValidWorkspace($workspace) ? $workspace : null;
     }
 
     /**
