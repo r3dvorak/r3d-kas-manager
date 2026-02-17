@@ -17,7 +17,7 @@
     <div class="uk-card uk-card-default uk-card-body uk-width-1-1@m uk-width-1-2@l" style="max-width:450px; min-width:350px; margin:auto;">
         <h3 class="uk-card-title uk-text-center">R3D KAS Manager Login</h3>
 
-        <form method="POST" action="{{ route('login.submit') }}">
+        <form method="POST" action="{{ route('login.submit', ['w' => $workspaceKey ?? request()->query('w')]) }}">
             @csrf
 
             {{-- Login name or domain --}}
