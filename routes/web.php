@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.28.19-alpha
+ * @version   0.29.5-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -22,6 +22,7 @@ use App\Http\Controllers\ConfigController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\MailboxesController;
 use App\Http\Controllers\Admin\MailforwardsController;
+use Illuminate\Http\Request;
 
 // ============================================================
 // === Unified Login / Logout ===
@@ -132,6 +133,20 @@ Route::prefix('client')->name('client.')->middleware(['web', 'useguard:kas_clien
     Route::get('/databases', [App\Http\Controllers\Client\DatabaseController::class, 'index'])->name('databases.index');
     Route::get('/databases/preview', [App\Http\Controllers\Client\DatabaseController::class, 'preview'])->name('databases.preview');
     Route::post('/databases/sync', [App\Http\Controllers\Client\DatabaseController::class, 'sync'])->name('databases.sync');
+
+    Route::get('/coming-soon/{resource}', function (Request $request, string $resource) {
+        $labels = [
+            'domains' => 'Domain',
+            'subdomains' => 'Subdomain',
+            'mailforwards' => 'E-Mail-Weiterleitung',
+            'ftp' => 'FTP',
+            'databases' => 'Datenbanken',
+        ];
+
+        $label = $labels[strtolower($resource)] ?? 'Bereich';
+
+        return redirect()->back()->with('info', $label . ': NEU/CRUD folgt im nächsten Schritt.');
+    })->name('coming-soon');
 
     Route::get('/ssl', [App\Http\Controllers\Client\SslController::class, 'index'])->name('ssl.index');
     Route::get('/ssl/preview', [App\Http\Controllers\Client\SslController::class, 'preview'])->name('ssl.preview');

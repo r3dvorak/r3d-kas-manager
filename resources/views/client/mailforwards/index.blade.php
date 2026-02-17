@@ -13,6 +13,9 @@
 @if(session('error'))
     <div class="uk-alert-danger" uk-alert><p>{{ session('error') }}</p></div>
 @endif
+@if(session('info'))
+    <div class="uk-alert-primary" uk-alert><p>{{ session('info') }}</p></div>
+@endif
 
 <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-small">
     <div class="uk-text-small">
@@ -22,6 +25,9 @@
         @endif
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
+        <div>
+            <a class="uk-button uk-button-primary" href="{{ route_w('client.coming-soon', ['resource' => 'mailforwards']) }}">NEU</a>
+        </div>
         <div>
             <a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung (KAS vs DB)</a>
         </div>

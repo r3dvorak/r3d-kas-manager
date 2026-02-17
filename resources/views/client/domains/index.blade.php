@@ -6,6 +6,10 @@
     Eine Domain ist im Internet die Adresse, unter der eine Website erreichbar ist, sozusagen der "Name" einer Website.
 </p>
 
+@if(session('info'))
+    <div class="uk-alert-primary" uk-alert><p>{{ session('info') }}</p></div>
+@endif
+
 <div class="uk-flex uk-flex-between uk-flex-middle uk-margin-small">
     <div class="uk-text-small">
         <strong>Angelegte Domains:</strong> {{ $domains->total() }}
@@ -14,6 +18,9 @@
         @endif
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
+        <div>
+            <a class="uk-button uk-button-primary" href="{{ route_w('client.coming-soon', ['resource' => 'domains']) }}">NEU</a>
+        </div>
         <div>
             <a class="uk-button uk-button-default" href="{{ route_w('client.domains.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung (KAS vs DB)</a>
         </div>

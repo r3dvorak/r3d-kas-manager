@@ -120,18 +120,18 @@
 ### Client Dashboard
 - [x] Aktuelle Server-IP wird angezeigt (nicht leer).
 - [x] Servername wird angezeigt (nicht leer).
-- [ ] Button `Abmelden` unter dem Inhalt entfernen (Logout bleibt in der Navbar).
+- [x] Button `Abmelden` unter dem Inhalt entfernen (Logout bleibt in der Navbar).
 
 ### Ressourcen-Bereiche
 - [x] Feld `Reserviert` korrekt berechnen (nicht immer `0`).
 - [x] Buttons `Änderungen Prüfung (KAS vs DB)` und `Sync jetzt` in Ressourcen-Ansichten ergänzen.
 
 ### CRUD-Aktionen in Client-Listen
-- [ ] `NEU`-Button ergänzen bei Domains.
-- [ ] `NEU`-Button ergänzen bei Subdomains.
-- [ ] `NEU`-Button ergänzen bei Mailforwards.
-- [ ] `NEU`-Button ergänzen bei FTP.
-- [ ] `NEU`-Button ergänzen bei Datenbanken.
+- [x] `NEU`-Button ergänzen bei Domains.
+- [x] `NEU`-Button ergänzen bei Subdomains.
+- [x] `NEU`-Button ergänzen bei Mailforwards.
+- [x] `NEU`-Button ergänzen bei FTP.
+- [x] `NEU`-Button ergänzen bei Datenbanken.
 
 ### Internationalisierung / Sprache
 - [ ] Alle UI-Texte in Sprach-Keys auslagern (keine hartkodierten Texte mehr).
