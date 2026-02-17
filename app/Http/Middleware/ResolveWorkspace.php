@@ -8,8 +8,9 @@
  * @date      2026-02-17
  * @license   MIT License
  *
- * Resolves a workspace key from query string (?w=...), injects it into
- * request/container/view, and canonicalizes GET/HEAD URLs to always carry w.
+ * Resolves a workspace key from query string (?w=...), configures a
+ * workspace-specific session cookie, injects context into request/container/view,
+ * and canonicalizes GET/HEAD login URLs to always carry w.
  */
 
 namespace App\Http\Middleware;
@@ -17,6 +18,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\View;
 
 class ResolveWorkspace
@@ -30,6 +32,9 @@ class ResolveWorkspace
         $normalized = strtolower(trim($provided));
         $isValid = $this->isValidWorkspace($normalized);
         $workspace = $isValid ? $normalized : $this->generateWorkspace();
+
+        // Important: set workspace session cookie before StartSession middleware runs.
+        config(['session.cookie' => $this->workspaceCookieName($workspace)]);
 
         // Expose context early for controllers/views/services.
         $request->attributes->set('workspace', $workspace);
@@ -46,10 +51,6 @@ class ResolveWorkspace
             && ($provided === '' || $normalized !== $provided || !$isValid);
 
         if ($needsCanonicalRedirect) {
-            if ($provided !== '' && !$isValid) {
-                $request->session()->flash('warning', 'Workspace war ungueltig oder abgelaufen. Neuer Workspace wurde erstellt.');
-            }
-
             $query = $request->query();
             $query[self::QUERY_KEY] = $workspace;
 
@@ -73,5 +74,11 @@ class ResolveWorkspace
     private function generateWorkspace(): string
     {
         return bin2hex(random_bytes(self::LENGTH / 2));
+    }
+
+    private function workspaceCookieName(string $workspace): string
+    {
+        $base = (string) env('SESSION_COOKIE_WORKSPACE', Str::slug((string) env('APP_NAME', 'laravel'), '_') . '_workspace_session');
+        return $base . '_' . $workspace;
     }
 }

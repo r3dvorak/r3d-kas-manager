@@ -37,7 +37,6 @@ class WorkspaceResolverTest extends TestCase
         $response->assertRedirect();
         $location = $response->headers->get('Location');
         $this->assertMatchesRegularExpression('#/login\?w=[a-f0-9]{40}$#', (string) $location);
-        $response->assertSessionHas('warning');
     }
 
     public function test_workspace_context_is_injected_into_request_and_container(): void

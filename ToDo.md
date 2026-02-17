@@ -52,12 +52,12 @@
 - [x] Unit-/Feature-Tests fuer Resolver
 
 ### Phase 2 - Session-Isolation pro Workspace
-- [ ] Dynamische Session-Cookie-Namen pro Guard + Workspace
-- [ ] `web` und `kas_client` sauber trennen
+- [x] Dynamische Session-Cookie-Namen pro Workspace
+- [x] `web` und `kas_client` sauber trennen
 - [ ] Logout-Semantik festlegen:
-- [ ] nur aktueller Workspace
+- [x] nur aktueller Workspace
 - [ ] optional: alle Workspaces
-- [ ] Feature-Tests fuer parallele Sessions
+- [x] Feature-Tests fuer parallele Sessions
 
 ### Phase 3 - Routing und Link-Propagation
 - [ ] Workspace in Hauptnavigation verankern
