@@ -383,3 +383,8 @@ tr.mailbox-row-state-blocked {
     display: inline-block;
     vertical-align: text-bottom;
 }
+
+/* Mirror UIKit gitter icon vertically (CSS only) */
+span[uk-icon*="gitter"] svg {
+    transform: scaleY(-1);
+}
