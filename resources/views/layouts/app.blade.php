@@ -83,6 +83,11 @@
                         @csrf
                         <button type="submit" class="uk-button uk-button-text">{{ __('ui.common.logout') }}</button>
                     </form>
+                    <form action="{{ $routeW('logout') }}" method="POST" style="display:inline;" onsubmit="return confirm('{{ __('ui.common.logout_all_workspaces_confirm') }}');">
+                        @csrf
+                        <input type="hidden" name="scope" value="all">
+                        <button type="submit" class="uk-button uk-button-text uk-text-danger uk-margin-small-left">{{ __('ui.common.logout_all_workspaces') }}</button>
+                    </form>
                 </div>
                 @endif
 
@@ -148,6 +153,13 @@
                 <form action="{{ $routeW('logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="uk-button uk-button-text uk-text-danger">{{ __('ui.common.logout') }}</button>
+                </form>
+            </li>
+            <li>
+                <form action="{{ $routeW('logout') }}" method="POST" onsubmit="return confirm('{{ __('ui.common.logout_all_workspaces_confirm') }}');">
+                    @csrf
+                    <input type="hidden" name="scope" value="all">
+                    <button type="submit" class="uk-button uk-button-text uk-text-danger">{{ __('ui.common.logout_all_workspaces') }}</button>
                 </form>
             </li>
         </ul>

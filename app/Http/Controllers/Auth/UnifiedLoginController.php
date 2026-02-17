@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.27.10-alpha
+ * @version   0.28.8-alpha
  * @date      2025-10-05
  * @license   MIT License
  */
@@ -15,8 +15,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Middleware\ResolveWorkspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use App\Models\KasClient;
 
 class UnifiedLoginController extends Controller
@@ -128,6 +130,8 @@ class UnifiedLoginController extends Controller
      */
     public function logout(Request $request)
     {
+        $logoutAllWorkspaces = $request->input('scope') === 'all';
+
         if (Auth::guard('web')->check()) {
             Auth::guard('web')->logout();
         }
@@ -139,6 +143,29 @@ class UnifiedLoginController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        if ($logoutAllWorkspaces) {
+            $this->forgetAllWorkspaceSessionCookies($request);
+        }
+
         return redirect()->route('login');
+    }
+
+    private function forgetAllWorkspaceSessionCookies(Request $request): void
+    {
+        $base = (string) env(
+            'SESSION_COOKIE_WORKSPACE',
+            Str::slug((string) env('APP_NAME', 'laravel'), '_') . '_workspace_session'
+        );
+        $prefix = $base . '_';
+        $path = (string) config('session.path', '/');
+        $domain = config('session.domain');
+
+        foreach (array_keys($request->cookies->all()) as $cookieName) {
+            if (!str_starts_with($cookieName, $prefix)) {
+                continue;
+            }
+
+            Cookie::queue(cookie()->forget($cookieName, $path, $domain));
+        }
     }
 }

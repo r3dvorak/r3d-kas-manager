@@ -11,6 +11,8 @@ return [
         'language' => 'Sprache',
         'back_to_admin' => 'Zurueck zu Admin',
         'logout' => 'Abmelden',
+        'logout_all_workspaces' => 'Alle Workspaces abmelden',
+        'logout_all_workspaces_confirm' => 'Wirklich alle Workspaces in diesem Browser abmelden?',
     ],
 
     'nav' => [

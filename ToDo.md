@@ -56,7 +56,7 @@
 - [x] `web` und `kas_client` sauber trennen
 - [ ] Logout-Semantik festlegen:
 - [x] nur aktueller Workspace
-- [ ] optional: alle Workspaces
+- [x] optional: alle Workspaces
 - [x] Feature-Tests fuer parallele Sessions
 
 ### Phase 3 - Routing und Link-Propagation

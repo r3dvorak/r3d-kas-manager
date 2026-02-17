@@ -11,6 +11,8 @@ return [
         'language' => 'Language',
         'back_to_admin' => 'Back to Admin',
         'logout' => 'Logout',
+        'logout_all_workspaces' => 'Logout all workspaces',
+        'logout_all_workspaces_confirm' => 'Do you really want to logout all workspaces in this browser?',
     ],
 
     'nav' => [
