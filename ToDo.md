@@ -139,61 +139,77 @@
 - [x] Gemischte Sprache in Views bereinigen (DE/EN konsistent pro Locale).
 - [x] Deutsche Texte mit korrekten Umlauten/Sonderzeichen schreiben (z. B. `Änderungen Prüfung`).
 
-## Nächste ToDos (Rezepte / Automationen - Admin First)
+## Nächste ToDos (Rezepte / Automationen - neu geplant, Admin First)
 
-### Rollenmodell (klar getrennt)
-- [ ] Rechte-Matrix final festlegen: `Admin` (voll), `Client` (eingeschränkt).
-- [ ] Admin darf Rezepte erstellen, importieren, exportieren, ausführen und global speichern.
-- [ ] Client darf nur freigegebene Rezepte sehen/ausführen (kein globales Erstellen/Löschen).
-- [ ] Kritische Aktionen nur Admin: Account-Neuanlage, Ressourcen-Limits, SSL-Policy, DB-/FTP-Massenanlage.
+### Zielbild & Leitlinien
+- [ ] Recipes als Operations-Container definieren (nicht als statische Datenansicht).
+- [ ] Klares Scope-Modell je Recipe festlegen: `client`, `domain`, `subdomain`, `mail`, `dns`, `composite`.
+- [ ] Prinzip festschreiben: Änderungen laufen über KAS-API-Calls + Run-Logs, keine stillen Direktmanipulationen.
+- [ ] Dry-Run vor Apply als Standardfluss definieren.
 
-### Admin Recipe Phase 1 (Start)
-- [ ] Admin-Recipe-CRUD als zentrale Oberfläche aufbauen (Liste, Detail, Version, Status).
-- [ ] Step-basierte Definition mit Reihenfolge und Validierung bereitstellen.
-- [ ] Dry-Run/Preview (Diff) vor Ausführung verpflichtend machen.
-- [ ] Run-Historie mit Ergebnis pro Schritt anzeigen.
+### Rollenmodell (Admin vs Client)
+- [ ] Rechte-Matrix final festlegen.
+- [ ] Admin: Recipe-CRUD, Import/Export, globale Templates, Massen-Ausführung.
+- [ ] Client: nur freigegebene Templates, nur auf eigenen Ressourcen, nur freigegebene Parameter.
+- [ ] Kritische Aktionen explizit Admin-only: Account-Neuanlage, Limits/Quotas, SSL-Policy, DB/FTP-Massenanlage.
 
-### Admin-Onboarding-Wizard (neues Konto / neue Umgebung)
-- [ ] Wizard für "neues Konto bereitstellen" erstellen (mehrstufig).
-- [ ] Eingaben: Hauptdomain, weitere Domains, SSL ja/nein, PHP-Default, Anzahl Mailboxen, Anzahl Weiterleitungen, Anzahl Datenbanken.
-- [ ] Für Mailboxen/Weiterleitungen Eingabe-Schema für Prefix (`vor dem @`) unterstützen.
-- [ ] Ergebnisseite mit allen erzeugten Zugangsdaten (nur einmal sichtbar + Download) bereitstellen.
-- [ ] Optional: sofortige Ausführung oder als Recipe-Entwurf speichern.
+### Architektur (modular & auditierbar)
+- [ ] Bestehende Struktur bestätigen und dokumentieren: `recipes`, `recipe_actions`, `recipe_runs`, `recipe_action_history`.
+- [ ] Dispatcher-Contract finalisieren: Action-Handler pro Typ (`SetPhpVersion`, `EnableSsl`, `ForceHttps`, `DnsUpsert`, ...).
+- [ ] Idempotenz-Strategie je Step einführen (`dedupe_key` / `external_ref`).
+- [ ] Rollback als Compensating Actions modellieren (nicht DB-Transaktionsrollback über externe APIs).
+- [ ] Drift-Check vor Apply ergänzen (aktueller KAS-Status vs geplanter Zustand).
 
-### Defaults & Policy-Engine
-- [ ] Globale Default-Parameter in Admin-Einstellungen pflegbar machen.
-- [ ] Passwort-Defaults (Länge, Zeichensatz, Sonderzeichenpflicht, Rotation) definieren.
-- [ ] Default-Werte für PHP-Version, SSL-Standard, DNS-Basis-Records, Mailbox-Quota definieren.
-- [ ] Pro Client überschreibbare Defaults unterstützen (Fallback auf global).
-- [ ] "all-inkl kompatible" sinnvolle Standardprofile als Presets hinterlegen.
+### Phase A - Admin Recipe Core (MVP)
+- [ ] Admin-UI für Recipes: Liste, Detail, Version, Status (`draft`, `active`, `archived`).
+- [ ] Action-Builder mit Reihenfolge, Parametern und Validierung.
+- [ ] Manual Run mit Dry-Run, Preview-Diff, Apply.
+- [ ] Run-Statusmodell final: `pending`, `running`, `success`, `partial`, `failed`, `cancelled`.
+- [ ] Run-Detailansicht: Step-Ergebnisse inkl. Fehler, Dauer, API-Responses (maskiert).
 
-### Geheimnisse / Zugangsdaten
-- [ ] Generierte Passwörter nur verschlüsselt speichern oder als einmaliges Secret ausgeben.
-- [ ] Klartext-Ausgabe nur im Run-Result direkt nach Erstellung + expliziter Hinweis.
-- [ ] Secret-Export optional als verschlüsselte Datei (`.json.enc`) bereitstellen.
-- [ ] Audit-Log ohne Klartext-Passwörter sicherstellen.
+### Phase B - Admin Onboarding Wizard
+- [ ] Wizard "Neues Konto / neue Umgebung bereitstellen" (mehrstufig).
+- [ ] Eingaben: Hauptdomain, zusätzliche Domains, SSL ja/nein, PHP-Default, Anzahl Mailboxen, Anzahl Weiterleitungen, Anzahl Datenbanken.
+- [ ] Eingabe für Mailbox-/Weiterleitungs-Präfixe (`vor dem @`) integrieren.
+- [ ] Am Ende generierte Artefakte/Zugangsdaten als Ergebnisbundle anzeigen.
+- [ ] Ergebnis nur einmal im Klartext sichtbar + optional sicherer Export.
+- [ ] Wizard-Lauf optional als Recipe speichern (wiederverwendbar).
 
-### Import / Export (Admin)
-- [ ] `recipe-package.json` Schema finalisieren (`schema_version`, `meta`, `steps`, `defaults`, `permissions`).
-- [ ] JSON-Import mit Validierung und Konfliktstrategie (`create_new`, `replace`, `skip_existing`).
-- [ ] CSV-Import für Massenaufgaben: DNS, Mailforwards, Mailboxen, Domains.
-- [ ] CSV-Preview mit Zeilenfehlern und Korrekturhinweisen.
-- [ ] Export von Rezepten inkl. Versionsmetadaten und Prüfsumme.
+### Phase C - Defaults, Policies, Presets
+- [ ] Admin-Einstellungen für globale Defaults bauen (PHP, SSL, DNS-Basis, Quotas, DB-Defaults).
+- [ ] Passwort-Policy konfigurierbar machen (Länge, Komplexität, Sonderzeichen, Rotation).
+- [ ] Pro Client Overrides zulassen (Fallback auf globale Defaults).
+- [ ] Presets "all-inkl kompatibel" definieren und auswählbar machen.
+- [ ] Policy-Validierung vor jedem Run erzwingen.
 
-### Client Recipes (eingeschränkt)
-- [ ] Client sieht nur vom Admin freigegebene Recipe-Templates.
-- [ ] Client darf nur erlaubte Parameter setzen (Whitelisting).
-- [ ] Client darf nur auf eigene Ressourcen ausführen (harte Tenant-Prüfung).
-- [ ] Keine Ausgabe sensitiver Zugangsdaten aus Admin-only Aktionen im Client-Kontext.
+### Phase D - Import / Export
+- [ ] `recipe-package.json` Schema definieren (`schema_version`, `meta`, `scope`, `actions`, `defaults`, `permissions`).
+- [ ] JSON-Export/Import für Rezepte inkl. Versionsmetadaten, Prüfsumme, Kompatibilitätsprüfung.
+- [ ] Konfliktstrategie beim Import umsetzen (`create_new`, `replace`, `skip_existing`).
+- [ ] CSV-Import für Massenoperationen umsetzen:
+- [ ] DNS (`dns.upsert`)
+- [ ] Mailboxen (`mailbox.create` / `mailbox.update`)
+- [ ] Weiterleitungen (`mailforward.create`)
+- [ ] Domains/Subdomains (`domain.create`, `subdomain.create`)
+- [ ] Import-Preview mit Zeilenvalidierung und Fehlerbericht bereitstellen.
 
-### Sicherheit / Governance
-- [ ] Run-Freigaben für kritische Rezepte (4-Augen optional) vorbereiten.
-- [ ] Rate-Limits und Queue-Limits für große Massenjobs setzen.
-- [ ] Idempotenz pro Step (`external_ref` / `dedupe_key`) erzwingen.
-- [ ] Vollständiges Audit: wer, wann, welche Parameter, welche Änderungen.
+### Phase E - Sicherheit, Secrets, Governance
+- [ ] Geheimnisse sicher behandeln: keine Klartext-Passwörter in Logs/Audits.
+- [ ] Einmalige Secret-Ausgabe mit expliziter Warnung und Ablauf.
+- [ ] Optional verschlüsselter Secret-Export (`.json.enc`).
+- [ ] Rate-Limits, Queue-Limits und Schutz gegen gefährliche Massenaktionen einführen.
+- [ ] Optionales 4-Augen-Prinzip für kritische Recipes vorbereiten.
 
-### UX / Betrieb
-- [ ] Fortschrittsanzeige pro Run (gesamt + pro Step + pro Item).
-- [ ] Wiederanlauf fehlgeschlagener Items (`retry failed only`).
-- [ ] Downloadbare Run-Reports (`csv/json`) mit Fehlergruppen.
-- [ ] Wizard- und Import-Tests als feste Abnahme-Checkliste ergänzen.
+### Phase F - Betrieb & Qualität
+- [ ] Asynchrone Runs über Queue mit Fortschritt pro Run/Step/Item.
+- [ ] `retry failed only` und Wiederanlauf-Strategie implementieren.
+- [ ] Downloadbare Run-Reports (`csv/json`) und Filter nach Fehlerklassen.
+- [ ] Testpaket für Recipes aufbauen:
+- [ ] Unit-Tests für Handler/Dispatcher
+- [ ] Feature-Tests für Admin/Client-Berechtigungen
+- [ ] E2E für Wizard + Import/Export + Dry-Run/Apply
+
+### Beispiel-Recipes (Referenz für MVP)
+- [ ] `Standard Joomla Setup`: `set_php_version`, `enable_ssl`, `force_https`, `set_document_root`, `disable_directory_listing`.
+- [ ] `Migration auf PHP 8.3`: `check_php_version`, `set_php_version`, optional `clear_cache`.
+- [ ] `Emergency SSL Fix`: `enable_sni`, `activate_certificate`, `force_https`.
