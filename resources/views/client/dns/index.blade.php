@@ -71,7 +71,7 @@
                     <td class="uk-text-nowrap">{{ rtrim((string) $r->record_zone, '.') }}</td>
                     <td class="uk-text-nowrap">{{ $r->record_type ?: '—' }}</td>
                     <td class="uk-text-nowrap">{{ $r->record_name === '' ? '—' : $r->record_name }}</td>
-                    <td style="max-width: 620px; white-space: normal;">{{ $r->record_data }}</td>
+                    <td style="max-width: 620px; white-space: normal; word-break: break-all; overflow-wrap: anywhere;">{{ $r->record_data }}</td>
                     <td class="uk-text-nowrap uk-text-right">{{ (int) ($r->record_aux ?? 0) }}</td>
                     <td class="uk-text-nowrap">
                         <a class="uk-button uk-button-text" href="{{ route('client.dns.edit', $r) }}">Bearbeiten</a>
