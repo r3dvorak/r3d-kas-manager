@@ -26,15 +26,15 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
-            <a class="uk-button uk-button-primary" href="{{ route_w('client.coming-soon', ['resource' => 'mailforwards']) }}">NEU</a>
+            <a class="uk-button uk-button-primary" href="{{ route_w('client.coming-soon', ['resource' => 'mailforwards']) }}">{{ __('ui.common.new') }}</a>
         </div>
         <div>
-            <a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung (KAS vs DB)</a>
+            <a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>{{ __('ui.common.check_changes') }}</a>
         </div>
         <div>
             <form action="{{ route_w('client.mailforwards.sync') }}" method="POST" style="display:inline;">
                 @csrf
-                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot ersetzen?')"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
+                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('{{ __('ui.client.sync_confirm_replace') }}')"><span uk-icon="future" class="uk-margin-small-right"></span>{{ __('ui.common.sync_now') }}</button>
             </form>
         </div>
     </div>
@@ -42,18 +42,18 @@
 
 <form class="uk-grid-small uk-margin" uk-grid method="GET" action="{{ route_w('client.mailforwards.index') }}">
     <div class="uk-width-1-2@m">
-        <input class="uk-input" type="text" name="q" value="{{ $q }}" placeholder="Suche...">
+        <input class="uk-input" type="text" name="q" value="{{ $q }}" placeholder="{{ __('ui.client.search_placeholder') }}">
     </div>
     <div class="uk-width-1-4@m">
         <select class="uk-select" name="domain" onchange="this.form.submit()">
-            <option value="">Alle Domains</option>
+            <option value="">{{ __('ui.common.all_domains') }}</option>
             @foreach($domainOptions as $d)
                 <option value="{{ $d }}" @selected(strtolower($domain) === strtolower($d))>{{ $d }}</option>
             @endforeach
         </select>
     </div>
     <div class="uk-width-auto@m">
-        <button class="uk-button uk-button-primary" type="submit">Suche</button>
+        <button class="uk-button uk-button-primary" type="submit">{{ __('ui.common.search') }}</button>
     </div>
 </form>
 

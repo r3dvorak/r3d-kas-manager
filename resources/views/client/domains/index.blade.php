@@ -19,15 +19,15 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
-            <a class="uk-button uk-button-primary" href="{{ route_w('client.coming-soon', ['resource' => 'domains']) }}">NEU</a>
+            <a class="uk-button uk-button-primary" href="{{ route_w('client.coming-soon', ['resource' => 'domains']) }}">{{ __('ui.common.new') }}</a>
         </div>
         <div>
-            <a class="uk-button uk-button-default" href="{{ route_w('client.domains.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung (KAS vs DB)</a>
+            <a class="uk-button uk-button-default" href="{{ route_w('client.domains.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>{{ __('ui.common.check_changes') }}</a>
         </div>
         <div>
             <form action="{{ route_w('client.domains.sync') }}" method="POST" style="display:inline;">
                 @csrf
-                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('Sync von KAS holen und DB-Snapshot aktualisieren?')"><span uk-icon="future" class="uk-margin-small-right"></span>Sync jetzt</button>
+                <button class="uk-button uk-button-secondary" type="submit" onclick="return confirm('{{ __('ui.client.sync_confirm_default') }}')"><span uk-icon="future" class="uk-margin-small-right"></span>{{ __('ui.common.sync_now') }}</button>
             </form>
         </div>
     </div>
@@ -38,7 +38,7 @@
         <input class="uk-input" type="text" name="q" value="{{ $q }}" placeholder="Suche (domain, pfad)...">
     </div>
     <div class="uk-width-auto@m">
-        <button class="uk-button uk-button-primary" type="submit">Suche</button>
+        <button class="uk-button uk-button-primary" type="submit">{{ __('ui.common.search') }}</button>
     </div>
 </form>
 
@@ -60,9 +60,9 @@
                     <td class="uk-text-nowrap"><strong>{{ $d->label() }}</strong></td>
                     <td class="uk-text-nowrap">
                         @if(($d->is_active ?? 'Y') === 'Y')
-                            <span class="uk-label uk-label-success">aktiv</span>
+                            <span class="uk-label uk-label-success">{{ __('ui.common.active') }}</span>
                         @else
-                            <span class="uk-label uk-label-warning">inaktiv</span>
+                            <span class="uk-label uk-label-warning">{{ __('ui.common.inactive') }}</span>
                         @endif
                     </td>
                     <td style="max-width: 520px; white-space: normal;">{{ $d->domain_path ?: '—' }}</td>

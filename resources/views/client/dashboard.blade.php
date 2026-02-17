@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.29.4-alpha
+ * @version   0.30.0-alpha
  * @date      2025-09-26
  *
  * @copyright (C) 2025 Richard Dvořák
@@ -96,9 +96,9 @@
 @endphp
 
 <div class="uk-container">
-    <h1 class="uk-heading-line"><span>Willkommen in der technischen Verwaltung</span></h1>
+    <h1 class="uk-heading-line"><span>{{ __('ui.client.dashboard_title') }}</span></h1>
     <p class="uk-text-muted uk-margin-remove-top">
-        Wichtiger Hinweis: Einstellungen werden nicht sofort auf dem Server umgesetzt. Es kann einige Minuten dauern, bis Aenderungen wirksam werden.
+        {{ __('ui.client.dashboard_hint') }}
     </p>
 
     <div class="uk-alert-primary" uk-alert>
@@ -111,16 +111,16 @@
 
     <div class="uk-card uk-card-default uk-card-body uk-margin">
         <div class="uk-flex uk-flex-between uk-flex-middle">
-            <h3 class="uk-card-title uk-margin-remove">Direktlinks</h3>
+            <h3 class="uk-card-title uk-margin-remove">{{ __('ui.client.quick_links') }}</h3>
             <div class="uk-text-small uk-text-muted">
                 {{ $serverHostname ?: '—' }}@if($serverIp) · {{ $serverIp }}@endif
             </div>
         </div>
 
         <div class="uk-grid-small uk-child-width-auto@s uk-margin-small-top" uk-grid>
-            <div><a class="uk-button uk-button-default" href="{{ route_w('client.dns.index') }}">DNS-Einstellungen</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route_w('client.mailboxes.index') }}">E-Mail-Postfach</a></div>
-            <div><a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.index') }}">E-Mail-Weiterleitung</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.dns.index') }}">{{ __('ui.client.dns_settings') }}</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.mailboxes.index') }}">{{ __('ui.client.mailbox') }}</a></div>
+            <div><a class="uk-button uk-button-default" href="{{ route_w('client.mailforwards.index') }}">{{ __('ui.client.mailforward') }}</a></div>
             <div><a class="uk-button uk-button-default" href="{{ route_w('client.domains.index') }}">Domain</a></div>
             <div><a class="uk-button uk-button-default" href="{{ route_w('client.recipes.index') }}">Rezepte</a></div>
             <div><a class="uk-button uk-button-secondary" href="{{ route_w('client.launch.create', ['tool' => 'webmail']) }}" target="_blank" rel="noopener noreferrer">Webmail</a></div>
@@ -130,35 +130,35 @@
         <div class="uk-grid-small uk-child-width-1-3@m uk-margin-top" uk-grid>
             <div>
                 <div class="uk-card uk-card-default uk-card-body uk-padding-small">
-                    <div class="uk-text-small uk-text-muted">aktuelle Server-IP</div>
+                    <div class="uk-text-small uk-text-muted">{{ __('ui.client.server_ip') }}</div>
                     <div class="uk-text-bold">{{ $serverIp ?: '—' }}</div>
                 </div>
             </div>
             <div>
                 <div class="uk-card uk-card-default uk-card-body uk-padding-small">
-                    <div class="uk-text-small uk-text-muted">Servername</div>
+                    <div class="uk-text-small uk-text-muted">{{ __('ui.client.server_name') }}</div>
                     <div class="uk-text-bold">{{ $serverHostname ?: '—' }}</div>
                 </div>
             </div>
             <div>
                 <div class="uk-card uk-card-default uk-card-body uk-padding-small">
-                    <div class="uk-text-small uk-text-muted">Stammverzeichnis</div>
+                    <div class="uk-text-small uk-text-muted">{{ __('ui.client.root_path') }}</div>
                     <div class="uk-text-bold uk-text-break">{{ $rootPath }}</div>
                 </div>
             </div>
         </div>
 
-        <h4 class="uk-heading-bullet uk-margin-top">Ressourcen</h4>
+        <h4 class="uk-heading-bullet uk-margin-top">{{ __('ui.common.resource') }}</h4>
         <div class="uk-overflow-auto">
             <table class="uk-table uk-table-small uk-table-divider uk-table-striped">
                 <thead>
                     <tr>
-                        <th>Ressourcen</th>
-                        <th class="uk-text-nowrap uk-text-right">angelegt</th>
-                        <th class="uk-text-nowrap uk-text-right">reserviert</th>
-                        <th class="uk-text-nowrap uk-text-right">verbleibend</th>
-                        <th class="uk-text-nowrap uk-text-right">moeglich</th>
-                        <th class="uk-text-nowrap uk-text-right">Aktionen</th>
+                        <th>{{ __('ui.common.resource') }}</th>
+                        <th class="uk-text-nowrap uk-text-right">{{ __('ui.common.created') }}</th>
+                        <th class="uk-text-nowrap uk-text-right">{{ __('ui.common.reserved') }}</th>
+                        <th class="uk-text-nowrap uk-text-right">{{ __('ui.common.remaining') }}</th>
+                        <th class="uk-text-nowrap uk-text-right">{{ __('ui.common.possible') }}</th>
+                        <th class="uk-text-nowrap uk-text-right">{{ __('ui.common.actions') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -251,7 +251,7 @@
         </div>
 
         <div class="uk-text-small uk-text-muted uk-margin-small-top">
-            Messung vom {{ $lastSpaceReportAt ? \Carbon\Carbon::parse($lastSpaceReportAt)->format('d.m.Y H:i') : now()->format('d.m.Y H:i') }} Uhr
+            {{ __('ui.common.measurement') }}: {{ $lastSpaceReportAt ? \Carbon\Carbon::parse($lastSpaceReportAt)->format('d.m.Y H:i') : now()->format('d.m.Y H:i') }}
         </div>
     </div>
 

@@ -31,6 +31,16 @@
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
 </head>
 <body>
+@php
+    $i18n = [
+        'external_service' => __('ui.common.external_service'),
+        'open_service' => __('ui.common.open_service'),
+        'check_credentials' => __('ui.common.check_credentials'),
+        'target_prefix' => __('ui.common.target_prefix'),
+        'copy' => __('ui.common.copy'),
+        'copied' => __('ui.common.copied'),
+    ];
+@endphp
 
 <header class="uk-background-muted" uk-sticky>
     <div class="uk-container uk-container-expand" style="padding-left:45px; padding-right:45px;">
@@ -225,28 +235,28 @@
 @if(!$isLoginPage)
 <div id="external-launch-modal" uk-modal>
     <div class="uk-modal-dialog uk-modal-body">
-        <h3 class="uk-modal-title" id="external-launch-title">Externen Dienst oeffnen</h3>
-        <p class="uk-text-small uk-text-muted" id="external-launch-target">Bitte Zugangsdaten pruefen, dann in neuem Tab oeffnen.</p>
+        <h3 class="uk-modal-title" id="external-launch-title">{{ __('ui.common.external_service') }}</h3>
+        <p class="uk-text-small uk-text-muted" id="external-launch-target">{{ __('ui.common.check_credentials') }}</p>
 
         <div class="uk-margin">
-            <label class="uk-form-label">Loginname</label>
+            <label class="uk-form-label">{{ __('ui.login.login_or_domain') }}</label>
             <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
                 <div class="uk-width-expand">
                     <input id="external-launch-login" class="uk-input" type="text" readonly>
                 </div>
                 <div class="uk-width-auto">
-                    <button id="external-launch-copy" class="uk-button uk-button-default" type="button">Kopieren</button>
+                    <button id="external-launch-copy" class="uk-button uk-button-default" type="button">{{ __('ui.common.copy') }}</button>
                 </div>
             </div>
         </div>
 
         <div class="uk-text-small uk-text-muted uk-margin-bottom">
-            Das Passwort wird aus Sicherheitsgruenden nicht uebergeben. Nutzen Sie Browser-/Passwortmanager-Autofill.
+            {{ __('ui.common.password_not_passed') }}
         </div>
 
         <div class="uk-flex uk-flex-right uk-grid-small" uk-grid>
-            <div><button class="uk-button uk-button-default uk-modal-close" type="button">Abbrechen</button></div>
-            <div><button id="external-launch-open" class="uk-button uk-button-primary" type="button">Oeffnen</button></div>
+            <div><button class="uk-button uk-button-default uk-modal-close" type="button">{{ __('ui.common.close') }}</button></div>
+            <div><button id="external-launch-open" class="uk-button uk-button-primary" type="button">{{ __('ui.common.open') }}</button></div>
         </div>
     </div>
 </div>
@@ -269,6 +279,7 @@
 </footer>
 
 <script>
+    window.__i18n = @json($i18n);
     window.confirmDeleteTwice = function (message, keyword) {
         if (!window.confirm(message)) {
             return false;
@@ -289,7 +300,8 @@
         }
 
         var launchUrl = trigger.getAttribute('data-launch-url') || trigger.getAttribute('href');
-        var tool = trigger.getAttribute('data-launch-tool') || 'Externer Dienst';
+        var i18n = window.__i18n || {};
+        var tool = trigger.getAttribute('data-launch-tool') || (i18n.external_service || 'External service');
         var login = trigger.getAttribute('data-launch-login') || '';
         var target = trigger.getAttribute('data-launch-target') || '';
 
@@ -303,8 +315,8 @@
             return true;
         }
 
-        title.textContent = tool + ' oeffnen';
-        targetText.textContent = target !== '' ? ('Ziel: ' + target) : 'Bitte Zugangsdaten pruefen, dann in neuem Tab oeffnen.';
+        title.textContent = tool + ' - ' + (i18n.open_service || 'Open');
+        targetText.textContent = target !== '' ? ((i18n.target_prefix || 'Target') + ': ' + target) : (i18n.check_credentials || 'Please check credentials and open in a new tab.');
         loginInput.value = login;
         openBtn.setAttribute('data-launch-url', launchUrl || '');
 
@@ -316,8 +328,8 @@
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(value).then(function () {
-                    copyBtn.textContent = 'Kopiert';
-                    setTimeout(function () { copyBtn.textContent = 'Kopieren'; }, 1000);
+                    copyBtn.textContent = i18n.copied || 'Copied';
+                    setTimeout(function () { copyBtn.textContent = i18n.copy || 'Copy'; }, 1000);
                 });
                 return;
             }
@@ -325,8 +337,8 @@
             loginInput.focus();
             loginInput.select();
             document.execCommand('copy');
-            copyBtn.textContent = 'Kopiert';
-            setTimeout(function () { copyBtn.textContent = 'Kopieren'; }, 1000);
+            copyBtn.textContent = i18n.copied || 'Copied';
+            setTimeout(function () { copyBtn.textContent = i18n.copy || 'Copy'; }, 1000);
         };
 
         openBtn.onclick = function () {
