@@ -45,6 +45,14 @@
             </select>
         </div>
         <div class="uk-width-1-4@m">
+            <label class="uk-form-label">Postfach-Status</label>
+            <select name="mailbox_access_state" class="uk-select">
+                <option value="enabled" @selected(old('mailbox_access_state', 'enabled') === 'enabled')>aktiviert</option>
+                <option value="receive_disabled" @selected(old('mailbox_access_state') === 'receive_disabled')>E-Mail-Empfang deaktiviert</option>
+                <option value="blocked" @selected(old('mailbox_access_state') === 'blocked')>gesperrt</option>
+            </select>
+        </div>
+        <div class="uk-width-1-4@m">
             <label class="uk-form-label">Quota (MB)</label>
             <input class="uk-input" type="number" min="0" step="0.1" name="quota_mb" value="{{ old('quota_mb') }}">
         </div>

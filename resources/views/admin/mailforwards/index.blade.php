@@ -66,12 +66,12 @@
                         @endif
                     </td>
                     <td class="uk-text-nowrap">{{ $f->kas_login }}</td>
-                    <td class="uk-text-nowrap">
-                        <a class="uk-button uk-button-text" href="{{ route('admin.mailforwards.edit', $f) }}">Bearbeiten</a>
-                        <form action="{{ route('admin.mailforwards.destroy', $f) }}" method="POST" style="display:inline;">
+                    <td class="uk-text-nowrap table-action-icons">
+                        <a href="{{ route('admin.mailforwards.edit', $f) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
+                        <form action="{{ route('admin.mailforwards.destroy', $f) }}" method="POST" class="table-action-form">
                             @csrf
                             @method('DELETE')
-                            <button class="uk-button uk-button-text uk-text-danger" type="submit" onclick="return confirm('Weiterleitung wirklich loeschen?')">Loeschen</button>
+                            <button class="uk-icon-button action-icon-btn action-icon-btn-danger" uk-icon="icon: trash" type="submit" title="Loeschen" onclick="return confirmDeleteTwice('Weiterleitung wirklich loeschen?', 'LOESCHEN')"></button>
                         </form>
                     </td>
                 </tr>

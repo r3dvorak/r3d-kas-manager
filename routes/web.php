@@ -144,6 +144,7 @@ Route::prefix('client')->name('client.')->middleware(['web', 'useguard:kas_clien
     Route::post('/mailboxes', [App\Http\Controllers\Client\MailboxController::class, 'store'])->name('mailboxes.store');
     Route::get('/mailboxes/{mailbox}/edit', [App\Http\Controllers\Client\MailboxController::class, 'edit'])->name('mailboxes.edit');
     Route::put('/mailboxes/{mailbox}', [App\Http\Controllers\Client\MailboxController::class, 'update'])->name('mailboxes.update');
+    Route::post('/mailboxes/{mailbox}/toggle-state', [App\Http\Controllers\Client\MailboxController::class, 'toggleState'])->name('mailboxes.toggle-state');
     Route::delete('/mailboxes/{mailbox}', [App\Http\Controllers\Client\MailboxController::class, 'destroy'])->name('mailboxes.destroy');
     Route::get('/recipes', [App\Http\Controllers\Client\RecipeController::class, 'index'])->name('recipes.index');
 });

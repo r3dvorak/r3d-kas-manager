@@ -81,6 +81,7 @@ class MailboxesController extends Controller
             'data_json' => [
                 'source' => 'admin-manual-ui',
                 'mail_spamfilter' => (string) ($validated['spamfilter'] ?? ''),
+                'mailbox_access_state' => (string) ($validated['mailbox_access_state'] ?? 'enabled'),
                 'quota_rule' => $validated['quota_mb'] === null ? null : ('max:' . ((float) $validated['quota_mb']) . 'MB'),
                 'used_mailaccount_space' => $validated['used_kb'] ?? 0,
                 'updated_at' => now()->toIso8601String(),
@@ -123,6 +124,7 @@ class MailboxesController extends Controller
             'data_json' => [
                 'source' => 'admin-manual-ui',
                 'mail_spamfilter' => (string) ($validated['spamfilter'] ?? ''),
+                'mailbox_access_state' => (string) ($validated['mailbox_access_state'] ?? 'enabled'),
                 'quota_rule' => $validated['quota_mb'] === null ? null : ('max:' . ((float) $validated['quota_mb']) . 'MB'),
                 'used_mailaccount_space' => $validated['used_kb'] ?? 0,
                 'updated_at' => now()->toIso8601String(),

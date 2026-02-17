@@ -104,7 +104,7 @@
                         <form action="{{ route('kas-clients.destroy', $client->id) }}" method="POST" class="kas-client-delete-form">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="uk-icon-button action-icon-btn action-icon-btn-danger" uk-icon="icon: trash" title="Löschen" onclick="return confirm('Wirklich löschen?')"></button>
+                            <button type="submit" class="uk-icon-button action-icon-btn action-icon-btn-danger" uk-icon="icon: trash" title="Löschen" onclick="return confirmDeleteTwice('Wirklich löschen?', 'LOESCHEN')"></button>
                         </form>
                     </td>
                 </tr>

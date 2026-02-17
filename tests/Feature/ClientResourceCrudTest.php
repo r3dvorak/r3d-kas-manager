@@ -195,4 +195,36 @@ class ClientResourceCrudTest extends TestCase
         $response = $this->delete('/client/mailboxes/' . $mailbox->id);
         $response->assertNotFound();
     }
+
+    public function test_client_can_toggle_mailbox_access_state_cycle(): void
+    {
+        $client = KasClient::create([
+            'account_login' => 'w01toggle',
+            'account_comment' => 'Toggle Client',
+            'password' => 'secret123',
+        ]);
+
+        $mailbox = KasMailAccount::create([
+            'kas_login' => 'w01toggle',
+            'mail_login' => 'info',
+            'domain' => 'toggle.test',
+            'email' => 'info@toggle.test',
+            'status' => 'active',
+            'data_json' => ['mailbox_access_state' => 'enabled'],
+        ]);
+
+        $this->actingAs($client, 'kas_client');
+
+        $this->post('/client/mailboxes/' . $mailbox->id . '/toggle-state')->assertRedirect('/client/mailboxes');
+        $mailbox->refresh();
+        $this->assertSame('receive_disabled', $mailbox->mailboxAccessState());
+
+        $this->post('/client/mailboxes/' . $mailbox->id . '/toggle-state')->assertRedirect('/client/mailboxes');
+        $mailbox->refresh();
+        $this->assertSame('blocked', $mailbox->mailboxAccessState());
+
+        $this->post('/client/mailboxes/' . $mailbox->id . '/toggle-state')->assertRedirect('/client/mailboxes');
+        $mailbox->refresh();
+        $this->assertSame('enabled', $mailbox->mailboxAccessState());
+    }
 }

@@ -176,5 +176,17 @@
     <p>© 2025 R3D Internet Dienstleistungen · <a href="#">{{ __('ui.footer.imprint') }}</a> · <a href="#">{{ __('ui.footer.privacy') }}</a></p>
 </footer>
 
+<script>
+    window.confirmDeleteTwice = function (message, keyword) {
+        if (!window.confirm(message)) {
+            return false;
+        }
+
+        var required = keyword || 'LOESCHEN';
+        var entered = window.prompt('Bitte zur Bestaetigung "' + required + '" eingeben:');
+        return entered === required;
+    };
+</script>
+
 </body>
 </html>

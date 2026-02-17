@@ -113,6 +113,7 @@ class MailboxController extends Controller
             'data_json' => [
                 'source' => 'manual-ui',
                 'mail_spamfilter' => (string) ($validated['spamfilter'] ?? ''),
+                'mailbox_access_state' => (string) ($validated['mailbox_access_state'] ?? 'enabled'),
                 'quota_rule' => $validated['quota_mb'] === null ? null : ('max:' . ((float) $validated['quota_mb']) . 'MB'),
                 'used_mailaccount_space' => $validated['used_kb'] ?? 0,
                 'updated_at' => now()->toIso8601String(),
@@ -159,6 +160,7 @@ class MailboxController extends Controller
             'data_json' => [
                 'source' => 'manual-ui',
                 'mail_spamfilter' => (string) ($validated['spamfilter'] ?? ''),
+                'mailbox_access_state' => (string) ($validated['mailbox_access_state'] ?? 'enabled'),
                 'quota_rule' => $validated['quota_mb'] === null ? null : ('max:' . ((float) $validated['quota_mb']) . 'MB'),
                 'used_mailaccount_space' => $validated['used_kb'] ?? 0,
                 'updated_at' => now()->toIso8601String(),
@@ -175,6 +177,28 @@ class MailboxController extends Controller
         $this->assertMailboxOwnership($mailbox, $kasLogin);
         $mailbox->delete();
         return redirect()->route('client.mailboxes.index')->with('success', 'Postfach geloescht.');
+    }
+
+    public function toggleState(KasMailAccount $mailbox)
+    {
+        $client = $this->currentClient();
+        $kasLogin = strtolower((string) $client->account_login);
+        $this->assertMailboxOwnership($mailbox, $kasLogin);
+
+        $json = is_array($mailbox->data_json) ? $mailbox->data_json : [];
+        $next = $mailbox->nextMailboxAccessState();
+        $json['mailbox_access_state'] = $next;
+        $json['updated_at'] = now()->toIso8601String();
+
+        $mailbox->update(['data_json' => $json]);
+
+        $label = match ($next) {
+            'receive_disabled' => 'E-Mail-Empfang deaktiviert',
+            'blocked' => 'gesperrt',
+            default => 'aktiviert',
+        };
+
+        return redirect()->route('client.mailboxes.index')->with('success', 'Postfach-Status gewechselt zu: ' . $label);
     }
 
     public function preview(MailSnapshotService $svc)

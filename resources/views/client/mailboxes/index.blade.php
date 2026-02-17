@@ -84,7 +84,7 @@
                     </tr>
                 @endif
 
-                <tr>
+                <tr class="{{ $m->mailboxAccessRowClass() }}">
                     <td style="max-width: 520px; white-space: normal;">
                         {{ $m->email }}
                     </td>
@@ -104,12 +104,21 @@
                             <div class="uk-text-muted uk-text-small">{{ number_format($mb, 0, ',', '.') }} MB</div>
                         @endif
                     </td>
-                    <td class="uk-text-nowrap uk-text-muted">
-                        <a class="uk-button uk-button-text" href="{{ route('client.mailboxes.edit', $m) }}">Bearbeiten</a>
-                        <form action="{{ route('client.mailboxes.destroy', $m) }}" method="POST" style="display:inline;">
+                    <td class="uk-text-nowrap uk-text-muted table-action-icons">
+                        <a href="{{ route('client.mailboxes.edit', $m) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
+                        <form action="{{ route('client.mailboxes.toggle-state', $m) }}" method="POST" class="table-action-form">
+                            @csrf
+                            <button
+                                class="uk-icon-button action-icon-btn mailbox-state-icon-{{ $m->mailboxAccessState() }}"
+                                type="submit"
+                                uk-icon="icon: {{ $m->mailboxAccessIcon() }}"
+                                title="Status: {{ $m->mailboxAccessLabel() }} (klicken zum Wechseln)">
+                            </button>
+                        </form>
+                        <form action="{{ route('client.mailboxes.destroy', $m) }}" method="POST" class="table-action-form">
                             @csrf
                             @method('DELETE')
-                            <button class="uk-button uk-button-text uk-text-danger" type="submit" onclick="return confirm('Postfach wirklich loeschen?')">Loeschen</button>
+                            <button class="uk-icon-button action-icon-btn action-icon-btn-danger" uk-icon="icon: trash" type="submit" title="Loeschen" onclick="return confirmDeleteTwice('Postfach wirklich loeschen?', 'LOESCHEN')"></button>
                         </form>
                     </td>
                 </tr>

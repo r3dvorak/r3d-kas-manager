@@ -321,6 +321,54 @@ nav[role="navigation"] svg,
     margin: 0;
 }
 
+.table-action-icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.table-action-icons .action-icon-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    min-height: 40px;
+}
+
+.table-action-icons .action-icon-btn svg {
+    width: 22px !important;
+    height: 22px !important;
+}
+
+.table-action-form {
+    display: inline-flex;
+    margin: 0;
+}
+
+/* Mailbox state colors */
+tr.mailbox-row-state-enabled {
+    background-color: #f2fbf4 !important;
+}
+
+tr.mailbox-row-state-receive-disabled {
+    background-color: #fff8e6 !important;
+}
+
+tr.mailbox-row-state-blocked {
+    background-color: #fdecec !important;
+}
+
+.mailbox-state-icon-enabled {
+    color: #2e7d32 !important;
+}
+
+.mailbox-state-icon-receive-disabled {
+    color: #a87400 !important;
+}
+
+.mailbox-state-icon-blocked {
+    color: #b12020 !important;
+}
+
 .nav-logo-icon {
     width: 16px;
     height: 16px;

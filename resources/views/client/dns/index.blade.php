@@ -73,12 +73,12 @@
                     <td class="uk-text-nowrap">{{ $r->record_name === '' ? '—' : $r->record_name }}</td>
                     <td style="max-width: 620px; white-space: normal; word-break: break-all; overflow-wrap: anywhere;">{{ $r->record_data }}</td>
                     <td class="uk-text-nowrap uk-text-right">{{ (int) ($r->record_aux ?? 0) }}</td>
-                    <td class="uk-text-nowrap">
-                        <a class="uk-button uk-button-text" href="{{ route('client.dns.edit', $r) }}">Bearbeiten</a>
-                        <form action="{{ route('client.dns.destroy', $r) }}" method="POST" style="display:inline;">
+                    <td class="uk-text-nowrap table-action-icons">
+                        <a href="{{ route('client.dns.edit', $r) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
+                        <form action="{{ route('client.dns.destroy', $r) }}" method="POST" class="table-action-form">
                             @csrf
                             @method('DELETE')
-                            <button class="uk-button uk-button-text uk-text-danger" type="submit" onclick="return confirm('DNS-Eintrag wirklich loeschen?')">Loeschen</button>
+                            <button class="uk-icon-button action-icon-btn action-icon-btn-danger" uk-icon="icon: trash" type="submit" title="Loeschen" onclick="return confirmDeleteTwice('DNS-Eintrag wirklich loeschen?', 'LOESCHEN')"></button>
                         </form>
                     </td>
                 </tr>
