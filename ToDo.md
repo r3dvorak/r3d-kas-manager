@@ -139,41 +139,61 @@
 - [x] Gemischte Sprache in Views bereinigen (DE/EN konsistent pro Locale).
 - [x] Deutsche Texte mit korrekten Umlauten/Sonderzeichen schreiben (z. B. `Änderungen Prüfung`).
 
-## Nächste ToDos (Rezepte / Automationen)
+## Nächste ToDos (Rezepte / Automationen - Admin First)
 
-### Recipe-Grundmodell
-- [ ] Tabellen für `recipes`, `recipe_steps`, `recipe_runs`, `recipe_run_items` anlegen.
-- [ ] Recipe-Statusmodell definieren (`draft`, `active`, `archived`).
-- [ ] Run-Statusmodell definieren (`pending`, `running`, `success`, `partial`, `failed`, `cancelled`).
-- [ ] Basis-UI für Recipe-Liste + Detailansicht erstellen.
+### Rollenmodell (klar getrennt)
+- [ ] Rechte-Matrix final festlegen: `Admin` (voll), `Client` (eingeschränkt).
+- [ ] Admin darf Rezepte erstellen, importieren, exportieren, ausführen und global speichern.
+- [ ] Client darf nur freigegebene Rezepte sehen/ausführen (kein globales Erstellen/Löschen).
+- [ ] Kritische Aktionen nur Admin: Account-Neuanlage, Ressourcen-Limits, SSL-Policy, DB-/FTP-Massenanlage.
 
-### Batch-Aufträge (MVP)
-- [ ] Selektionslogik für Zielobjekte (Domains, Subdomains, Mailboxen, Mailforwards, DNS) bauen.
-- [ ] Dry-Run/Preview mit Diff vor Ausführung umsetzen.
-- [ ] Idempotente Handler pro Aktionstyp einführen (`dns.upsert`, `mailforward.create`, `mailbox.update` ...).
-- [ ] Ausführung mit Einzel-Fehlerbehandlung pro Item (kein Totalabbruch) umsetzen.
+### Admin Recipe Phase 1 (Start)
+- [ ] Admin-Recipe-CRUD als zentrale Oberfläche aufbauen (Liste, Detail, Version, Status).
+- [ ] Step-basierte Definition mit Reihenfolge und Validierung bereitstellen.
+- [ ] Dry-Run/Preview (Diff) vor Ausführung verpflichtend machen.
+- [ ] Run-Historie mit Ergebnis pro Schritt anzeigen.
 
-### CSV-Import
-- [ ] Upload + Parsing mit Header-Validierung bauen.
-- [ ] Vorlagen je Typ definieren (DNS, Mailforward, Mailbox, Domain).
-- [ ] Import-Preview mit Fehlerliste und Zeilenbezug umsetzen.
-- [ ] Import als Recipe-Run speichern und ausführen.
+### Admin-Onboarding-Wizard (neues Konto / neue Umgebung)
+- [ ] Wizard für "neues Konto bereitstellen" erstellen (mehrstufig).
+- [ ] Eingaben: Hauptdomain, weitere Domains, SSL ja/nein, PHP-Default, Anzahl Mailboxen, Anzahl Weiterleitungen, Anzahl Datenbanken.
+- [ ] Für Mailboxen/Weiterleitungen Eingabe-Schema für Prefix (`vor dem @`) unterstützen.
+- [ ] Ergebnisseite mit allen erzeugten Zugangsdaten (nur einmal sichtbar + Download) bereitstellen.
+- [ ] Optional: sofortige Ausführung oder als Recipe-Entwurf speichern.
 
-### Recipe Export / Import
-- [ ] Exportformat `recipe-package.json` definieren (`schema_version`, `meta`, `steps`, `mappings`).
-- [ ] Rezept als JSON exportieren (inkl. Filter, Aktionen, Standardwerte).
-- [ ] Rezept aus JSON importieren (Validierung + Kompatibilitätsprüfung per `schema_version`).
-- [ ] Konfliktstrategie beim Import implementieren (`create_new`, `replace`, `skip_existing`).
-- [ ] Optional ZIP-Paket für mehrere Rezepte (`recipes.zip`) unterstützen.
+### Defaults & Policy-Engine
+- [ ] Globale Default-Parameter in Admin-Einstellungen pflegbar machen.
+- [ ] Passwort-Defaults (Länge, Zeichensatz, Sonderzeichenpflicht, Rotation) definieren.
+- [ ] Default-Werte für PHP-Version, SSL-Standard, DNS-Basis-Records, Mailbox-Quota definieren.
+- [ ] Pro Client überschreibbare Defaults unterstützen (Fallback auf global).
+- [ ] "all-inkl kompatible" sinnvolle Standardprofile als Presets hinterlegen.
+
+### Geheimnisse / Zugangsdaten
+- [ ] Generierte Passwörter nur verschlüsselt speichern oder als einmaliges Secret ausgeben.
+- [ ] Klartext-Ausgabe nur im Run-Result direkt nach Erstellung + expliziter Hinweis.
+- [ ] Secret-Export optional als verschlüsselte Datei (`.json.enc`) bereitstellen.
+- [ ] Audit-Log ohne Klartext-Passwörter sicherstellen.
+
+### Import / Export (Admin)
+- [ ] `recipe-package.json` Schema finalisieren (`schema_version`, `meta`, `steps`, `defaults`, `permissions`).
+- [ ] JSON-Import mit Validierung und Konfliktstrategie (`create_new`, `replace`, `skip_existing`).
+- [ ] CSV-Import für Massenaufgaben: DNS, Mailforwards, Mailboxen, Domains.
+- [ ] CSV-Preview mit Zeilenfehlern und Korrekturhinweisen.
+- [ ] Export von Rezepten inkl. Versionsmetadaten und Prüfsumme.
+
+### Client Recipes (eingeschränkt)
+- [ ] Client sieht nur vom Admin freigegebene Recipe-Templates.
+- [ ] Client darf nur erlaubte Parameter setzen (Whitelisting).
+- [ ] Client darf nur auf eigene Ressourcen ausführen (harte Tenant-Prüfung).
+- [ ] Keine Ausgabe sensitiver Zugangsdaten aus Admin-only Aktionen im Client-Kontext.
 
 ### Sicherheit / Governance
-- [ ] Rechte für Recipe-CRUD und Recipe-Run pro Rolle trennen (Admin/Client).
-- [ ] Audit-Log pro Run und pro Item speichern (wer, wann, was, Ergebnis).
-- [ ] Rate-Limits für große Imports und parallele Runs setzen.
-- [ ] Schutz gegen gefährliche Massenaktionen (Bestätigungsdialog + 2. Bestätigung).
+- [ ] Run-Freigaben für kritische Rezepte (4-Augen optional) vorbereiten.
+- [ ] Rate-Limits und Queue-Limits für große Massenjobs setzen.
+- [ ] Idempotenz pro Step (`external_ref` / `dedupe_key`) erzwingen.
+- [ ] Vollständiges Audit: wer, wann, welche Parameter, welche Änderungen.
 
 ### UX / Betrieb
-- [ ] Fortschrittsanzeige pro Run (gesamt + pro Schritt) in der UI.
-- [ ] Wiederholbare fehlgeschlagene Items (`retry failed only`) ermöglichen.
-- [ ] Downloadbare Run-Reports (`csv/json`) bereitstellen.
-- [ ] Rezepte als Templates klonbar machen.
+- [ ] Fortschrittsanzeige pro Run (gesamt + pro Step + pro Item).
+- [ ] Wiederanlauf fehlgeschlagener Items (`retry failed only`).
+- [ ] Downloadbare Run-Reports (`csv/json`) mit Fehlergruppen.
+- [ ] Wizard- und Import-Tests als feste Abnahme-Checkliste ergänzen.
