@@ -28,7 +28,7 @@
         <button class="uk-button uk-button-primary" type="submit">Filter</button>
     </div>
     <div class="uk-width-auto@m">
-        <a class="uk-button uk-button-default" href="{{ route('admin.mailboxes.create') }}">Neu</a>
+        <a class="uk-button uk-button-default" href="{{ route('admin.mailboxes.create') }}">NEU</a>
     </div>
     <div class="uk-width-auto@m">
         @if($kasLogin)

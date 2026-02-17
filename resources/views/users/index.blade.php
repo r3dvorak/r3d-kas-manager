@@ -36,7 +36,7 @@
                 <option value="duplicate">Duplizieren</option>
             </select>
             <button type="submit" class="uk-button uk-button-primary uk-margin-small-left">Anwenden</button>
-            <a href="{{ route('users.create') }}" class="uk-button uk-button-secondary uk-margin-small-left">Neu</a>
+            <a href="{{ route('users.create') }}" class="uk-button uk-button-secondary uk-margin-small-left">NEU</a>
         </div>
 
         <table class="uk-table uk-table-divider uk-table-small uk-table-hover">

@@ -24,7 +24,7 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
-            <a class="uk-button uk-button-primary" href="{{ route_w('client.mailboxes.create') }}">Neues Postfach</a>
+            <a class="uk-button uk-button-primary" href="{{ route_w('client.mailboxes.create') }}">NEU</a>
         </div>
         <div>
             <a class="uk-button uk-button-default" href="{{ route_w('client.mailboxes.preview') }}"><span uk-icon="refresh" class="uk-margin-small-right"></span>Änderungen Prüfung (KAS vs DB)</a>
