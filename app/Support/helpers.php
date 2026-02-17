@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.10-alpha
+ * @version   0.28.14-alpha
  * @date      2026-02-17
  * @license   MIT License
  */
@@ -15,10 +15,14 @@ if (!function_exists('route_w')) {
     /**
      * Build a route URL and automatically propagate the current workspace key.
      *
-     * @param array<string,mixed> $parameters
+     * @param mixed $parameters
      */
-    function route_w(string $name, array $parameters = [], bool $absolute = true): string
+    function route_w(string $name, $parameters = [], bool $absolute = true): string
     {
+        if (!is_array($parameters)) {
+            $parameters = [$parameters];
+        }
+
         $workspace = app()->bound('workspace.key')
             ? (string) app('workspace.key')
             : (string) request()->attributes->get('workspace', request()->query('w', ''));

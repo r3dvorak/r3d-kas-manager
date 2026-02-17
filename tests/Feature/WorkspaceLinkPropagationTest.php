@@ -42,6 +42,22 @@ class WorkspaceLinkPropagationTest extends TestCase
         $response->assertRedirect('/login?w=' . $workspace);
     }
 
+    public function test_route_w_accepts_scalar_parameters_and_keeps_workspace(): void
+    {
+        Route::middleware('web')->get('/_workspace_routew_scalar_probe', function () {
+            return response()->json([
+                'edit_url' => route_w('client.mailboxes.edit', 123),
+            ]);
+        });
+
+        $workspace = str_repeat('d', 40);
+        $response = $this->get('/_workspace_routew_scalar_probe?w=' . $workspace);
+        $response->assertOk();
+
+        $url = (string) $response->json('edit_url');
+        $this->assertStringContainsString('/client/mailboxes/123/edit?w=' . $workspace, $url);
+    }
+
     public function test_logout_redirect_keeps_workspace_context(): void
     {
         $user = User::create([

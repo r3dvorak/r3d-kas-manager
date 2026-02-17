@@ -19,6 +19,9 @@
     </div>
     <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
         <div>
+            <a class="uk-button uk-button-secondary" href="{{ route_w('client.launch.create', ['tool' => 'pma']) }}" target="_blank" rel="noopener noreferrer">phpMyAdmin</a>
+        </div>
+        <div>
             <a class="uk-button uk-button-default" href="{{ route_w('client.databases.preview') }}">Pruefung (KAS vs DB)</a>
         </div>
         <div>
@@ -66,4 +69,3 @@
     {{ $databases->links() }}
 </div>
 @endsection
-
