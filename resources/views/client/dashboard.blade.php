@@ -23,26 +23,41 @@
     $serverHostname = (string) ($client?->server_hostname ?? '');
     $serverIp = (string) ($client?->server_ip ?? '');
     $rootPath = $kasLogin !== '' ? "/www/htdocs/{$kasLogin}/" : '—';
-@endphp
+    $clientId = (int) ($client?->id ?? 0);
 
-@php($domainsCount = \App\Models\KasDomain::where('kas_client_id', $client?->id)->whereNull('deleted_at')->count())
-@php($subdomainsCount = \App\Models\KasSubdomain::where('kas_client_id', $client?->id)->whereNull('deleted_at')->count())
-@php($mailboxesCount = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->count())
-@php($forwardsCount = \App\Models\KasMailForward::where('kas_login', $kasLogin)->where('status', 'active')->count())
+    $domainsCount = 0;
+    $subdomainsCount = 0;
+    $mailboxesCount = 0;
+    $forwardsCount = 0;
+    $maxDomains = (int) ($client?->max_domain ?? 0);
+    $maxSubdomains = (int) ($client?->max_subdomain ?? 0);
+    $maxMailboxes = (int) ($client?->max_mail_account ?? 0);
+    $maxForwards = (int) ($client?->max_mail_forward ?? 0);
+    $maxWebspaceMb = (float) ($client?->max_webspace ?? 0);
+    $usedWebspaceGbFromStats = ($client && method_exists($client, 'usedSpaceGb')) ? (float) $client->usedSpaceGb() : 0.0;
+    $mailboxesUsedMb = 0.0;
+    $usedWebspaceGbFromMailboxes = 0.0;
+    $usedWebspaceGb = 0.0;
+    $usedWebspaceSource = '—';
+    $maxWebspaceGb = $maxWebspaceMb > 0 ? round($maxWebspaceMb / 1024, 2) : 0.0;
+    $freeWebspaceGb = 0.0;
 
-@php($maxDomains = (int) ($client?->max_domain ?? 0))
-@php($maxSubdomains = (int) ($client?->max_subdomain ?? 0))
-@php($maxMailboxes = (int) ($client?->max_mail_account ?? 0))
-@php($maxForwards = (int) ($client?->max_mail_forward ?? 0))
-@php($maxWebspaceMb = (float) ($client?->max_webspace ?? 0))
-@php($usedWebspaceGbFromStats = ($client && method_exists($client, 'usedSpaceGb')) ? (float) $client->usedSpaceGb() : 0.0)
-@php($mailboxesUsedMb = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->get()->sum(fn($m) => (float)($m->usedSpaceMb() ?? 0)))
-@php($usedWebspaceGbFromMailboxes = $mailboxesUsedMb > 0 ? round($mailboxesUsedMb / 1024, 2) : 0.0)
-@php($usedWebspaceGb = $usedWebspaceGbFromStats > 0 ? $usedWebspaceGbFromStats : $usedWebspaceGbFromMailboxes)
-@php($usedWebspaceSource = $usedWebspaceGbFromStats > 0 ? 'KAS get_space' : ($usedWebspaceGbFromMailboxes > 0 ? 'Summe Postfaecher (DB)' : '—'))
-@php($maxWebspaceGb = $maxWebspaceMb > 0 ? round($maxWebspaceMb / 1024, 2) : 0.0)
-@php($freeWebspaceGb = ($maxWebspaceGb > 0) ? max(0.0, round($maxWebspaceGb - $usedWebspaceGb, 2)) : 0.0)
-@php
+    if ($clientId > 0) {
+        $domainsCount = \App\Models\KasDomain::where('kas_client_id', $clientId)->whereNull('deleted_at')->count();
+        $subdomainsCount = \App\Models\KasSubdomain::where('kas_client_id', $clientId)->whereNull('deleted_at')->count();
+    }
+
+    if ($kasLogin !== '') {
+        $mailboxesCount = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->count();
+        $forwardsCount = \App\Models\KasMailForward::where('kas_login', $kasLogin)->where('status', 'active')->count();
+        $mailboxesUsedMb = \App\Models\KasMailAccount::where('kas_login', $kasLogin)->where('status', 'active')->get()->sum(fn($m) => (float)($m->usedSpaceMb() ?? 0));
+    }
+
+    $usedWebspaceGbFromMailboxes = $mailboxesUsedMb > 0 ? round($mailboxesUsedMb / 1024, 2) : 0.0;
+    $usedWebspaceGb = $usedWebspaceGbFromStats > 0 ? $usedWebspaceGbFromStats : $usedWebspaceGbFromMailboxes;
+    $usedWebspaceSource = $usedWebspaceGbFromStats > 0 ? 'KAS get_space' : ($usedWebspaceGbFromMailboxes > 0 ? 'Summe Postfaecher (DB)' : '—');
+    $freeWebspaceGb = ($maxWebspaceGb > 0) ? max(0.0, round($maxWebspaceGb - $usedWebspaceGb, 2)) : 0.0;
+
     $latestSpaceReport = \App\Models\KasSpaceReport::where('kas_login', $kasLogin)->orderByDesc('measured_at')->first();
     $lastSpaceReportAt = $latestSpaceReport?->measured_at;
 
