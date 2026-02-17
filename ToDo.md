@@ -91,19 +91,19 @@
 - [x] Datenbankmigrationen finalisieren
 
 ### Phase 8 - Abnahme
-- [ ] E2E-Checkliste komplett gruen
-- [ ] Manuelle Browsertests (Firefox/Chrome, normal + privat)
-- [ ] Dokumentation aktualisieren (`README.md`)
-- [ ] Release Notes + Betriebsanleitung
+- [x] E2E-Checkliste komplett gruen
+- [x] Manuelle Browsertests (Firefox/Chrome, normal + privat)
+- [x] Dokumentation aktualisieren (`README.md`)
+- [x] Release Notes + Betriebsanleitung
 
 ## Test-Checkliste (Abnahme)
-- [ ] Tab A als Admin angemeldet, Tab B bleibt neutraler Login bis Login erfolgt.
-- [ ] Tab B als Client B, Tab C als Client C, beide zeigen unterschiedliche Daten stabil.
-- [ ] Wechsel in Tab B darf Tab C nicht beeinflussen.
-- [ ] Admin in Tab A bleibt Admin, wenn in anderem Tab Client-Login stattfindet.
-- [ ] Impersonation oeffnet neuen Tab mit isoliertem Kontext.
-- [ ] Logout in einem Tab beendet nicht alle anderen Tabs (nur aktueller Workspace).
-- [ ] Spracheinstellung bleibt pro Workspace konsistent.
+- [x] Tab A als Admin angemeldet, Tab B bleibt neutraler Login bis Login erfolgt.
+- [x] Tab B als Client B, Tab C als Client C, beide zeigen unterschiedliche Daten stabil.
+- [x] Wechsel in Tab B darf Tab C nicht beeinflussen.
+- [x] Admin in Tab A bleibt Admin, wenn in anderem Tab Client-Login stattfindet.
+- [x] Impersonation oeffnet neuen Tab mit isoliertem Kontext.
+- [x] Logout in einem Tab beendet nicht alle anderen Tabs (nur aktueller Workspace).
+- [x] Spracheinstellung bleibt pro Workspace konsistent.
 
 ## Offene Entscheidungen
 - [x] Query-Parameter vs. Path-basiert fuer Workspace

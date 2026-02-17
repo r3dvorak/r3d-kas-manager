@@ -58,6 +58,34 @@ php artisan recipe:run 1 --domain=r3d.de --account=w01e77bc --dry
 3. Existing sessions continue with legacy cookie behavior; users can re-login if needed.
 4. Keep cleanup schedule active (`workspace:cleanup`) to purge stale workspace launch/impersonation artifacts.
 
+## Workspace Operations Guide
+
+### Acceptance / Smoke Test (Phase 8)
+1. Open `https://<host>/login?w=<A40HEX>` and login as Admin.
+2. Open a second tab with `https://<host>/login?w=<B40HEX>` and login as Client B.
+3. Open a third tab with `https://<host>/login?w=<C40HEX>` and login as Client C.
+4. Verify each tab keeps its own role/data after navigation and redirects.
+5. Verify logout in one workspace does not terminate other workspaces.
+6. Verify language switch keeps the same `w` and remains isolated per workspace.
+
+### Browser Matrix (manual)
+- Firefox normal profile: pass
+- Firefox private profile: pass
+- Chrome/Brave normal profile: pass
+- Chrome/Brave private profile: pass
+
+### Runbook Commands
+```bash
+php artisan test
+php artisan workspace:cleanup --hours=24
+php artisan schedule:run
+```
+
+### Troubleshooting
+- `419 Page Expired`: URL lost `?w=...` or stale CSRF token; reload current workspace URL and retry.
+- `Size of a request header field exceeds server limit`: too many workspace cookies; run cleanup/logout-all and restart browser session.
+- Legacy link without `w`: app should canonicalize/recover `w`; if disabled, check `WORKSPACE_ISOLATION_ENABLED`.
+
 ## 📜 License
 
 This project is licensed under the **MIT License**.  
@@ -70,4 +98,3 @@ Copyright (c) 2025 Richard Dvořák, R3D Internet Dienstleistungen
 ## 🧩 Attribution
 
 Built with [Laravel](https://laravel.com) — an open-source PHP framework licensed under the [MIT License](https://opensource.org/licenses/MIT).
-
