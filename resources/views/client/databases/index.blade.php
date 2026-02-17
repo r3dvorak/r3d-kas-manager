@@ -56,7 +56,15 @@
                     <td style="max-width: 360px; white-space: normal;">{{ $db->database_comment ?: '—' }}</td>
                     <td style="max-width: 520px; white-space: normal;">{{ $db->database_allowed_hosts ?: '—' }}</td>
                     <td class="uk-text-nowrap uk-text-muted table-action-icons">
-                        <a href="{{ route_w('client.launch.create', ['tool' => 'pma', 'database' => $db->id]) }}" target="_blank" rel="noopener noreferrer" class="uk-icon-button action-icon-btn" uk-icon="icon: sign-in" title="phpMyAdmin"></a>
+                        <a href="{{ route_w('client.launch.create', ['tool' => 'pma', 'database' => $db->id]) }}"
+                           class="uk-icon-button action-icon-btn"
+                           uk-icon="icon: sign-in"
+                           title="phpMyAdmin"
+                           data-launch-url="{{ route_w('client.launch.create', ['tool' => 'pma', 'database' => $db->id]) }}"
+                           data-launch-tool="phpMyAdmin"
+                           data-launch-login="{{ $db->database_login }}"
+                           data-launch-target="{{ $db->database_login }}"
+                           onclick="return openExternalLaunchModal(event, this);"></a>
                     </td>
                 </tr>
             @empty

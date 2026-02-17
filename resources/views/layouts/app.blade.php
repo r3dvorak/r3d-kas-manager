@@ -222,6 +222,36 @@
     </div>
 </main>
 
+@if(!$isLoginPage)
+<div id="external-launch-modal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h3 class="uk-modal-title" id="external-launch-title">Externen Dienst oeffnen</h3>
+        <p class="uk-text-small uk-text-muted" id="external-launch-target">Bitte Zugangsdaten pruefen, dann in neuem Tab oeffnen.</p>
+
+        <div class="uk-margin">
+            <label class="uk-form-label">Loginname</label>
+            <div class="uk-flex uk-flex-middle uk-grid-small" uk-grid>
+                <div class="uk-width-expand">
+                    <input id="external-launch-login" class="uk-input" type="text" readonly>
+                </div>
+                <div class="uk-width-auto">
+                    <button id="external-launch-copy" class="uk-button uk-button-default" type="button">Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="uk-text-small uk-text-muted uk-margin-bottom">
+            Das Passwort wird aus Sicherheitsgruenden nicht uebergeben. Nutzen Sie Browser-/Passwortmanager-Autofill.
+        </div>
+
+        <div class="uk-flex uk-flex-right uk-grid-small" uk-grid>
+            <div><button class="uk-button uk-button-default uk-modal-close" type="button">Abbrechen</button></div>
+            <div><button id="external-launch-open" class="uk-button uk-button-primary" type="button">Oeffnen</button></div>
+        </div>
+    </div>
+</div>
+@endif
+
 <footer class="uk-background-muted uk-padding-small" style="padding-left:45px; padding-right:45px;">
     @if($isLoginPage)
         <div class="uk-flex uk-flex-between uk-flex-middle uk-text-small">
@@ -247,6 +277,69 @@
         var required = keyword || 'LOESCHEN';
         var entered = window.prompt('Bitte zur Bestaetigung "' + required + '" eingeben:');
         return entered === required;
+    };
+
+    window.openExternalLaunchModal = function (event, trigger) {
+        if (event) {
+            event.preventDefault();
+        }
+
+        if (!trigger || typeof UIkit === 'undefined') {
+            return true;
+        }
+
+        var launchUrl = trigger.getAttribute('data-launch-url') || trigger.getAttribute('href');
+        var tool = trigger.getAttribute('data-launch-tool') || 'Externer Dienst';
+        var login = trigger.getAttribute('data-launch-login') || '';
+        var target = trigger.getAttribute('data-launch-target') || '';
+
+        var title = document.getElementById('external-launch-title');
+        var targetText = document.getElementById('external-launch-target');
+        var loginInput = document.getElementById('external-launch-login');
+        var openBtn = document.getElementById('external-launch-open');
+        var copyBtn = document.getElementById('external-launch-copy');
+
+        if (!title || !targetText || !loginInput || !openBtn || !copyBtn) {
+            return true;
+        }
+
+        title.textContent = tool + ' oeffnen';
+        targetText.textContent = target !== '' ? ('Ziel: ' + target) : 'Bitte Zugangsdaten pruefen, dann in neuem Tab oeffnen.';
+        loginInput.value = login;
+        openBtn.setAttribute('data-launch-url', launchUrl || '');
+
+        copyBtn.onclick = function () {
+            var value = loginInput.value || '';
+            if (value === '') {
+                return;
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(value).then(function () {
+                    copyBtn.textContent = 'Kopiert';
+                    setTimeout(function () { copyBtn.textContent = 'Kopieren'; }, 1000);
+                });
+                return;
+            }
+
+            loginInput.focus();
+            loginInput.select();
+            document.execCommand('copy');
+            copyBtn.textContent = 'Kopiert';
+            setTimeout(function () { copyBtn.textContent = 'Kopieren'; }, 1000);
+        };
+
+        openBtn.onclick = function () {
+            var url = openBtn.getAttribute('data-launch-url');
+            if (!url) {
+                return;
+            }
+            window.open(url, '_blank', 'noopener');
+            UIkit.modal('#external-launch-modal').hide();
+        };
+
+        UIkit.modal('#external-launch-modal').show();
+        return false;
     };
 </script>
 
