@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.12-alpha
+ * @version   0.28.20-alpha
  * @date      2026-02-17
  * @license   MIT License
  *
@@ -29,6 +29,12 @@ class ResolveWorkspace
 
     public function handle(Request $request, Closure $next)
     {
+        if (!workspace_isolation_enabled()) {
+            $request->attributes->set('workspace', null);
+            View::share('workspaceKey', null);
+            return $next($request);
+        }
+
         $provided = (string) $request->query(self::QUERY_KEY, '');
         $normalized = strtolower(trim($provided));
         $isValid = $this->isValidWorkspace($normalized);
@@ -41,10 +47,15 @@ class ResolveWorkspace
         if ($isValid) {
             $workspace = $normalized;
         } else {
+            $fromReferer = $this->workspaceFromReferer($request);
+            if ($fromReferer !== null && $isAuthenticated) {
+                $workspace = $fromReferer;
+            }
+
             $fromCookieConfig = $this->workspaceFromConfiguredCookie();
-            if ($fromCookieConfig !== null) {
+            if ($workspace === null && $fromCookieConfig !== null) {
                 $workspace = $fromCookieConfig;
-            } elseif ($isSafeMethod && $isLoginRoute && !$isAuthenticated) {
+            } elseif ($workspace === null && $isSafeMethod && $isLoginRoute && !$isAuthenticated) {
                 $workspace = self::generateWorkspaceKey();
             }
         }
@@ -61,13 +72,20 @@ class ResolveWorkspace
 
         // Canonicalize GET/HEAD URLs so workspace context remains visible.
         $needsCanonicalRedirect = $isSafeMethod
-            && $isLoginRoute
             && !$isAuthenticated
             && is_string($workspace)
             && $workspace !== ''
+            && $isLoginRoute
             && ($provided === '' || $normalized !== $provided || !$isValid);
 
-        if ($needsCanonicalRedirect) {
+        $needsLegacyRedirect = $isSafeMethod
+            && $isAuthenticated
+            && !$isLoginRoute
+            && is_string($workspace)
+            && $workspace !== ''
+            && ($provided === '' || $normalized !== $workspace);
+
+        if ($needsCanonicalRedirect || $needsLegacyRedirect) {
             $query = $request->query();
             $query[self::QUERY_KEY] = $workspace;
 
@@ -104,6 +122,23 @@ class ResolveWorkspace
         }
 
         $workspace = strtolower(substr($cookie, strlen($prefix)));
+        return self::isValidWorkspace($workspace) ? $workspace : null;
+    }
+
+    private function workspaceFromReferer(Request $request): ?string
+    {
+        $referer = (string) $request->headers->get('referer', '');
+        if ($referer === '') {
+            return null;
+        }
+
+        $parts = parse_url($referer);
+        if (!is_array($parts) || (($parts['host'] ?? null) !== $request->getHost())) {
+            return null;
+        }
+
+        parse_str((string) ($parts['query'] ?? ''), $query);
+        $workspace = strtolower((string) ($query[self::QUERY_KEY] ?? ''));
         return self::isValidWorkspace($workspace) ? $workspace : null;
     }
 }

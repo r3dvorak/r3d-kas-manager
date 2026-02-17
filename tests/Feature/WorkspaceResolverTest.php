@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
@@ -79,5 +81,38 @@ class WorkspaceResolverTest extends TestCase
             ->all();
 
         $this->assertSame([], $sessionCookieNames);
+    }
+
+    public function test_login_without_workspace_does_not_redirect_when_feature_flag_disabled(): void
+    {
+        config(['r3d.workspace_isolation_enabled' => false]);
+
+        $response = $this->get('/login');
+        $response->assertOk();
+    }
+
+    public function test_legacy_link_without_workspace_recovers_workspace_from_same_host_referer_for_authenticated_user(): void
+    {
+        Route::middleware('web')->get('/_legacy_workspace_probe', function (Request $request) {
+            return response()->json([
+                'workspace' => $request->attributes->get('workspace'),
+            ]);
+        });
+
+        $user = User::create([
+            'name' => 'Admin Legacy',
+            'login' => 'admin_legacy',
+            'email' => 'admin_legacy@example.test',
+            'password' => Hash::make('secret123'),
+            'role' => 'admin',
+            'is_admin' => 1,
+        ]);
+
+        $workspace = str_repeat('c', 40);
+        $response = $this->actingAs($user, 'web')
+            ->withHeader('referer', 'https://r3d-kas-manager.test/client/dashboard?w=' . $workspace)
+            ->get('/_legacy_workspace_probe');
+
+        $response->assertRedirect('/_legacy_workspace_probe?w=' . $workspace);
     }
 }

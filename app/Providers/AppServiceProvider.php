@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.28.19-alpha
+ * @version   0.28.20-alpha
  * @date      2025-09-26
  * 
  * @copyright (C) 2025 Richard Dvořák
@@ -43,6 +43,7 @@ class AppServiceProvider extends ServiceProvider
         // Always provide a safe default, then override from DB when available.
         config([
             'r3d.session_timeout' => 30,
+            'r3d.workspace_isolation_enabled' => filter_var((string) env('WORKSPACE_ISOLATION_ENABLED', 'true'), FILTER_VALIDATE_BOOL),
         ]);
 
         try {

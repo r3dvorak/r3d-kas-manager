@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.28.10-alpha
+ * @version   0.28.20-alpha
  * @date      2026-02-17
  * @license   MIT License
  */
@@ -20,6 +20,11 @@ class AppendWorkspaceToRedirects
     public function handle(Request $request, Closure $next)
     {
         $response = $next($request);
+
+        if (!workspace_isolation_enabled()) {
+            return $response;
+        }
+
         $workspace = (string) ($request->attributes->get('workspace') ?? $request->query('w', ''));
 
         if (!$response instanceof RedirectResponse || !ResolveWorkspace::isValidWorkspace($workspace)) {

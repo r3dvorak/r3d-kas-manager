@@ -85,10 +85,10 @@
 - [x] Observability (Logs/Debug-Infos)
 
 ### Phase 7 - Migration & Backward Compatibility
-- [ ] Legacy-Links ohne `w` behandeln
-- [ ] Soft-Rollout mit Feature-Flag
-- [ ] Rueckfallstrategie dokumentieren
-- [ ] Datenbankmigrationen finalisieren
+- [x] Legacy-Links ohne `w` behandeln
+- [x] Soft-Rollout mit Feature-Flag
+- [x] Rueckfallstrategie dokumentieren
+- [x] Datenbankmigrationen finalisieren
 
 ### Phase 8 - Abnahme
 - [ ] E2E-Checkliste komplett gruen

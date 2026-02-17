@@ -84,7 +84,7 @@ class ExternalLaunchTokenFlowTest extends TestCase
             'expires_at' => now()->subMinute(),
         ]);
 
-        $consume = $this->get('/launch/' . $token);
+        $consume = $this->get('/launch/' . $token . '?w=' . str_repeat('a', 40));
         $consume->assertForbidden();
     }
 

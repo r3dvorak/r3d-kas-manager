@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák
- * @version   0.28.0-alpha
+ * @version   0.28.20-alpha
  * @date      2025-10-05
  * @license   MIT License
  * 
@@ -33,7 +33,7 @@ class UseGuardSession
     {
         $workspace = strtolower((string) ($request->attributes->get('workspace') ?? $request->query('w', '')));
 
-        if (\App\Http\Middleware\ResolveWorkspace::isValidWorkspace($workspace)) {
+        if (workspace_isolation_enabled() && \App\Http\Middleware\ResolveWorkspace::isValidWorkspace($workspace)) {
             $base = (string) env('SESSION_COOKIE_WORKSPACE', Str::slug((string) env('APP_NAME', 'laravel'), '_') . '_workspace_session');
             config(['session.cookie' => $base . '_' . $workspace]);
         } else {
