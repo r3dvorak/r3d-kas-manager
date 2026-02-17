@@ -19,6 +19,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 
 class ResolveWorkspace
@@ -40,6 +41,7 @@ class ResolveWorkspace
         $request->attributes->set('workspace', $workspace);
         app()->instance('workspace.key', $workspace);
         View::share('workspaceKey', $workspace);
+        URL::defaults([self::QUERY_KEY => $workspace]);
 
         // Canonicalize GET/HEAD URLs so workspace context remains visible.
         $isSafeMethod = in_array($request->method(), ['GET', 'HEAD'], true);

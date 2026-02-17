@@ -21,6 +21,10 @@
         $activeClass = static fn (array $patterns): string => request()->routeIs(...$patterns) ? 'nav-link-active' : '';
         $clientMenuEnabled = static fn (string $key): bool => $clientUser?->hasClientMenuItem($key) ?? false;
         $locale = app()->getLocale();
+        $workspaceQuery = is_string($workspaceKey ?? null) ? $workspaceKey : (string) request()->query('w', '');
+        $routeW = static function (string $name, array $params = []) use ($workspaceQuery): string {
+            return route($name, $workspaceQuery !== '' ? array_merge($params, ['w' => $workspaceQuery]) : $params);
+        };
     @endphp
     <title>{{ $mode ? $mode . ' | ' : '' }}RIIID KAS Manager</title>
 
@@ -66,7 +70,7 @@
 
                     {{-- Back to Admin --}}
                     @if(session('impersonate') && Auth::guard('kas_client')->check())
-                        <form action="{{ route('kas-clients.impersonate.leave') }}" method="POST" class="uk-display-inline">
+                        <form action="{{ $routeW('kas-clients.impersonate.leave') }}" method="POST" class="uk-display-inline">
                             @csrf
                             <button type="submit" class="uk-button uk-button-danger uk-button-small uk-margin-small-right">
                                 ← {{ __('ui.common.back_to_admin') }}
@@ -75,7 +79,7 @@
                     @endif
 
                     {{-- Logout --}}
-                    <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                    <form action="{{ $routeW('logout') }}" method="POST" style="display:inline;">
                         @csrf
                         <button type="submit" class="uk-button uk-button-text">{{ __('ui.common.logout') }}</button>
                     </form>
@@ -99,38 +103,38 @@
             <div class="uk-offcanvas-bar">
                 <ul class="uk-nav uk-nav-default">
                     @if(Auth::guard('kas_client')->check())
-                        @if($clientMenuEnabled('dashboard'))<li><a href="{{ route('client.dashboard') }}" class="{{ $activeClass(['client.dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.dashboard') }}</a></li>@endif
-                        @if($clientMenuEnabled('domain'))<li><a href="{{ route('client.domains.index') }}" class="{{ $activeClass(['client.domains.*']) }}"><span uk-icon="world" class="uk-margin-small-right"></span>{{ __('ui.nav.domain') }}</a></li>@endif
-                        @if($clientMenuEnabled('subdomain'))<li><a href="{{ route('client.subdomains.index') }}" class="{{ $activeClass(['client.subdomains.*']) }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.subdomain') }}</a></li>@endif
-                        @if($clientMenuEnabled('mailboxes'))<li><a href="{{ route('client.mailboxes.index') }}" class="{{ $activeClass(['client.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>@endif
-                        @if($clientMenuEnabled('mailforwards'))<li><a href="{{ route('client.mailforwards.index') }}" class="{{ $activeClass(['client.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>@endif
-                        @if($clientMenuEnabled('ftp'))<li><a href="{{ route('client.ftp.index') }}" class="{{ $activeClass(['client.ftp.*']) }}"><span uk-icon="folder" class="uk-margin-small-right"></span>{{ __('ui.nav.ftp') }}</a></li>@endif
-                        @if($clientMenuEnabled('databases'))<li><a href="{{ route('client.databases.index') }}" class="{{ $activeClass(['client.databases.*']) }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>@endif
-                        @if($clientMenuEnabled('dns'))<li><a href="{{ route('client.dns.index') }}" class="{{ $activeClass(['client.dns.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>@endif
-                        @if($clientMenuEnabled('ssl'))<li><a href="{{ route('client.ssl.index') }}" class="{{ $activeClass(['client.ssl.*']) }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>@endif
-                        @if($clientMenuEnabled('statistics'))<li><a href="{{ route('client.statistics.index') }}" class="{{ $activeClass(['client.statistics.*']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.statistics') }}</a></li>@endif
-                        @if($clientMenuEnabled('recipes'))<li><a href="{{ route('client.recipes.index') }}" class="{{ $activeClass(['client.recipes.*']) }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>@endif
+                        @if($clientMenuEnabled('dashboard'))<li><a href="{{ $routeW('client.dashboard') }}" class="{{ $activeClass(['client.dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.dashboard') }}</a></li>@endif
+                        @if($clientMenuEnabled('domain'))<li><a href="{{ $routeW('client.domains.index') }}" class="{{ $activeClass(['client.domains.*']) }}"><span uk-icon="world" class="uk-margin-small-right"></span>{{ __('ui.nav.domain') }}</a></li>@endif
+                        @if($clientMenuEnabled('subdomain'))<li><a href="{{ $routeW('client.subdomains.index') }}" class="{{ $activeClass(['client.subdomains.*']) }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.subdomain') }}</a></li>@endif
+                        @if($clientMenuEnabled('mailboxes'))<li><a href="{{ $routeW('client.mailboxes.index') }}" class="{{ $activeClass(['client.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>@endif
+                        @if($clientMenuEnabled('mailforwards'))<li><a href="{{ $routeW('client.mailforwards.index') }}" class="{{ $activeClass(['client.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>@endif
+                        @if($clientMenuEnabled('ftp'))<li><a href="{{ $routeW('client.ftp.index') }}" class="{{ $activeClass(['client.ftp.*']) }}"><span uk-icon="folder" class="uk-margin-small-right"></span>{{ __('ui.nav.ftp') }}</a></li>@endif
+                        @if($clientMenuEnabled('databases'))<li><a href="{{ $routeW('client.databases.index') }}" class="{{ $activeClass(['client.databases.*']) }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>@endif
+                        @if($clientMenuEnabled('dns'))<li><a href="{{ $routeW('client.dns.index') }}" class="{{ $activeClass(['client.dns.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>@endif
+                        @if($clientMenuEnabled('ssl'))<li><a href="{{ $routeW('client.ssl.index') }}" class="{{ $activeClass(['client.ssl.*']) }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>@endif
+                        @if($clientMenuEnabled('statistics'))<li><a href="{{ $routeW('client.statistics.index') }}" class="{{ $activeClass(['client.statistics.*']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.statistics') }}</a></li>@endif
+                        @if($clientMenuEnabled('recipes'))<li><a href="{{ $routeW('client.recipes.index') }}" class="{{ $activeClass(['client.recipes.*']) }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>@endif
                     @elseif(Auth::guard('web')->check())
-                        <li><a href="{{ route('dashboard') }}" class="{{ $activeClass(['dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}" class="{{ $activeClass(['kas-clients.*']) }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
-                        <li><a href="{{ route('admin.mailboxes.index') }}" class="{{ $activeClass(['admin.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
-                        <li><a href="{{ route('admin.mailforwards.index') }}" class="{{ $activeClass(['admin.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
-                        <li><a href="{{ route('docs') }}" class="{{ $activeClass(['docs']) }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
-                        <li><a href="{{ route('stats') }}" class="{{ $activeClass(['stats']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
-                        <li><a href="{{ route('users.index') }}" class="{{ $activeClass(['users.*']) }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
+                        <li><a href="{{ $routeW('dashboard') }}" class="{{ $activeClass(['dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
+                        <li><a href="{{ $routeW('kas-clients.index') }}" class="{{ $activeClass(['kas-clients.*']) }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
+                        <li><a href="{{ $routeW('admin.mailboxes.index') }}" class="{{ $activeClass(['admin.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
+                        <li><a href="{{ $routeW('admin.mailforwards.index') }}" class="{{ $activeClass(['admin.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
+                        <li><a href="{{ $routeW('docs') }}" class="{{ $activeClass(['docs']) }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
+                        <li><a href="{{ $routeW('stats') }}" class="{{ $activeClass(['stats']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
+                        <li><a href="{{ $routeW('users.index') }}" class="{{ $activeClass(['users.*']) }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
             @endif
             <li class="uk-nav-divider"></li>
             <li class="uk-nav-header">{{ __('ui.common.language') }}</li>
             <li><a href="{{ route('locale.switch', 'de') }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>Deutsch</a></li>
             <li><a href="{{ route('locale.switch', 'en') }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>English</a></li>
             @if(Auth::guard('web')->check())
-                <li><a href="{{ route('config.index') }}" class="{{ $activeClass(['config.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
+                <li><a href="{{ $routeW('config.index') }}" class="{{ $activeClass(['config.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
             @endif
 
             @if(session('impersonate') && Auth::guard('kas_client')->check())
                 <li class="uk-nav-divider"></li>
                 <li>
-                    <form action="{{ route('kas-clients.impersonate.leave') }}" method="POST">
+                    <form action="{{ $routeW('kas-clients.impersonate.leave') }}" method="POST">
                         @csrf
                         <button type="submit" class="uk-button uk-button-danger uk-button-small uk-width-1-1">
                             ← {{ __('ui.common.back_to_admin') }}
@@ -141,7 +145,7 @@
 
             <li class="uk-nav-divider"></li>
             <li>
-                <form action="{{ route('logout') }}" method="POST">
+                <form action="{{ $routeW('logout') }}" method="POST">
                     @csrf
                     <button type="submit" class="uk-button uk-button-text uk-text-danger">{{ __('ui.common.logout') }}</button>
                 </form>
@@ -162,32 +166,32 @@
             <aside class="uk-width-1-6@m uk-visible@m uk-border-right">
                 <ul class="uk-nav uk-nav-default">
                     @if(Auth::guard('kas_client')->check())
-                        @if($clientMenuEnabled('dashboard'))<li><a href="{{ route('client.dashboard') }}" class="{{ $activeClass(['client.dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.dashboard') }}</a></li>@endif
-                        @if($clientMenuEnabled('domain'))<li><a href="{{ route('client.domains.index') }}" class="{{ $activeClass(['client.domains.*']) }}"><span uk-icon="world" class="uk-margin-small-right"></span>{{ __('ui.nav.domain') }}</a></li>@endif
-                        @if($clientMenuEnabled('subdomain'))<li><a href="{{ route('client.subdomains.index') }}" class="{{ $activeClass(['client.subdomains.*']) }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.subdomain') }}</a></li>@endif
-                        @if($clientMenuEnabled('mailboxes'))<li><a href="{{ route('client.mailboxes.index') }}" class="{{ $activeClass(['client.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>@endif
-                        @if($clientMenuEnabled('mailforwards'))<li><a href="{{ route('client.mailforwards.index') }}" class="{{ $activeClass(['client.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>@endif
-                        @if($clientMenuEnabled('ftp'))<li><a href="{{ route('client.ftp.index') }}" class="{{ $activeClass(['client.ftp.*']) }}"><span uk-icon="folder" class="uk-margin-small-right"></span>{{ __('ui.nav.ftp') }}</a></li>@endif
-                        @if($clientMenuEnabled('databases'))<li><a href="{{ route('client.databases.index') }}" class="{{ $activeClass(['client.databases.*']) }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>@endif
-                        @if($clientMenuEnabled('dns'))<li><a href="{{ route('client.dns.index') }}" class="{{ $activeClass(['client.dns.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>@endif
-                        @if($clientMenuEnabled('ssl'))<li><a href="{{ route('client.ssl.index') }}" class="{{ $activeClass(['client.ssl.*']) }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>@endif
-                        @if($clientMenuEnabled('statistics'))<li><a href="{{ route('client.statistics.index') }}" class="{{ $activeClass(['client.statistics.*']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.statistics') }}</a></li>@endif
-                        @if($clientMenuEnabled('recipes'))<li><a href="{{ route('client.recipes.index') }}" class="{{ $activeClass(['client.recipes.*']) }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>@endif
+                        @if($clientMenuEnabled('dashboard'))<li><a href="{{ $routeW('client.dashboard') }}" class="{{ $activeClass(['client.dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.dashboard') }}</a></li>@endif
+                        @if($clientMenuEnabled('domain'))<li><a href="{{ $routeW('client.domains.index') }}" class="{{ $activeClass(['client.domains.*']) }}"><span uk-icon="world" class="uk-margin-small-right"></span>{{ __('ui.nav.domain') }}</a></li>@endif
+                        @if($clientMenuEnabled('subdomain'))<li><a href="{{ $routeW('client.subdomains.index') }}" class="{{ $activeClass(['client.subdomains.*']) }}"><span uk-icon="grid" class="uk-margin-small-right"></span>{{ __('ui.nav.subdomain') }}</a></li>@endif
+                        @if($clientMenuEnabled('mailboxes'))<li><a href="{{ $routeW('client.mailboxes.index') }}" class="{{ $activeClass(['client.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>@endif
+                        @if($clientMenuEnabled('mailforwards'))<li><a href="{{ $routeW('client.mailforwards.index') }}" class="{{ $activeClass(['client.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>@endif
+                        @if($clientMenuEnabled('ftp'))<li><a href="{{ $routeW('client.ftp.index') }}" class="{{ $activeClass(['client.ftp.*']) }}"><span uk-icon="folder" class="uk-margin-small-right"></span>{{ __('ui.nav.ftp') }}</a></li>@endif
+                        @if($clientMenuEnabled('databases'))<li><a href="{{ $routeW('client.databases.index') }}" class="{{ $activeClass(['client.databases.*']) }}"><span uk-icon="database" class="uk-margin-small-right"></span>{{ __('ui.nav.databases') }}</a></li>@endif
+                        @if($clientMenuEnabled('dns'))<li><a href="{{ $routeW('client.dns.index') }}" class="{{ $activeClass(['client.dns.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.dns') }}</a></li>@endif
+                        @if($clientMenuEnabled('ssl'))<li><a href="{{ $routeW('client.ssl.index') }}" class="{{ $activeClass(['client.ssl.*']) }}"><span uk-icon="lock" class="uk-margin-small-right"></span>{{ __('ui.nav.ssl') }}</a></li>@endif
+                        @if($clientMenuEnabled('statistics'))<li><a href="{{ $routeW('client.statistics.index') }}" class="{{ $activeClass(['client.statistics.*']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.statistics') }}</a></li>@endif
+                        @if($clientMenuEnabled('recipes'))<li><a href="{{ $routeW('client.recipes.index') }}" class="{{ $activeClass(['client.recipes.*']) }}"><span uk-icon="nut" class="uk-margin-small-right"></span>{{ __('ui.nav.recipes') }}</a></li>@endif
                     @elseif(Auth::guard('web')->check())
-                        <li><a href="{{ route('dashboard') }}" class="{{ $activeClass(['dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
-                        <li><a href="{{ route('kas-clients.index') }}" class="{{ $activeClass(['kas-clients.*']) }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
-                        <li><a href="{{ route('admin.mailboxes.index') }}" class="{{ $activeClass(['admin.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
-                        <li><a href="{{ route('admin.mailforwards.index') }}" class="{{ $activeClass(['admin.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
-                        <li><a href="{{ route('docs') }}" class="{{ $activeClass(['docs']) }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
-                        <li><a href="{{ route('stats') }}" class="{{ $activeClass(['stats']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
-                        <li><a href="{{ route('users.index') }}" class="{{ $activeClass(['users.*']) }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
+                        <li><a href="{{ $routeW('dashboard') }}" class="{{ $activeClass(['dashboard']) }}"><span uk-icon="home" class="uk-margin-small-right"></span>{{ __('ui.nav.startpage') }}</a></li>
+                        <li><a href="{{ $routeW('kas-clients.index') }}" class="{{ $activeClass(['kas-clients.*']) }}"><span uk-icon="thumbnails" class="uk-margin-small-right"></span>{{ __('ui.nav.accounts') }}</a></li>
+                        <li><a href="{{ $routeW('admin.mailboxes.index') }}" class="{{ $activeClass(['admin.mailboxes.*']) }}"><span uk-icon="mail" class="uk-margin-small-right"></span>{{ __('ui.nav.mailboxes') }}</a></li>
+                        <li><a href="{{ $routeW('admin.mailforwards.index') }}" class="{{ $activeClass(['admin.mailforwards.*']) }}"><span uk-icon="reply" class="uk-margin-small-right"></span>{{ __('ui.nav.mailforwards') }}</a></li>
+                        <li><a href="{{ $routeW('docs') }}" class="{{ $activeClass(['docs']) }}"><span uk-icon="file-text" class="uk-margin-small-right"></span>{{ __('ui.nav.docs') }}</a></li>
+                        <li><a href="{{ $routeW('stats') }}" class="{{ $activeClass(['stats']) }}"><span uk-icon="gitter" class="uk-margin-small-right"></span>{{ __('ui.nav.stats') }}</a></li>
+                        <li><a href="{{ $routeW('users.index') }}" class="{{ $activeClass(['users.*']) }}"><span uk-icon="users" class="uk-margin-small-right"></span>{{ __('ui.nav.user_management') }}</a></li>
                     @endif
                     <li class="uk-nav-divider"></li>
                     <li class="uk-nav-header">{{ __('ui.common.language') }}</li>
                     <li><a href="{{ route('locale.switch', 'de') }}" class="{{ $locale === 'de' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>Deutsch</a></li>
                     <li><a href="{{ route('locale.switch', 'en') }}" class="{{ $locale === 'en' ? 'nav-link-active' : '' }}"><span uk-icon="world" class="uk-margin-small-right"></span>English</a></li>
                     @if(Auth::guard('web')->check())
-                        <li><a href="{{ route('config.index') }}" class="{{ $activeClass(['config.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
+                        <li><a href="{{ $routeW('config.index') }}" class="{{ $activeClass(['config.*']) }}"><span uk-icon="settings" class="uk-margin-small-right"></span>{{ __('ui.nav.settings') }}</a></li>
                     @endif
                 </ul>
             </aside>
