@@ -73,10 +73,10 @@
 - [x] Ruecksprung aus Impersonation korrekt pro Workspace
 
 ### Phase 5 - Externe Launches (Webmail/PMA etc.)
-- [ ] LaunchToken-Service (one-time, short TTL)
-- [ ] Token-Speicher + Ablauf/Invalidation
-- [ ] Webmail-/PMA-Links ueber Token-Flow
-- [ ] Audit-Log fuer externe Launches
+- [x] LaunchToken-Service (one-time, short TTL)
+- [x] Token-Speicher + Ablauf/Invalidation
+- [x] Webmail-/PMA-Links ueber Token-Flow
+- [x] Audit-Log fuer externe Launches
 
 ### Phase 6 - Härtung
 - [ ] Rate-Limits und Abuse-Schutz
