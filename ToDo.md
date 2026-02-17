@@ -134,10 +134,10 @@
 - [x] `NEU`-Button ergänzen bei Datenbanken.
 
 ### Internationalisierung / Sprache
-- [ ] Alle UI-Texte in Sprach-Keys auslagern (keine hartkodierten Texte mehr).
-- [ ] Vollständige DE- und EN-Übersetzungen pflegen.
-- [ ] Gemischte Sprache in Views bereinigen (DE/EN konsistent pro Locale).
-- [ ] Deutsche Texte mit korrekten Umlauten/Sonderzeichen schreiben (z. B. `Änderungen Prüfung`).
+- [x] Alle UI-Texte in Sprach-Keys auslagern (keine hartkodierten Texte mehr).
+- [x] Vollständige DE- und EN-Übersetzungen pflegen.
+- [x] Gemischte Sprache in Views bereinigen (DE/EN konsistent pro Locale).
+- [x] Deutsche Texte mit korrekten Umlauten/Sonderzeichen schreiben (z. B. `Änderungen Prüfung`).
 
 ## Nächste ToDos (Rezepte / Automationen)
 
