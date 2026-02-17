@@ -54,7 +54,7 @@
 ### Phase 2 - Session-Isolation pro Workspace
 - [x] Dynamische Session-Cookie-Namen pro Workspace
 - [x] `web` und `kas_client` sauber trennen
-- [ ] Logout-Semantik festlegen:
+- [x] Logout-Semantik festlegen:
 - [x] nur aktueller Workspace
 - [x] optional: alle Workspaces
 - [x] Feature-Tests fuer parallele Sessions
