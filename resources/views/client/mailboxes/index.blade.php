@@ -111,7 +111,7 @@
                            title="Webmail"
                            data-launch-url="{{ route_w('client.launch.create', ['tool' => 'webmail', 'mailbox' => $m->id]) }}"
                            data-launch-tool="Webmail"
-                           data-launch-login="{{ $m->mail_login ?: $m->email }}"
+                           data-launch-login="{{ $m->email }}"
                            data-launch-target="{{ $m->email }}"
                            onclick="return openExternalLaunchModal(event, this);"></a>
                         <a href="{{ route_w('client.mailboxes.edit', $m) }}" class="uk-icon-button action-icon-btn" uk-icon="icon: pencil" title="Bearbeiten"></a>
