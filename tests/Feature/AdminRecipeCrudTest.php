@@ -116,5 +116,36 @@ class AdminRecipeCrudTest extends TestCase
         $response = $this->actingAs($user, 'web')->get('/recipes');
         $response->assertForbidden();
     }
-}
 
+    public function test_admin_can_generate_recipe_via_wizard(): void
+    {
+        $admin = User::create([
+            'name' => 'Admin',
+            'login' => 'recipe_wizard_admin',
+            'email' => 'recipe_wizard_admin@example.test',
+            'password' => Hash::make('secret123'),
+            'role' => 'admin',
+            'is_admin' => 1,
+        ]);
+
+        $response = $this->actingAs($admin, 'web')->post('/recipes-wizard', [
+            'name' => 'Onboarding Testkunde',
+            'main_domain' => 'example.test',
+            'extra_domains' => 'shop.example.test, www.example.test',
+            'enable_ssl' => '1',
+            'php_version' => '8.3',
+            'mailbox_prefixes' => 'info, kontakt',
+            'mail_quota_mb' => 2048,
+            'forward_prefixes' => 'jobs',
+            'forward_target' => 'bewerbung@example.test',
+            'database_count' => 2,
+            'description' => 'Wizard recipe',
+        ]);
+
+        $response->assertStatus(302);
+        $recipe = Recipe::where('name', 'Onboarding Testkunde')->first();
+        $this->assertNotNull($recipe);
+        $this->assertDatabaseHas('recipes', ['id' => $recipe->id, 'status' => 'draft', 'category' => 'composite']);
+        $this->assertGreaterThanOrEqual(4, $recipe->actions()->count());
+    }
+}

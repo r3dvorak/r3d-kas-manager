@@ -4,7 +4,7 @@
  *
  * @package   r3d-kas-manager
  * @author    Richard Dvorak
- * @version   0.31.3-alpha
+ * @version   0.31.4-alpha
  * @date      2026-02-17
  * @license   MIT License
  */
@@ -22,6 +22,134 @@ use Illuminate\View\View;
 
 class RecipeController extends Controller
 {
+    public function wizard(): View
+    {
+        return view('admin.recipes.wizard');
+    }
+
+    public function storeFromWizard(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'main_domain' => ['required', 'string', 'max:255'],
+            'extra_domains' => ['nullable', 'string'],
+            'enable_ssl' => ['nullable', 'boolean'],
+            'php_version' => ['required', 'string', 'max:16'],
+            'mailbox_prefixes' => ['nullable', 'string'],
+            'mail_quota_mb' => ['nullable', 'integer', 'min:0', 'max:1048576'],
+            'forward_prefixes' => ['nullable', 'string'],
+            'forward_target' => ['nullable', 'string', 'max:255'],
+            'database_count' => ['nullable', 'integer', 'min:0', 'max:200'],
+            'description' => ['nullable', 'string'],
+        ]);
+
+        $mainDomain = strtolower(trim((string) $validated['main_domain']));
+        $domains = array_values(array_unique(array_filter(array_map(
+            static fn (string $v): string => strtolower(trim($v)),
+            array_merge([$mainDomain], $this->splitList((string) ($validated['extra_domains'] ?? '')))
+        ))));
+
+        $mailPrefixes = $this->splitList((string) ($validated['mailbox_prefixes'] ?? ''));
+        $forwardPrefixes = $this->splitList((string) ($validated['forward_prefixes'] ?? ''));
+        $forwardTarget = trim((string) ($validated['forward_target'] ?? ''));
+        $mailQuota = (int) ($validated['mail_quota_mb'] ?? 2048);
+        $databaseCount = (int) ($validated['database_count'] ?? 0);
+
+        $recipeVars = [
+            'domain_name' => $mainDomain,
+            'php_version' => (string) $validated['php_version'],
+            'enable_ssl' => !empty($validated['enable_ssl']),
+            'database_count' => $databaseCount,
+        ];
+
+        $credentials = [
+            'mailboxes' => [],
+            'forwards' => [],
+            'notes' => [],
+        ];
+
+        $order = 1;
+        $actions = [];
+
+        foreach ($domains as $domain) {
+            $actions[] = [
+                'order' => $order++,
+                'type' => 'add_domain',
+                'label' => 'Domain anlegen: ' . $domain,
+                'parameters' => [
+                    'domain_name' => $domain,
+                    'domain_path' => '/' . $domain . '/',
+                    'php_version' => (string) $validated['php_version'],
+                ],
+            ];
+        }
+
+        foreach ($mailPrefixes as $prefix) {
+            $password = $this->generatePassword(18);
+            $actions[] = [
+                'order' => $order++,
+                'type' => 'add_mailaccount',
+                'label' => 'Mailbox anlegen: ' . $prefix . '@' . $mainDomain,
+                'parameters' => [
+                    'mail_account' => $prefix,
+                    'mail_domain' => $mainDomain,
+                    'mail_password' => $password,
+                    'mail_quota_mb' => $mailQuota,
+                ],
+            ];
+            $credentials['mailboxes'][] = [
+                'email' => $prefix . '@' . $mainDomain,
+                'password' => $password,
+            ];
+        }
+
+        foreach ($forwardPrefixes as $prefix) {
+            $from = $prefix . '@' . $mainDomain;
+            $target = $forwardTarget !== '' ? $forwardTarget : ('info@' . $mainDomain);
+            $actions[] = [
+                'order' => $order++,
+                'type' => 'add_mailforward',
+                'label' => 'Weiterleitung: ' . $from,
+                'parameters' => [
+                    'mail_forward_address' => $from,
+                    'mail_forward_targets' => $target,
+                ],
+            ];
+            $credentials['forwards'][] = [
+                'from' => $from,
+                'to' => $target,
+            ];
+        }
+
+        if ($databaseCount > 0) {
+            $credentials['notes'][] = 'Datenbanken: ' . $databaseCount . ' gewünscht (Auto-Action folgt in Phase C/D).';
+        }
+        if (!empty($validated['enable_ssl'])) {
+            $credentials['notes'][] = 'SSL aktiviert: wird als Policy-Flag im Recipe gespeichert, konkrete SSL-Action folgt in Phase C.';
+        }
+
+        $recipe = null;
+        DB::transaction(function () use (&$recipe, $validated, $recipeVars, $actions): void {
+            $recipe = Recipe::create([
+                'name' => $validated['name'],
+                'description' => $validated['description'] ?: 'Wizard-generated recipe',
+                'status' => 'draft',
+                'version' => 1,
+                'category' => 'composite',
+                'is_template' => false,
+                'variables' => $recipeVars,
+            ]);
+
+            foreach ($actions as $a) {
+                $recipe->actions()->create($a);
+            }
+        });
+
+        return redirect()->route('admin.recipes.show', $recipe)
+            ->with('ok', 'Recipe über Wizard erstellt.')
+            ->with('wizard_credentials', $credentials);
+    }
+
     public function index(Request $request): View
     {
         $q = trim((string) $request->query('q', ''));
@@ -298,5 +426,23 @@ class RecipeController extends Controller
                 ],
             ],
         ];
+    }
+
+    private function splitList(string $raw): array
+    {
+        $parts = preg_split('/[\r\n,;]+/', $raw) ?: [];
+        $parts = array_map(static fn (string $v): string => strtolower(trim($v)), $parts);
+        return array_values(array_filter($parts, static fn (string $v): bool => $v !== ''));
+    }
+
+    private function generatePassword(int $length = 18): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^*+';
+        $max = strlen($alphabet) - 1;
+        $out = '';
+        for ($i = 0; $i < $length; $i++) {
+            $out .= $alphabet[random_int(0, $max)];
+        }
+        return $out;
     }
 }

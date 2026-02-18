@@ -12,7 +12,10 @@
         <span uk-search-icon></span>
         <input class="uk-search-input" type="search" name="q" value="{{ $q ?? '' }}" placeholder="Suche nach Name/Kategorie">
     </form>
-    <a href="{{ route_w('admin.recipes.create') }}" class="uk-button uk-button-primary">NEU</a>
+    <div class="uk-flex uk-grid-small" uk-grid>
+        <div><a href="{{ route_w('admin.recipes.wizard') }}" class="uk-button uk-button-secondary">Wizard</a></div>
+        <div><a href="{{ route_w('admin.recipes.create') }}" class="uk-button uk-button-primary">NEU</a></div>
+    </div>
 </div>
 
 <table class="uk-table uk-table-divider uk-table-small uk-table-striped">
@@ -54,4 +57,3 @@
 
 {{ $recipes->links() }}
 @endsection
-

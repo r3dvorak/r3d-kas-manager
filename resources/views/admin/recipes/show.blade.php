@@ -7,6 +7,37 @@
     <div class="uk-alert-success" uk-alert>{{ session('ok') }}</div>
 @endif
 
+@if(session('wizard_credentials'))
+    @php($wiz = session('wizard_credentials'))
+    <div class="uk-alert-warning" uk-alert>
+        <p class="uk-margin-small-bottom"><strong>Wizard-Ergebnis (einmalige Anzeige)</strong></p>
+        @if(!empty($wiz['mailboxes']))
+            <p class="uk-margin-small-bottom"><strong>Mailbox-Zugangsdaten:</strong></p>
+            <ul class="uk-margin-small-top">
+                @foreach($wiz['mailboxes'] as $mb)
+                    <li><code>{{ $mb['email'] }}</code> / <code>{{ $mb['password'] }}</code></li>
+                @endforeach
+            </ul>
+        @endif
+        @if(!empty($wiz['forwards']))
+            <p class="uk-margin-small-bottom"><strong>Weiterleitungen:</strong></p>
+            <ul class="uk-margin-small-top">
+                @foreach($wiz['forwards'] as $fw)
+                    <li><code>{{ $fw['from'] }}</code> → <code>{{ $fw['to'] }}</code></li>
+                @endforeach
+            </ul>
+        @endif
+        @if(!empty($wiz['notes']))
+            <p class="uk-margin-small-bottom"><strong>Hinweise:</strong></p>
+            <ul class="uk-margin-small-top">
+                @foreach($wiz['notes'] as $note)
+                    <li>{{ $note }}</li>
+                @endforeach
+            </ul>
+        @endif
+    </div>
+@endif
+
 <div class="uk-grid-medium" uk-grid>
     <div class="uk-width-2-3@m">
         <div class="uk-card uk-card-default uk-card-body">
@@ -113,4 +144,3 @@
     </table>
 </div>
 @endsection
-

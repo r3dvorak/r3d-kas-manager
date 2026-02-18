@@ -4,7 +4,7 @@
  * 
  * @package   r3d-kas-manager
  * @author    Richard Dvořák, R3D Internet Dienstleistungen
- * @version   0.31.2-alpha
+ * @version   0.31.4-alpha
  * @date      2025-10-05
  * 
  * @license   MIT License
@@ -85,6 +85,8 @@ Route::middleware(['web', 'useguard:web', 'auth:web', 'can:access-admin-panel'])
     Route::post('/mailforwards/sync', [MailforwardsController::class, 'sync'])->name('admin.mailforwards.sync');
 
     Route::resource('/recipes', AdminRecipeController::class)->names('admin.recipes');
+    Route::get('/recipes-wizard', [AdminRecipeController::class, 'wizard'])->name('admin.recipes.wizard');
+    Route::post('/recipes-wizard', [AdminRecipeController::class, 'storeFromWizard'])->name('admin.recipes.wizard.store');
     Route::post('/recipes/{recipe}/run-dry', [AdminRecipeController::class, 'runDry'])->name('admin.recipes.run-dry');
     Route::post('/recipes/{recipe}/run-apply', [AdminRecipeController::class, 'runApply'])->name('admin.recipes.run-apply');
     Route::get('/recipes/{recipe}/runs/{run}', [AdminRecipeController::class, 'showRun'])->name('admin.recipes.runs.show');

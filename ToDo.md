@@ -168,10 +168,10 @@
 - [x] Run-Detailansicht: Step-Ergebnisse inkl. Fehler, Dauer, API-Responses (maskiert).
 
 ### Phase B - Admin Onboarding Wizard
-- [ ] Wizard "Neues Konto / neue Umgebung bereitstellen" (mehrstufig).
-- [ ] Eingaben: Hauptdomain, zusätzliche Domains, SSL ja/nein, PHP-Default, Anzahl Mailboxen, Anzahl Weiterleitungen, Anzahl Datenbanken.
-- [ ] Eingabe für Mailbox-/Weiterleitungs-Präfixe (`vor dem @`) integrieren.
-- [ ] Am Ende generierte Artefakte/Zugangsdaten als Ergebnisbundle anzeigen.
+- [x] Wizard "Neues Konto / neue Umgebung bereitstellen" (mehrstufig).
+- [x] Eingaben: Hauptdomain, zusätzliche Domains, SSL ja/nein, PHP-Default, Anzahl Mailboxen, Anzahl Weiterleitungen, Anzahl Datenbanken.
+- [x] Eingabe für Mailbox-/Weiterleitungs-Präfixe (`vor dem @`) integrieren.
+- [x] Am Ende generierte Artefakte/Zugangsdaten als Ergebnisbundle anzeigen.
 - [ ] Ergebnis nur einmal im Klartext sichtbar + optional sicherer Export.
 - [ ] Wizard-Lauf optional als Recipe speichern (wiederverwendbar).
 
